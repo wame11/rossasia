@@ -29,4 +29,10 @@ Same as before: Jacob, Lily, Hannah, Ethan, admin — or type `test` with no
 password to preview with every stop unlocked.
 
 ## Publishing
-Settings → Pages → Deploy from a branch → `main` / root.
+Live at **https://ross.asia** (GitHub Pages, `main` / root).
+
+The `CNAME` file in this repo sets the custom domain — leave it in place, or
+Pages reverts to `wame11.github.io/rossasia/`.
+
+DNS at GoDaddy: four `A` records on `@` → `185.199.108.153`, `185.199.109.153`,
+`185.199.110.153`, `185.199.111.153`, plus a `CNAME` on `www` → `wame11.github.io`.
