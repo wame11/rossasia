@@ -960,3 +960,7 @@ h1,.map-head h2,.hub-head h2,.section-head h2,.reward h2{text-shadow:2px 2px 0 r
 .vtab{text-transform:none;font-size:.82rem}
 @media(max-width:430px){.vtab{font-size:.76rem}}
 @media(max-width:360px){.vtab{font-size:.7rem}}
+
+/* iOS standalone: keep content clear of the status bar / notch */
+.app{padding-top:max(14px,env(safe-area-inset-top))}
+.login-screen{padding-top:max(20px,env(safe-area-inset-top))}

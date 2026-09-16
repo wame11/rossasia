@@ -30,7 +30,7 @@ function wipeLocal(keepStamp){
 }
 /* ?reset=1 in the address bar wipes this device instantly */
 try{if(new URLSearchParams(location.search).get('reset')==='1'){wipeLocal();location.replace(location.pathname);}}catch(_){/**/}
-const AVATARS={Jacob:'🐉',Lily:'🌸',Hannah:'🦊',Ethan:'🚄',Mark:'🐼',admin:'👑',test:'🧪'};
+const AVATARS={Jacob:'🐉',Lily:'🌸',Hannah:'🦊',Ethan:'🚄',Mark:'🗻',admin:'👑',test:'🧪'};
 
 let session=null,progress=freshProgress(),shared=freshShared(),currentLevel=null,countdownTimer=null,activeGame=null;
 const $=s=>document.querySelector(s);
@@ -428,7 +428,7 @@ function reportScore(root,stop,gi,score,won){
   st.complete=Object.values(st.perGame).some(g=>g.won);
   progress.game[stop.id]=st;
   const gk=stop.id+'-'+gi;
-  if(won&&!progress.chipGrant[gk]){progress.chipGrant[gk]=true;progress.chips=(progress.chips||0)+10;grantEarn(10);updateChips();syncPlayer();sfx('coin');bearShout('+10 chips! Come gamble them with me! 🐼🪙');setTimeout(maybeMysteryBox,1200);}
+  if(won&&!progress.chipGrant[gk]){progress.chipGrant[gk]=true;progress.chips=(progress.chips||0)+10;grantEarn(10);updateChips();syncPlayer();sfx('coin');bearShout('+10 chips! Come gamble them with me! 🐒🪙');setTimeout(maybeMysteryBox,1200);}
   saveProgress();refreshTaskTags(root,stop);
   const badge=root.querySelector('.gm-tab[data-gi="'+gi+'"] .gm-best');
   if(badge)badge.textContent=st.perGame[gi].best+(st.perGame[gi].won?' 🏆':'');
@@ -1486,7 +1486,7 @@ function bearCelebrate(msg){
 }
 function bearShout(msg){const b=document.getElementById('bearBubble');if(!b)return;b.textContent=msg;b.classList.add('show');clearTimeout(bearShout._t);bearShout._t=setTimeout(()=>b.classList.remove('show'),4200);}
 /* talking lucky-cat mascot */
-const BEAR_LINES=['Tap the glowing stop!','Snap those photos! \ud83d\udcf8','Beat my high score\u2026 if you can!','Win a game, win 10 chips. \ud83e\ude99','TAP ME for the Neon Den. \ud83c\udfb0','Photo of EVERY hunt item \u2014 no cheating!','Bonus points for extra wins!','I am the house. The house wins.','Feeling lucky? Tap me.','Most chips at the end wins REAL money. \ud83d\udcb7','Sugoi! Nice work, team!','Bamboo tastes better after a win.'];
+const BEAR_LINES=['Tap the glowing stop!','Snap those photos! \ud83d\udcf8','Beat my high score\u2026 if you can!','Win a game, win 10 chips. \ud83e\ude99','TAP ME for the Neon Den. \ud83c\udfb0','Photo of EVERY hunt item \u2014 no cheating!','Bonus points for extra wins!','I am the house. The house wins.','Feeling lucky? Tap me.','Most chips at the end wins REAL money. \ud83d\udcb7','Sugoi! Nice work, team!','Hot spring after this, I reckon.'];
 let bearTimer=null,bearIdx=-1;
 function bearSay(){const b=document.getElementById('bearBubble');if(!b)return;let i;do{i=Math.floor(Math.random()*BEAR_LINES.length);}while(i===bearIdx);bearIdx=i;b.textContent=BEAR_LINES[i];b.classList.add('show');setTimeout(()=>b.classList.remove('show'),4600);}
 function wireBear(){const m=document.getElementById('cornerMascot');
@@ -1503,7 +1503,7 @@ function openDen(){
   const o=document.createElement('div');o.className='den';
   o.innerHTML='<div class="den-card">'+
     '<button type="button" class="den-close">✕</button>'+
-    '<div class="den-head">🐼 KIMBAP’S NEON DEN</div>'+
+    '<div class="den-head">🐒 KIMBAP’S NEON DEN</div>'+
     '<div class="den-balance">🪙 Chips: <b>'+(progress.chips||0)+'</b></div>'+
     '<div class="den-wager">Bet: '+[5,10,25].map(v=>'<button type="button" class="den-bet" data-v="'+v+'">'+v+'</button>').join('')+'<button type="button" class="den-bet" data-v="all">ALL IN</button></div>'+
     '<div class="den-games">'+
@@ -1724,7 +1724,7 @@ else{try{const s=JSON.parse(sessionStorage.getItem(STORAGE.session)||'null');if(
    Mystery Boxes, SFX, cat moods/name, Ceremony, play-time points
    ================================================================ */
 let BEAR_NAME='Kimbap';
-const BEAR_NAMES=['Kimbap','Bamboo','Mochi','Yuki','Bento','Ramen','Kimchi','Tofu'];
+const BEAR_NAMES=['Kimbap','Momo','Yuki','Bento','Ramen','Kimchi','Tofu','Saru'];
 function setBearName(n){BEAR_NAME=n;localStorage.setItem('a26-catname',n);bearCelebrate('Call me '+n+'! 🐱');}
 /* ---- SFX + haptics (34) ---- */
 let muted=localStorage.getItem('a26-muted')==='1';let audioCtx=null;
@@ -1753,7 +1753,7 @@ function hubStory(body){
   const box=body.querySelector('.story-box'),inp=body.querySelector('.story-in');
   function paint(){box.innerHTML=lines.map((l,i)=>'<p'+(i===0?' class="story-first"':'')+'>'+escapeHtml(l)+'</p>').join('');box.scrollTop=box.scrollHeight;}
   paint();
-  body.querySelector('.story-add').addEventListener('click',()=>{const t=inp.value.trim();if(!t)return;lines.push(t);inp.value='';turn++;paint();sfx('click');bearShout('Player '+(turn%4+1)+'\u2019s turn! Pass it on! 🐼');});
+  body.querySelector('.story-add').addEventListener('click',()=>{const t=inp.value.trim();if(!t)return;lines.push(t);inp.value='';turn++;paint();sfx('click');bearShout('Player '+(turn%4+1)+'\u2019s turn! Pass it on! 🐒');});
   body.querySelector('.story-read').addEventListener('click',()=>{paint();sfx('win');bearCelebrate('What a masterpiece! 📖✨');
     try{const u=new SpeechSynthesisUtterance(lines.join(' '));u.rate=.95;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(_){/**/}});
 }
@@ -1907,7 +1907,7 @@ addItem({id:'top_gold_suit',cat:'Tops',name:'Golden Suit ✨',price:180,top:'jac
 /* Face */
 [['none','None',0,null],['glasses','Round Glasses',25,'glasses'],['tache','Silly Moustache',30,'tache'],['freckles','Freckles',20,'freckles'],['sun','Sunglasses 😎',45,'sun'],['star','Star Face Paint ⭐',55,'star'],['heart','Heart Face Paint 💖',55,'heart'],['warpaint','War Paint',65,'warpaint']].forEach(([id,n,p,k])=>addItem({id:'acc_'+id,cat:'Face',name:n,price:p,acc:k}));
 /* Pets */
-[['none','No Pet',0,null],['dog','Shiba Inu 🐕',60,'🐕'],['cat','Lucky Cat 🐈',60,'🐈'],['lizard','Gecko 🦎',70,'🦎'],['snake','Snake 🐍',75,'🐍'],['scorpion','Koi Carp 🐟',75,'🐟'],['burro','Sika Deer 🦌',90,'🦌'],['eagle','Crane 🕊️',90,'🕊️'],['bear','Mini Kimbap 🐼',110,'🐼'],['ufo','UFO Buddy 🛸',130,'🛸'],['unicorn','Unicorn 🦄',140,'🦄'],['dragon','Dragon 🐉',160,'🐉']].forEach(([id,n,p,e])=>addItem({id:'pet_'+id,cat:'Pet',name:n,price:p,pet:e}));
+[['none','No Pet',0,null],['dog','Shiba Inu 🐕',60,'🐕'],['cat','Lucky Cat 🐈',60,'🐈'],['lizard','Gecko 🦎',70,'🦎'],['snake','Snake 🐍',75,'🐍'],['scorpion','Koi Carp 🐟',75,'🐟'],['burro','Sika Deer 🦌',90,'🦌'],['eagle','Crane 🕊️',90,'🕊️'],['bear','Mini Kimbap 🐒',110,'🐒'],['ufo','UFO Buddy 🛸',130,'🛸'],['unicorn','Unicorn 🦄',140,'🦄'],['dragon','Dragon 🐉',160,'🐉']].forEach(([id,n,p,e])=>addItem({id:'pet_'+id,cat:'Pet',name:n,price:p,pet:e}));
 /* Auras / Scenes / Nameplates */
 [['none','None',0,null],['gold','Golden Glow',80,'gold'],['stars','Star Sparkle ✨',100,'stars'],['fire','Fire Ring 🔥',120,'fire'],['ice','Ice Mist ❄️',120,'ice'],['rainbow','Rainbow Aura 🌈',180,'rainbow']].forEach(([id,n,p,a])=>addItem({id:'aura_'+id,cat:'Aura',name:n,price:p,aura:a}));
 [['locker','Locker Room',0,'locker'],['route','Tokyo Neon 🏙️',50,'tokyo'],['canyon','Kyoto Sunset ⛩️',60,'kyoto'],['beach','Mount Fuji 🗻',70,'fuji'],['vegas','Seoul Nights 🌃',90,'seoul'],['space','Outer Space 🌌',110,'space']].forEach(([id,n,p,s])=>addItem({id:'scene_'+id,cat:'Scene',name:n,price:p,scene:s}));
@@ -2091,15 +2091,15 @@ function tryOrWear(id){
   if(c.owned[id]){previewItem=null;c.equip[it.cat]=id;saveProgress();renderCharacter();renderShop();syncPlayer();sfx('click');return;}
   /* not owned: try it on first — SEE it before you buy */
   previewItem=it;renderCharacter();renderShop();sfx('click');
-  bearShout('Looking good! Buy it or keep browsing. 🐼');
+  bearShout('Looking good! Buy it or keep browsing. 🐒');
 }
 function buyOrWear(id){
   const it=SHOP_ITEMS.find(i=>i.id===id);if(!it)return;const c=char();
   if(!c.owned[id]){
-    if(!(session&&session.test)&&(progress.chips||0)<it.price){bearShout('Not enough chips! Go win some. 🐼');previewItem=null;renderCharacter();renderShop();return;}
+    if(!(session&&session.test)&&(progress.chips||0)<it.price){bearShout('Not enough chips! Go win some. 🐒');previewItem=null;renderCharacter();renderShop();return;}
     if(it.price>0 && !confirm('Spend '+it.price+' chips on '+it.name+'?\n\nRemember: chips can win you REAL money (the £15 shop dash) — spend them on outfits only if you\u2019re sure!')) {previewItem=null;renderCharacter();renderShop();return;}
     if(!(session&&session.test))progress.chips-=it.price;
-    c.owned[id]=1;sfx('coin');bearCelebrate('Nice '+it.name+'! Looking good! 🐼');
+    c.owned[id]=1;sfx('coin');bearCelebrate('Nice '+it.name+'! Looking good! 🐒');
   }
   c.equip[it.cat]=id;saveProgress();updateChips();renderCharacter();renderShop();syncPlayer();sfx('click');
 }
@@ -2331,7 +2331,7 @@ function openMysteryBox(){
 const HUB_GAMES=[
   {id:'breaker',n:'🧱 Neon Breaker',d:'Smash the neon bricks — classic breaker!'},
   {id:'roadle',n:'🟩 Asiadle',d:'Wordle, Japan & Korea edition. 6 guesses!'},
-  {id:'ttt',n:'⭕ Tic-Tac-Panda',d:'Beat '+BEAR_NAME+' at noughts & crosses. He talks trash.'},
+  {id:'ttt',n:'⭕ Tic-Tac-Macaque',d:'Beat '+BEAR_NAME+' at noughts & crosses. He talks trash.'},
   {id:'headsup',n:'🙆 Heads Up!',d:'Phone on forehead — family shouts clues! (landscape)'},
   {id:'rush',n:'⚡ Neon Rush',d:'MULTIPLAYER quiz battle! 2-4 players, pass the phone.'},
   {id:'heist',n:'🥷 Ninja Heist',d:'MULTIPLAYER! Answer, then MINE, HACK or SHIELD.'},
@@ -2416,26 +2416,26 @@ function hubRoadle(body){
   }));
   activeGame={stop(){}};
 }
-/* --- Tic-Tac-Panda (13) --- */
+/* --- Tic-Tac-Macaque (13) --- */
 function hubTTT(body){
-  const TRASH=['Too easy. 🐼','Is that your best move?!','I\u2019ve seen koi play better.','*yawns*','Bold. Wrong, but bold.','My grandma panda plays faster.','You fell for it!','Delicious. Like bamboo.'];
+  const TRASH=['Too easy. 🐒','Is that your best move?!','I\u2019ve seen koi play better.','*yawns*','Bold. Wrong, but bold.','My grandma macaque plays faster.','You fell for it!','Delicious. Like a stolen peach.'];
   const WIN=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
   let cells=Array(9).fill(''),over=false;
-  body.innerHTML='<div class="game-hud">📖 You are ❌. Beat '+BEAR_NAME+' the panda (🐼). He WILL trash talk.</div><div class="ttt-grid">'+Array.from({length:9},(_,i)=>'<button type="button" class="ttt-cell" data-i="'+i+'"></button>').join('')+'</div><p class="game-hud ttt-msg">Your move!</p><button type="button" class="btn btn-secondary ttt-reset">New game</button>';
+  body.innerHTML='<div class="game-hud">📖 You are ❌. Beat '+BEAR_NAME+' the snow monkey (🐒). He WILL trash talk.</div><div class="ttt-grid">'+Array.from({length:9},(_,i)=>'<button type="button" class="ttt-cell" data-i="'+i+'"></button>').join('')+'</div><p class="game-hud ttt-msg">Your move!</p><button type="button" class="btn btn-secondary ttt-reset">New game</button>';
   const msg=body.querySelector('.ttt-msg'),els9=[...body.querySelectorAll('.ttt-cell')];
   function winner(b){for(const[a,c,d]of WIN)if(b[a]&&b[a]===b[c]&&b[c]===b[d])return b[a];return b.every(x=>x)?'tie':null;}
   function bearMove(){
     const empty=cells.map((v,i)=>v?null:i).filter(v=>v!==null);
     let pick=null;
-    for(const i of empty){const t=[...cells];t[i]='🐼';if(winner(t)==='🐼'){pick=i;break;}}
+    for(const i of empty){const t=[...cells];t[i]='🐒';if(winner(t)==='🐒'){pick=i;break;}}
     if(pick===null)for(const i of empty){const t=[...cells];t[i]='❌';if(winner(t)==='❌'){pick=i;break;}}
     if(pick===null)pick=empty.includes(4)?4:empty[Math.floor(Math.random()*empty.length)];
-    cells[pick]='🐼';els9[pick].textContent='🐼';
+    cells[pick]='🐒';els9[pick].textContent='🐒';
     bearShout(TRASH[Math.floor(Math.random()*TRASH.length)]);
   }
   function check(){const w=winner(cells);if(!w)return false;over=true;
-    msg.textContent=w==='❌'?'🏆 YOU BEAT THE PANDA!':w==='🐼'?'🐼 '+BEAR_NAME+' wins. Obviously.':'🤝 Tie!';
-    if(w==='❌'){sfx('win');burst(body);bearShout('WHAT?! Rematch. NOW.');}else if(w==='🐼'){sfx('lose');bearCelebrate('Told you. 😎');}
+    msg.textContent=w==='❌'?'🏆 YOU BEAT THE MONKEY!':w==='🐒'?'🐒 '+BEAR_NAME+' wins. Obviously.':'🤝 Tie!';
+    if(w==='❌'){sfx('win');burst(body);bearShout('WHAT?! Rematch. NOW.');}else if(w==='🐒'){sfx('lose');bearCelebrate('Told you. 😎');}
     return true;}
   els9.forEach(b=>b.addEventListener('click',()=>{
     const i=+b.dataset.i;if(over||cells[i])return;
@@ -2700,7 +2700,7 @@ function downloadBlob(blob,name){
 function bearMood(){
   const h=new Date().getHours();
   if(h>=21||h<7)return {acc:'💤',lines:['*yaaaawn* five more stations…','Wake me at the next hotel. 😴','Night trains? Brave.','Zzz… huh? Oh. Hi.']};
-  if(statusForStop&&stopById('seoul')&&statusForStop('seoul')!=='ready'&&today()>=dateObj('2026-10-27'))return {acc:'🕶️',lines:['SEOUL BABY! 😎','The den never closes in Seoul!','K-pop panda, reporting in!','I look GOOD in shades.']};
+  if(statusForStop&&stopById('seoul')&&statusForStop('seoul')!=='ready'&&today()>=dateObj('2026-10-27'))return {acc:'🕶️',lines:['SEOUL BABY! 😎','The den never closes in Seoul!','K-pop monkey, reporting in!','I look GOOD in shades.']};
   if(h>=11&&h<=16)return {acc:'🍜',lines:['It\u2019s ramen o\u2019clock. 🍜','Anyone got a melon soda? 🥤','Konbini run? I\u2019m in.','I\u2019m basically a cushion right now.']};
   return null;
 }
