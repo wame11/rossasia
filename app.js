@@ -5,6 +5,7 @@ const ACCOUNTS={
   Lily:{role:'player',hash:'fe2592b42a727e977f055947385b709cc82b16b9a87f88c6abf3900d65d0cdc3'},
   Hannah:{role:'player',hash:'9975baa75e1603273cbd3d94746a0442e22d5dc0268750dd45229f343f53fe19'},
   Ethan:{role:'player',hash:'08f61ac43fc9a9d5bd3d41f6dc2976ad27d8d5d8422e2ac87c12b98364a331fe'},
+  Mark:{role:'player',hash:'9975baa75e1603273cbd3d94746a0442e22d5dc0268750dd45229f343f53fe19'},
   admin:{role:'admin',hash:'7f3d56bb44da1a1f5239ac9db712488db90f135d999290ed9104eba8691096e2'}
 };
 /* Paste your Google Apps Script /exec URL into sheetEndpoint to sync across devices. */
@@ -29,7 +30,7 @@ function wipeLocal(keepStamp){
 }
 /* ?reset=1 in the address bar wipes this device instantly */
 try{if(new URLSearchParams(location.search).get('reset')==='1'){wipeLocal();location.replace(location.pathname);}}catch(_){/**/}
-const AVATARS={Jacob:'🐉',Lily:'🌸',Hannah:'🦊',Ethan:'🚄',admin:'👑',test:'🧪'};
+const AVATARS={Jacob:'🐉',Lily:'🌸',Hannah:'🦊',Ethan:'🚄',Mark:'🐼',admin:'👑',test:'🧪'};
 
 let session=null,progress=freshProgress(),shared=freshShared(),currentLevel=null,countdownTimer=null,activeGame=null;
 const $=s=>document.querySelector(s);
@@ -427,13 +428,13 @@ function reportScore(root,stop,gi,score,won){
   st.complete=Object.values(st.perGame).some(g=>g.won);
   progress.game[stop.id]=st;
   const gk=stop.id+'-'+gi;
-  if(won&&!progress.chipGrant[gk]){progress.chipGrant[gk]=true;progress.chips=(progress.chips||0)+10;grantEarn(10);updateChips();syncPlayer();sfx('coin');bearShout('+10 chips! Come gamble them with me! 🐱🪙');setTimeout(maybeMysteryBox,1200);}
+  if(won&&!progress.chipGrant[gk]){progress.chipGrant[gk]=true;progress.chips=(progress.chips||0)+10;grantEarn(10);updateChips();syncPlayer();sfx('coin');bearShout('+10 chips! Come gamble them with me! 🐼🪙');setTimeout(maybeMysteryBox,1200);}
   saveProgress();refreshTaskTags(root,stop);
   const badge=root.querySelector('.gm-tab[data-gi="'+gi+'"] .gm-best');
   if(badge)badge.textContent=st.perGame[gi].best+(st.perGame[gi].won?' 🏆':'');
   if(won)burst(root.querySelector('.arcade'));
 }
-const TARGETS={runner:400,catch:15,whack:15,dodge:30,timing:5,tap:40,memory:2,simon:6,hl:5,reels:20,wheel:20,dice21:20};
+const TARGETS={runner:400,catch:15,whack:15,dodge:30,timing:5,tap:40,memory:2,simon:6,hl:5,reels:20,wheel:20,dice21:20,taiko:20,stack:8,snake:8,flappy:6,sort:15,slice:20};
 const INSTR={runner:'Tap anywhere to start, tap to JUMP over obstacles. One crash ends the run — it gets faster!',
 catch:'Tap to start, then SLIDE your finger to move the catcher. Catch the good stuff, avoid the bad. 3 lives!',
 whack:'Tap any square to start. Tap the targets FAST when they pop up — don\u2019t tap decoys, don\u2019t let them escape. 3 lives!',
@@ -445,8 +446,14 @@ simon:'Watch the pads light up, then repeat the sequence by tapping them in orde
 hl:'Guess if the next card is HIGHER or LOWER (2 low, Ace high). Build your streak — one wrong guess ends it!',
 reels:'Tap SPIN (costs 1 chip). Match 2 symbols = +4, all 3 = JACKPOT +20. Run out = new stack.',
 wheel:'Bet a chip on a colour: gold pays \u00d72 (likely), purple \u00d73, red \u00d75 (rare). Reach the goal!',
-dice21:'Roll dice toward 21 without going bust, or STICK to beat the bank\u2019s roll. Hit exactly 21 = +8 chips!'};
-function targetText(t,v){return {runner:'Score '+v,catch:'Catch '+v,whack:'Bop '+v,dodge:'Survive '+v+'s',timing:v+' perfect snaps',tap:v+' taps in 30s',memory:'Clear '+v+' rounds',simon:'Sequence of '+v,hl:'Streak of '+v,reels:'Reach '+v+' chips',wheel:'Reach '+v+' chips',dice21:'Reach '+v+' chips'}[t];}
+dice21:'Roll dice toward 21 without going bust, or STICK to beat the bank\u2019s roll. Hit exactly 21 = +8 chips!',
+taiko:'Notes fall in two lanes. Tap the LEFT or RIGHT side of the screen exactly as a note crosses the neon line. 3 lives!',
+stack:'Tap to start, then tap to drop each block onto the one below. Whatever hangs over the edge gets sliced off \u2014 keep it lined up!',
+snake:'Swipe on the board or use the arrows to steer. Eat to grow, but do not hit the wall or your own tail!',
+flappy:'Tap to start, then keep tapping to flap. Fly through the gap in each gate \u2014 touch anything and you are done.',
+sort:'An item appears \u2014 decide FAST: safe to eat, or not? Wrong answer or running out of time costs a life. 3 lives!',
+slice:'Tap to start, then swipe your finger through the food to slice it. Slice a bomb and you lose a life. 3 lives!'};
+function targetText(t,v){return {taiko:v+' clean hits',stack:'Stack '+v,snake:'Eat '+v,flappy:'Pass '+v+' gates',sort:'Sort '+v,slice:'Slice '+v,runner:'Score '+v,catch:'Catch '+v,whack:'Bop '+v,dodge:'Survive '+v+'s',timing:v+' perfect snaps',tap:v+' taps in 30s',memory:'Clear '+v+' rounds',simon:'Sequence of '+v,hl:'Streak of '+v,reels:'Reach '+v+' chips',wheel:'Reach '+v+' chips',dice21:'Reach '+v+' chips'}[t];}
 function renderArcade(root,stop){
   const host=root.querySelector('.arcade');
   const games=gamesFor(stop);const st=gameState(stop.id);
@@ -454,7 +461,7 @@ function renderArcade(root,stop){
     '<div class="gm-tabs">'+games.map((g,i)=>'<button type="button" class="gm-tab" data-gi="'+i+'"><span class="gm-name">'+escapeHtml(g.n)+'</span><span class="gm-best">'+((st.perGame[i]?.best||0)+(st.perGame[i]?.won?' 🏆':''))+'</span></button>').join('')+'</div>'+
     '<div class="arcade-goal"></div><div class="arcade-stage"></div>';
   const stage=host.querySelector('.arcade-stage'),goal=host.querySelector('.arcade-goal');
-  const engines={runner:egRunner,catch:egCatch,whack:egWhack,dodge:egDodge,timing:egTiming,tap:egTap,memory:egMemory,simon:egSimon,hl:egHL,reels:egReels,wheel:egWheel,dice21:egDice21};
+  const engines={runner:egRunner,catch:egCatch,whack:egWhack,dodge:egDodge,timing:egTiming,tap:egTap,memory:egMemory,simon:egSimon,hl:egHL,reels:egReels,wheel:egWheel,dice21:egDice21,taiko:egTaiko,stack:egStack,snake:egSnake,flappy:egFlappy,sort:egSort,slice:egSlice};
   function open(i){
     stopGame();host.querySelectorAll('.gm-tab').forEach(b=>b.classList.toggle('active',+b.dataset.gi===i));
     const g=games[i];const target=g.o.target||TARGETS[g.t];
@@ -769,6 +776,277 @@ function egDice21(stage,g,report){
   update('1 chip per round · hit 21 for +8 · reach '+g.target+'!');
   return {stop(){inRound=false;}};
 }
+/* ============================================================
+   NEW ENGINES 13–18 — added so no two stops feel the same
+   ============================================================ */
+
+/* 13 TAIKO — rhythm drums: tap the side the note lands on */
+function egTaiko(stage,g,report){
+  const hud=hudLine(stage),c=makeCanvas(stage),ctx=c.getContext('2d'),cache={};
+  const L=g.l||'🥁',R=g.r||'🎏',LINE=246;
+  let raf,run=false,notes=[],hits=0,lives=3,t=0,speed=2.8,won=false;
+  function frame(){
+    t++;
+    if(t%Math.max(30,72-Math.floor(speed*7))===0)notes.push({lane:Math.random()<0.5?0:1,y:-24});
+    notes.forEach(n=>n.y+=speed);
+    notes=notes.filter(n=>{if(n.y>LINE+44){lives--;return false;}return true;});
+    if(t%420===0)speed+=0.3;
+    ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);
+    ctx.fillStyle='rgba(255,255,255,.05)';ctx.fillRect(0,0,300,300);
+    ctx.strokeStyle='#00e5ff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,LINE);ctx.lineTo(600,LINE);ctx.stroke();
+    ctx.fillStyle='#8fc6f6';ctx.font='bold 15px sans-serif';ctx.textAlign='center';
+    ctx.fillText('TAP THIS SIDE',150,286);ctx.fillText('TAP THIS SIDE',450,286);
+    notes.forEach(n=>drawIcon(ctx,n.lane?R:L,n.lane?450:150,n.y,44,cache));
+    if(!won&&hits>=g.target){won=true;report(hits,true);}
+    hud.innerHTML='Hits <b>'+hits+'</b> · '+hearts(lives)+(won?' · 🏆':'');
+    if(lives<=0)return over();
+    raf=requestAnimationFrame(frame);
+  }
+  function over(){run=false;cancelAnimationFrame(raf);report(hits,won);
+    ctx.fillStyle='rgba(5,11,24,.85)';ctx.fillRect(0,0,600,300);ctx.fillStyle='#00e5ff';ctx.textAlign='center';
+    ctx.font='bold 30px sans-serif';ctx.fillText('🥁 '+hits+' hits!',300,140);ctx.font='bold 17px sans-serif';ctx.fillText('Tap to play again',300,175);}
+  c.addEventListener('pointerdown',e=>{e.preventDefault();
+    if(!run){notes=[];hits=0;lives=3;t=0;speed=2.8;won=false;run=true;frame();return;}
+    const r=c.getBoundingClientRect(),x=(e.clientX-r.left)*600/r.width,lane=x<300?0:1;
+    let best=-1,bd=1e9;
+    notes.forEach((n,i)=>{if(n.lane!==lane)return;const d=Math.abs(n.y-LINE);if(d<bd){bd=d;best=i;}});
+    if(best>=0&&bd<48){hits++;notes.splice(best,1);sfx('coin');}else lives--;
+  });
+  ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);ctx.fillStyle='#cfeeff';ctx.font='bold 22px sans-serif';ctx.textAlign='center';
+  ctx.fillText('Tap to start — hit the drums in time',300,150);
+  hud.innerHTML='Tap the side a note is on, as it crosses the line.';
+  return {stop(){run=false;cancelAnimationFrame(raf);}};
+}
+
+/* 14 STACK — tower stacker, the overhang gets sliced off */
+function egStack(stage,g,report){
+  const hud=hudLine(stage),c=makeCanvas(stage),ctx=c.getContext('2d');
+  const H=26,VIS=8;
+  let raf,run=false,stack=[],cur={x:0,w:200},dir=1,speed=3.4,score=0,won=false;
+  function reset(){stack=[{x:200,w:200}];score=0;speed=3.4;won=false;newBlock();}
+  function newBlock(){cur={x:0,w:stack[stack.length-1].w};dir=1;}
+  function draw(){
+    ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);
+    const base=292,off=Math.max(0,stack.length-VIS);
+    stack.forEach((b,i)=>{if(i<off)return;const y=base-(i-off+1)*H;
+      ctx.fillStyle=i%2?'#1f6fe0':'#00e5ff';ctx.fillRect(b.x,y,b.w,H-3);
+      ctx.fillStyle='rgba(255,255,255,.18)';ctx.fillRect(b.x,y,b.w,4);});
+    const y=base-(stack.length-off+1)*H;
+    ctx.fillStyle='#ff3d8b';ctx.fillRect(cur.x,Math.max(y,4),cur.w,H-3);
+    hud.innerHTML='Stacked <b>'+score+'</b> · block '+Math.round(cur.w)+'px'+(won?' · 🏆':'');
+  }
+  function frame(){cur.x+=dir*speed;
+    if(cur.x<=0){cur.x=0;dir=1;}
+    if(cur.x+cur.w>=600){cur.x=600-cur.w;dir=-1;}
+    draw();raf=requestAnimationFrame(frame);}
+  function drop(){
+    const top=stack[stack.length-1];
+    const left=Math.max(cur.x,top.x),right=Math.min(cur.x+cur.w,top.x+top.w),w=right-left;
+    if(w<=4){run=false;cancelAnimationFrame(raf);report(score,won);
+      ctx.fillStyle='rgba(5,11,24,.85)';ctx.fillRect(0,0,600,300);ctx.fillStyle='#00e5ff';ctx.textAlign='center';
+      ctx.font='bold 30px sans-serif';ctx.fillText('💥 Toppled on '+score,300,140);
+      ctx.font='bold 17px sans-serif';ctx.fillText('Tap to rebuild',300,175);return;}
+    stack.push({x:left,w:w});score++;speed=Math.min(9,speed+0.25);sfx('click');
+    if(!won&&score>=g.target){won=true;report(score,true);}
+    newBlock();
+  }
+  c.addEventListener('pointerdown',e=>{e.preventDefault();if(!run){reset();run=true;frame();}else drop();});
+  ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);ctx.fillStyle='#cfeeff';ctx.font='bold 22px sans-serif';ctx.textAlign='center';
+  ctx.fillText('Tap to start — tap again to drop',300,150);
+  hud.innerHTML='Drop each block on the one below. Miss and it gets narrower!';
+  return {stop(){run=false;cancelAnimationFrame(raf);}};
+}
+
+/* 15 SNAKE — classic, with a d-pad for phones */
+function egSnake(stage,g,report){
+  stage.innerHTML='<div class="game-hud"></div>';
+  const hud=stage.querySelector('.game-hud');
+  const c=makeCanvas(stage,300),ctx=c.getContext('2d'),cache={};
+  const pad=document.createElement('div');pad.className='dpad';
+  pad.innerHTML='<button type="button" data-d="u">⬆️</button><div><button type="button" data-d="l">⬅️</button>'+
+    '<button type="button" data-d="d">⬇️</button><button type="button" data-d="r">➡️</button></div>';
+  stage.appendChild(pad);
+  const CELL=30,COLS=20,ROWS=10,FOOD=g.food||'🍙';
+  let raf,run=false,snake=[],dir={x:1,y:0},next={x:1,y:0},food={x:12,y:5},score=0,won=false,tick=0,speed=9;
+  function reset(){snake=[{x:3,y:5},{x:2,y:5},{x:1,y:5}];dir={x:1,y:0};next={x:1,y:0};score=0;speed=9;won=false;place();}
+  function place(){do{food={x:Math.floor(Math.random()*COLS),y:Math.floor(Math.random()*ROWS)};}
+    while(snake.some(s=>s.x===food.x&&s.y===food.y));}
+  function turn(d){
+    const m={u:{x:0,y:-1},d:{x:0,y:1},l:{x:-1,y:0},r:{x:1,y:0}}[d];
+    if(!m)return; if(m.x===-dir.x&&m.y===-dir.y)return; next=m;
+  }
+  function step(){
+    dir=next;
+    const h={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+    if(h.x<0||h.y<0||h.x>=COLS||h.y>=ROWS||snake.some(s=>s.x===h.x&&s.y===h.y))return over();
+    snake.unshift(h);
+    if(h.x===food.x&&h.y===food.y){score++;place();sfx('coin');speed=Math.max(4,speed-0.28);
+      if(!won&&score>=g.target){won=true;report(score,true);}}
+    else snake.pop();
+  }
+  function draw(){
+    ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);
+    ctx.strokeStyle='rgba(0,229,255,.08)';ctx.lineWidth=1;
+    for(let i=1;i<COLS;i++){ctx.beginPath();ctx.moveTo(i*CELL,0);ctx.lineTo(i*CELL,300);ctx.stroke();}
+    for(let j=1;j<ROWS;j++){ctx.beginPath();ctx.moveTo(0,j*CELL);ctx.lineTo(600,j*CELL);ctx.stroke();}
+    drawIcon(ctx,FOOD,food.x*CELL+CELL/2,food.y*CELL+CELL/2,26,cache);
+    snake.forEach((sg,i)=>{ctx.fillStyle=i?'#1f6fe0':'#00e5ff';
+      ctx.fillRect(sg.x*CELL+3,sg.y*CELL+3,CELL-6,CELL-6);});
+    hud.innerHTML='Eaten <b>'+score+'</b>'+(won?' · 🏆':'')+' · length '+snake.length;
+  }
+  function frame(){tick++;if(tick%Math.round(speed)===0)step();draw();if(run)raf=requestAnimationFrame(frame);}
+  function over(){run=false;cancelAnimationFrame(raf);report(score,won);
+    ctx.fillStyle='rgba(5,11,24,.85)';ctx.fillRect(0,0,600,300);ctx.fillStyle='#00e5ff';ctx.textAlign='center';
+    ctx.font='bold 30px sans-serif';ctx.fillText('💥 Ate '+score,300,140);
+    ctx.font='bold 17px sans-serif';ctx.fillText('Tap the board to play again',300,175);}
+  pad.querySelectorAll('button').forEach(b=>b.addEventListener('pointerdown',e=>{
+    e.preventDefault();if(!run){reset();run=true;frame();}turn(b.dataset.d);}));
+  let sx=0,sy=0;
+  c.addEventListener('pointerdown',e=>{e.preventDefault();sx=e.clientX;sy=e.clientY;
+    if(!run){reset();run=true;frame();}});
+  c.addEventListener('pointerup',e=>{const dx=e.clientX-sx,dy=e.clientY-sy;
+    if(Math.abs(dx)<14&&Math.abs(dy)<14)return;
+    turn(Math.abs(dx)>Math.abs(dy)?(dx>0?'r':'l'):(dy>0?'d':'u'));});
+  c.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+  ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);ctx.fillStyle='#cfeeff';ctx.font='bold 22px sans-serif';ctx.textAlign='center';
+  ctx.fillText('Tap to start — swipe or use the arrows',300,150);
+  hud.innerHTML='Eat, grow, do not bite yourself.';
+  return {stop(){run=false;cancelAnimationFrame(raf);}};
+}
+
+/* 16 FLAPPY — tap to flap through the torii gates */
+function egFlappy(stage,g,report){
+  const hud=hudLine(stage),c=makeCanvas(stage),ctx=c.getContext('2d'),cache={};
+  const BIRD=g.p||'🕊️';
+  let raf,run=false,y=140,vy=0,gates=[],score=0,won=false,t=0,speed=2.9;
+  function reset(){y=140;vy=0;gates=[];score=0;t=0;speed=2.9;won=false;}
+  function frame(){
+    t++;vy+=0.52;y+=vy;
+    if(t%Math.max(72,120-Math.floor(speed*10))===0)gates.push({x:620,gap:70+Math.random()*120,passed:false});
+    gates.forEach(gt=>gt.x-=speed);
+    gates=gates.filter(gt=>gt.x>-70);
+    if(t%480===0)speed+=0.2;
+    ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);
+    gates.forEach(gt=>{
+      ctx.fillStyle='#d7263d';
+      ctx.fillRect(gt.x,0,54,gt.gap-46);ctx.fillRect(gt.x,gt.gap+46,54,300-(gt.gap+46));
+      ctx.fillStyle='#0a1428';ctx.fillRect(gt.x-8,gt.gap-56,70,10);ctx.fillRect(gt.x-8,gt.gap+46,70,10);
+      if(!gt.passed&&gt.x+54<110){gt.passed=true;score++;sfx('coin');
+        if(!won&&score>=g.target){won=true;report(score,true);}}
+      if(gt.x<134&&gt.x+54>86&&(y<gt.gap-46||y>gt.gap+46))return over();
+    });
+    if(y<0||y>296)return over();
+    drawIcon(ctx,BIRD,110,y,38,cache);
+    hud.innerHTML='Gates <b>'+score+'</b>'+(won?' · 🏆':'');
+    if(run)raf=requestAnimationFrame(frame);
+  }
+  function over(){if(!run)return;run=false;cancelAnimationFrame(raf);report(score,won);
+    ctx.fillStyle='rgba(5,11,24,.85)';ctx.fillRect(0,0,600,300);ctx.fillStyle='#00e5ff';ctx.textAlign='center';
+    ctx.font='bold 30px sans-serif';ctx.fillText('💥 '+score+' gates',300,140);
+    ctx.font='bold 17px sans-serif';ctx.fillText('Tap to fly again',300,175);}
+  c.addEventListener('pointerdown',e=>{e.preventDefault();
+    if(!run){reset();run=true;frame();}vy=-7.4;});
+  ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);ctx.fillStyle='#cfeeff';ctx.font='bold 22px sans-serif';ctx.textAlign='center';
+  ctx.fillText('Tap to start — keep tapping to fly',300,150);
+  hud.innerHTML='Fly through the gates. Do not touch anything.';
+  return {stop(){run=false;cancelAnimationFrame(raf);}};
+}
+
+/* 17 SORT — two bins, is it safe to eat or not? */
+function egSort(stage,g,report){
+  stage.innerHTML='<div class="game-hud"></div><div class="sort-arena"><div class="sort-bar"><i></i></div>'+
+    '<div class="sort-item"></div></div><div class="sort-btns">'+
+    '<button type="button" class="btn btn-primary sort-go" data-s="1">✅ '+(g.okLabel||'SAFE')+'</button>'+
+    '<button type="button" class="btn btn-danger sort-go" data-s="0">🚫 '+(g.noLabel||'NOPE')+'</button></div>';
+  const hud=stage.querySelector('.game-hud'),item=stage.querySelector('.sort-item'),bar=stage.querySelector('.sort-bar i');
+  const good=g.good||['🍙','🍣'],bad=g.bad||['🦐','🦀'];
+  let score=0,lives=3,running=false,won=false,cur=null,left=0,timer=null,limit=2600;
+  function next(){
+    const isGood=Math.random()<0.55;
+    const arr=isGood?good:bad;
+    cur={e:arr[Math.floor(Math.random()*arr.length)],ok:isGood};
+    item.textContent=cur.e;item.classList.remove('pop');void item.offsetWidth;item.classList.add('pop');
+    left=limit;
+  }
+  function update(){hud.innerHTML='Sorted <b>'+score+'</b> · '+hearts(lives)+(won?' · 🏆':'');}
+  function tick(){
+    left-=60;bar.style.width=Math.max(0,left/limit*100)+'%';
+    if(left<=0){lives--;update();if(lives<=0)return finish();next();}
+  }
+  function choose(sayOk){
+    if(!running){start();return;}
+    if(!cur)return;
+    if(sayOk===cur.ok){score++;sfx('coin');limit=Math.max(900,limit-55);
+      if(!won&&score>=g.target){won=true;report(score,true);}}
+    else{lives--;sfx('lose');}
+    update();if(lives<=0)return finish();next();
+  }
+  function start(){running=true;score=0;lives=3;limit=2600;won=false;update();next();
+    clearInterval(timer);timer=setInterval(tick,60);}
+  function finish(){running=false;clearInterval(timer);report(score,won);
+    item.textContent='💥';hud.innerHTML='Out of lives — <b>'+score+'</b> sorted. Tap a button to retry.';}
+  stage.querySelectorAll('.sort-go').forEach(b=>b.addEventListener('click',()=>choose(b.dataset.s==='1')));
+  item.textContent='❓';hud.innerHTML='Tap a button to start. Safe to eat, or not?';
+  return {stop(){running=false;clearInterval(timer);}};
+}
+
+/* 18 SLICE — swipe through the food, miss the bombs */
+function egSlice(stage,g,report){
+  const hud=hudLine(stage),c=makeCanvas(stage),ctx=c.getContext('2d'),cache={};
+  const good=g.good||['🍣','🍙','🍡'],bomb=g.bomb||'💣';
+  let raf,run=false,items=[],trail=[],down=false,score=0,lives=3,t=0,won=false,rate=52;
+  function reset(){items=[];trail=[];score=0;lives=3;t=0;rate=52;won=false;}
+  function spawn(){
+    const isBomb=Math.random()<0.22;
+    items.push({x:60+Math.random()*480,y:320,vx:(Math.random()-0.5)*3.2,vy:-(9.5+Math.random()*2.6),
+      e:isBomb?bomb:good[Math.floor(Math.random()*good.length)],bomb:isBomb,dead:false});
+  }
+  function frame(){
+    t++;if(t%Math.max(26,rate)===0){spawn();if(t%600===0)rate=Math.max(26,rate-4);}
+    items.forEach(i=>{i.x+=i.vx;i.y+=i.vy;i.vy+=0.22;});
+    items=items.filter(i=>{
+      if(i.y>340&&i.vy>0){if(!i.bomb&&!i.dead)lives--;return false;}
+      return true;});
+    ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);
+    items.forEach(i=>{if(!i.dead)drawIcon(ctx,i.e,i.x,i.y,40,cache);});
+    if(trail.length>1){ctx.strokeStyle='#00e5ff';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();
+      ctx.moveTo(trail[0].x,trail[0].y);trail.forEach(pt=>ctx.lineTo(pt.x,pt.y));ctx.stroke();}
+    if(trail.length>7)trail.shift();
+    if(!won&&score>=g.target){won=true;report(score,true);}
+    hud.innerHTML='Sliced <b>'+score+'</b> · '+hearts(lives)+(won?' · 🏆':'');
+    if(lives<=0)return over();
+    raf=requestAnimationFrame(frame);
+  }
+  function over(){run=false;cancelAnimationFrame(raf);report(score,won);
+    ctx.fillStyle='rgba(5,11,24,.85)';ctx.fillRect(0,0,600,300);ctx.fillStyle='#00e5ff';ctx.textAlign='center';
+    ctx.font='bold 30px sans-serif';ctx.fillText('🔪 '+score+' sliced',300,140);
+    ctx.font='bold 17px sans-serif';ctx.fillText('Tap to play again',300,175);}
+  function at(e){const r=c.getBoundingClientRect();
+    return {x:(e.clientX-r.left)*600/r.width,y:(e.clientY-r.top)*300/r.height};}
+  function cut(p){
+    items.forEach(i=>{
+      if(i.dead)return;
+      if(Math.hypot(i.x-p.x,i.y-p.y)<30){
+        i.dead=true;
+        if(i.bomb){lives--;sfx('lose');}
+        else{score++;sfx('coin');}
+      }});
+  }
+  c.addEventListener('pointerdown',e=>{e.preventDefault();
+    try{c.setPointerCapture(e.pointerId);}catch(_){/**/}
+    if(!run){reset();run=true;frame();return;}
+    down=true;trail=[at(e)];cut(at(e));});
+  c.addEventListener('pointermove',e=>{if(!down||!run)return;e.preventDefault();
+    const p=at(e);trail.push(p);cut(p);});
+  c.addEventListener('pointerup',()=>{down=false;trail=[];});
+  c.addEventListener('pointerleave',()=>{down=false;trail=[];});
+  c.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+  ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);ctx.fillStyle='#cfeeff';ctx.font='bold 22px sans-serif';ctx.textAlign='center';
+  ctx.fillText('Tap to start — then swipe to slice',300,150);
+  hud.innerHTML='Slice the food. Do not slice the bombs.';
+  return {stop(){run=false;cancelAnimationFrame(raf);}};
+}
+
 function burstNear(host){burst(host.closest('.task-block')||host);}
 /* confetti burst */
 function burst(host){
@@ -1208,32 +1486,63 @@ function bearCelebrate(msg){
 }
 function bearShout(msg){const b=document.getElementById('bearBubble');if(!b)return;b.textContent=msg;b.classList.add('show');clearTimeout(bearShout._t);bearShout._t=setTimeout(()=>b.classList.remove('show'),4200);}
 /* talking lucky-cat mascot */
-const BEAR_LINES=['Let\u2019s ride the Shinkansen! \ud83d\ude84','Beat my high score\u2026 if you can!','Snap those photos! \ud83d\udcf8','Tokyo, Kyoto, Seoul \u2014 let\u2019s GO!','I smell ramen\u2026 \ud83c\udf5c','Bow at the torii gate, it\u2019s polite!','Tap the glowing stop!','Sugoi! Nice work, team!','Are we there yet? \ud83d\ude02','Mind the bullet train doors!','I bet Lily wins this one\u2026','Jacob, is that your best score?!','Cats LOVE scavenger hunts.','Fushimi Inari has THOUSANDS of gates.','Neon lights, here I come! \ud83c\udfd9\ufe0f','Don\u2019t feed me\u2026 feed the leaderboard!','5 games per stop \u2014 beat them ALL!','Hannah\u2019s coming for first place!','Ethan built all this. Show off. \ud83d\ude0f','Photo of EVERY hunt item, no cheating!','My cousin is a shrine fox.','Fastest paws in Tokyo. \ud83d\udc3e','Bonus points for extra wins!','Kiyomizu-dera \u2014 no nails, no joke!','I call window seat! \ud83d\ude85','Winner gets\u2026 my respect. And points.','Simon says\u2026 tap faster!','Jackpot!! Oh wait, wrong game.','Stretch those tapping fingers!','11 hours on a plane? Wake me in Seoul.','TAP ME for my Neon Den! \ud83c\udfb0','Feeling lucky? Tap me and find out!','My den. Your chips. One tap. \ud83d\udc31','Double or nothing? Tap the cat!','I never lose at dice. Prove me wrong.','The wheel loves gold... usually.','Scared to gamble? Chicken katsu! \ud83c\udf57','Win 10 chips every arcade game you beat!','House always wins. I AM the house.','All-in? You maniac. I respect it.','Psst\u2026 tap me. First flip\u2019s free-ish.','Chips buy glory, not gachapon. Sorry.','A wise cat once said: one more spin.','What happens in the den stays in the den.'];
+const BEAR_LINES=['Tap the glowing stop!','Snap those photos! \ud83d\udcf8','Beat my high score\u2026 if you can!','Win a game, win 10 chips. \ud83e\ude99','TAP ME for the Neon Den. \ud83c\udfb0','Photo of EVERY hunt item \u2014 no cheating!','Bonus points for extra wins!','I am the house. The house wins.','Feeling lucky? Tap me.','Most chips at the end wins REAL money. \ud83d\udcb7','Sugoi! Nice work, team!','Bamboo tastes better after a win.'];
 let bearTimer=null,bearIdx=-1;
 function bearSay(){const b=document.getElementById('bearBubble');if(!b)return;let i;do{i=Math.floor(Math.random()*BEAR_LINES.length);}while(i===bearIdx);bearIdx=i;b.textContent=BEAR_LINES[i];b.classList.add('show');setTimeout(()=>b.classList.remove('show'),4600);}
 function wireBear(){const m=document.getElementById('cornerMascot');
   if(m&&!m.dataset.wired){m.dataset.wired='1';m.style.pointerEvents='auto';m.style.cursor='pointer';
     m.addEventListener('click',e=>{e.preventDefault();sfx('click');openDen();});
     if(!document.getElementById('bearAcc')){const a=document.createElement('span');a.id='bearAcc';a.className='bear-acc';m.appendChild(a);}}}
-function startBear(){clearInterval(bearTimer);setTimeout(bearSay,800);bearTimer=setInterval(bearSay,5000);wireBear();}
+/* Kimbap only pipes up occasionally — event messages (wins, chips, warnings) still fire instantly */
+function startBear(){clearInterval(bearTimer);bearTimer=setInterval(bearSay,75000);wireBear();}
 /* ===== MOCHI'S NEON DEN — gamble your chips ===== */
 let denWager=5;
 function openDen(){
-  if(isAdmin()){bearShout('Admins don\u2019t gamble. House rules!');return;}
+  if(isAdmin()){bearShout('Admins don’t gamble. House rules!');return;}
   if(document.querySelector('.den'))return;
   const o=document.createElement('div');o.className='den';
   o.innerHTML='<div class="den-card">'+
-    '<button type="button" class="den-close">\u2715</button>'+
-    '<div class="den-head">\ud83d\udc31 MOCHI\u2019S NEON DEN</div>'+
-    '<div class="den-balance">\ud83e\ude99 Chips: <b>'+(progress.chips||0)+'</b></div>'+
+    '<button type="button" class="den-close">✕</button>'+
+    '<div class="den-head">🐼 KIMBAP’S NEON DEN</div>'+
+    '<div class="den-balance">🪙 Chips: <b>'+(progress.chips||0)+'</b></div>'+
     '<div class="den-wager">Bet: '+[5,10,25].map(v=>'<button type="button" class="den-bet" data-v="'+v+'">'+v+'</button>').join('')+'<button type="button" class="den-bet" data-v="all">ALL IN</button></div>'+
     '<div class="den-games">'+
-      '<div class="den-game"><h4>\ud83e\ude99 Coin Flip \u00d72</h4><div class="den-coin">?</div><div class="den-row"><button type="button" class="btn btn-primary den-flip" data-p="H">Heads</button><button type="button" class="btn btn-secondary den-flip" data-p="T">Tails</button></div></div>'+
-      '<div class="den-game"><h4>\ud83c\udfb2 Beat the Cat \u00d72</h4><div class="den-dice"><span class="d-you">\u2680</span><span class="d-vs">vs</span><span class="d-bear">\u2680</span></div><div class="den-row"><button type="button" class="btn btn-primary den-roll">Roll!</button></div></div>'+
-      '<div class="den-game"><h4>\ud83c\udfa1 Lucky Wheel</h4><div class="den-wheel">\ud83c\udfa1</div><div class="den-row"><button type="button" class="btn btn-primary den-spin" data-c="gold">\ud83d\udfe1 \u00d72</button><button type="button" class="btn btn-secondary den-spin" data-c="purple">\ud83d\udfe3 \u00d73</button><button type="button" class="btn btn-danger den-spin" data-c="red">\ud83d\udd34 \u00d75</button></div></div>'+
+
+      '<div class="den-game"><h4>🪙 Coin Flip ×2</h4>'+
+        '<div class="den-coin">?</div>'+
+        '<div class="den-row"><button type="button" class="btn btn-primary den-flip" data-p="H">Heads</button>'+
+        '<button type="button" class="btn btn-secondary den-flip" data-p="T">Tails</button></div>'+
+        '<p class="den-mini">Call it. Right = double your bet.</p></div>'+
+
+      '<div class="den-game"><h4>🐉 Dragon Tower</h4>'+
+        '<div class="tower"></div>'+
+        '<div class="den-row"><button type="button" class="btn btn-primary tower-go">Start climb</button>'+
+        '<button type="button" class="btn btn-secondary tower-out" disabled>Cash out</button></div>'+
+        '<p class="den-mini">Three doors a floor, one is a dud. Climb for ×1.6 each time — or take the money and run.</p></div>'+
+
+      '<div class="den-game"><h4>🀄 Mahjong Pairs ×3</h4>'+
+        '<div class="mj-grid"></div>'+
+        '<div class="den-row"><button type="button" class="btn btn-primary mj-go">Deal tiles</button></div>'+
+        '<p class="den-mini">Six tiles, three picks. Find the matching pair.</p></div>'+
+
+      '<div class="den-game"><h4>🥢 Chopstick Draw ×4</h4>'+
+        '<div class="sticks"></div>'+
+        '<div class="den-row"><button type="button" class="btn btn-primary stick-go">New draw</button></div>'+
+        '<p class="den-mini">One of the four is long. Pick it and win four times your bet.</p></div>'+
+
+      '<div class="den-game"><h4>🎁 Gachapon</h4>'+
+        '<div class="gacha">🎁</div>'+
+        '<div class="den-row"><button type="button" class="btn btn-primary gacha-go">Turn the handle</button></div>'+
+        '<p class="den-mini">One capsule, one prize. Usually rubbish. Sometimes ×50.</p></div>'+
+
+      '<div class="den-game"><h4>🧧 Lucky Envelope</h4>'+
+        '<div class="env-row"></div>'+
+        '<div class="den-row"><button type="button" class="btn btn-primary env-go">New envelopes</button></div>'+
+        '<p class="den-mini">Six envelopes. Two are empty, one pays ×10.</p></div>'+
+
     '</div>'+
-    '<p class="den-msg">Pick a bet, then play. Beat every arcade game for +10 chips each!</p>'+
-    '<p class="den-instr">📖 HOW IT WORKS: choose your bet at the top, then tap a game. Win = your bet multiplied. Lose = bet gone. Ties give your bet back. MOST CHIPS AT THE END OF THE TRIP = EXTRA £15! (30-second shop dash — grab anything up to £15!)</p>'+
+    '<p class="den-msg">Pick a bet at the top, then choose a game.</p>'+
+    '<p class="den-instr">📖 HOW IT WORKS: set your bet, then play. Win = your bet multiplied. Lose = bet gone. MOST CHIPS AT THE END OF THE TRIP = EXTRA £15! (30-second shop dash — grab anything up to £15!)</p>'+
   '</div>';
   document.body.appendChild(o);
   const msg=o.querySelector('.den-msg');
@@ -1243,36 +1552,142 @@ function openDen(){
   function stake(){const c=progress.chips||0;const w=denWager==='all'?c:Math.min(Number(denWager),c);
     if(w<=0){msg.textContent='No chips! Beat an arcade game (+10) and come back.';return 0;}
     return w;}
+  function pay(delta){progress.chips=Math.max(0,(progress.chips||0)+delta);saveProgress();updateChips();syncPlayer();}
   function settle(win,w,mult,label){
-    progress.chips=(progress.chips||0)-w+(win?w*mult:0);saveProgress();updateChips();syncPlayer();
-    msg.textContent=win?('\ud83c\udf89 '+label+' You win '+(w*mult-w)+' chips!'):('\ud83d\udc80 '+label+' Lost '+w+' chips.');
-    burst(o.querySelector('.den-card'));if(!win)o.querySelector('.den-card').classList.add('shake'),setTimeout(()=>o.querySelector('.den-card').classList.remove('shake'),400);
-    if(win){sfx('win');bearCelebrate('NOO! My chips! 😭');}else{sfx('lose');bearShout('The house thanks you. 😏');}denReact(win);}
-  /* coin flip */
+    pay(win?(w*mult-w):-w);
+    msg.textContent=win?('🎉 '+label+' You win '+Math.round(w*mult-w)+' chips!'):('💀 '+label+' Lost '+w+' chips.');
+    burst(o.querySelector('.den-card'));
+    if(!win){const card=o.querySelector('.den-card');card.classList.add('shake');setTimeout(()=>card.classList.remove('shake'),400);}
+    if(win){sfx('win');bearCelebrate('NOO! My chips! 😭');}else{sfx('lose');bearShout('The house thanks you. 😏');}
+    denReact(win);
+  }
   let busy=false;
+
+  /* ---------- 1. COIN FLIP (unchanged favourite) ---------- */
   o.querySelectorAll('.den-flip').forEach(b=>b.addEventListener('click',()=>{
     if(busy)return;const w=stake();if(!w)return;busy=true;
     const coin=o.querySelector('.den-coin');coin.classList.add('flip');let t=0;
     const iv=setInterval(()=>{coin.textContent=Math.random()<0.5?'H':'T';if(++t>=12){clearInterval(iv);coin.classList.remove('flip');
       const res=Math.random()<0.5?'H':'T';coin.textContent=res;settle(res===b.dataset.p,w,2,'Coin says '+res+'.');busy=false;}},100);}));
-  /* dice */
-  const DIE=['\u2680','\u2681','\u2682','\u2683','\u2684','\u2685'];
-  o.querySelector('.den-roll').addEventListener('click',()=>{
+
+  /* ---------- 2. DRAGON TOWER — climb or cash out ---------- */
+  const tower=o.querySelector('.tower'),tGo=o.querySelector('.tower-go'),tOut=o.querySelector('.tower-out');
+  let tStake=0,tFloor=0,tLive=false;
+  function towerPaint(pick,bad){
+    const mult=Math.pow(1.6,tFloor);
+    tower.innerHTML='<div class="tower-mult">'+(tLive?'Floor '+tFloor+' · pot <b>'+Math.round(tStake*mult)+'</b> chips':'Not climbing')+'</div>'+
+      '<div class="tower-doors">'+[0,1,2].map(i=>'<button type="button" class="tower-door'+
+        (pick===i?(bad?' dud':' safe'):'')+'" data-i="'+i+'" '+(tLive?'':'disabled')+'>'+
+        (pick===i?(bad?'💥':'🐉'):'🚪')+'</button>').join('')+'</div>';
+    tower.querySelectorAll('.tower-door').forEach(d=>d.addEventListener('click',()=>towerPick(+d.dataset.i)));
+  }
+  function towerPick(i){
+    if(!tLive||busy)return;
+    const dud=Math.floor(Math.random()*3);
+    if(i===dud){tLive=false;towerPaint(i,true);tOut.disabled=true;tGo.textContent='Start climb';
+      msg.textContent='💥 Dud door on floor '+(tFloor+1)+'! Lost '+tStake+' chips.';
+      sfx('lose');bearShout('The dragon says thanks. 😏');denReact(false);
+      const card=o.querySelector('.den-card');card.classList.add('shake');setTimeout(()=>card.classList.remove('shake'),400);
+      return;}
+    tFloor++;towerPaint(i,false);
+    msg.textContent='⬆️ Floor '+tFloor+'! Pot is '+Math.round(tStake*Math.pow(1.6,tFloor))+' chips. Climb again or cash out?';
+    sfx('coin');
+  }
+  tGo.addEventListener('click',()=>{
+    if(tLive||busy)return;const w=stake();if(!w)return;
+    pay(-w);tStake=w;tFloor=0;tLive=true;tOut.disabled=false;tGo.textContent='Climbing…';
+    towerPaint(-1,false);msg.textContent='Climbing! Pick a door.';
+  });
+  tOut.addEventListener('click',()=>{
+    if(!tLive)return;
+    const won=Math.round(tStake*Math.pow(1.6,tFloor));
+    tLive=false;tOut.disabled=true;tGo.textContent='Start climb';
+    pay(won);towerPaint(-1,false);
+    if(tFloor>0){msg.textContent='💰 Cashed out on floor '+tFloor+' — +'+(won-tStake)+' chips!';sfx('win');burst(o.querySelector('.den-card'));bearCelebrate('Coward! A rich coward. 🐉');denReact(true);}
+    else msg.textContent='Bet returned — you did not climb.';
+  });
+  towerPaint(-1,false);
+
+  /* ---------- 3. MAHJONG PAIRS ---------- */
+  const mj=o.querySelector('.mj-grid');
+  const MJ_FACES=['🀄','🌸','🎋','🍙','🏮','🍵'];
+  let mjTiles=[],mjPicks=0,mjStake=0,mjLive=false,mjFound={};
+  function mjPaint(){
+    mj.innerHTML=mjTiles.map((f,i)=>'<button type="button" class="mj-tile'+(mjFound[i]?' up':'')+'" data-i="'+i+'" '+(mjLive?'':'disabled')+'>'+(mjFound[i]?f:'🁆')+'</button>').join('');
+    mj.querySelectorAll('.mj-tile').forEach(t=>t.addEventListener('click',()=>mjPick(+t.dataset.i)));
+  }
+  function mjPick(i){
+    if(!mjLive||mjFound[i])return;
+    mjFound[i]=true;mjPicks++;mjPaint();sfx('click');
+    const up=Object.keys(mjFound).map(k=>mjTiles[k]);
+    const pair=up.some((f,a)=>up.indexOf(f)!==a);
+    if(pair){mjLive=false;mj.querySelectorAll('.mj-tile').forEach(t=>t.disabled=true);settle(true,mjStake,3,'Matching pair in '+mjPicks+'!');return;}
+    if(mjPicks>=3){mjLive=false;mjTiles.forEach((f,k)=>mjFound[k]=true);mjPaint();mj.querySelectorAll('.mj-tile').forEach(t=>t.disabled=true);settle(false,mjStake,3,'No pair in three picks.');return;}
+    msg.textContent='Pick '+mjPicks+'/3 — no pair yet…';
+  }
+  o.querySelector('.mj-go').addEventListener('click',()=>{
+    if(busy)return;const w=stake();if(!w)return;
+    const faces=[...MJ_FACES].sort(()=>Math.random()-0.5).slice(0,3);
+    mjTiles=[faces[0],faces[0],faces[1],faces[2],faces[1],faces[2]].sort(()=>Math.random()-0.5);
+    mjStake=w;mjPicks=0;mjFound={};mjLive=true;mjPaint();
+    msg.textContent='Three picks to find a pair. Go.';
+  });
+  mjTiles=['🁆','🁆','🁆','🁆','🁆','🁆'];mjPaint();
+
+  /* ---------- 4. CHOPSTICK DRAW ---------- */
+  const sticks=o.querySelector('.sticks');
+  let stkLong=0,stkLive=false,stkStake=0;
+  function stkPaint(reveal){
+    sticks.innerHTML=[0,1,2,3].map(i=>'<button type="button" class="stick'+
+      (reveal?(i===stkLong?' long':' short'):'')+'" data-i="'+i+'" '+(stkLive?'':'disabled')+'><span></span></button>').join('');
+    sticks.querySelectorAll('.stick').forEach(b=>b.addEventListener('click',()=>{
+      if(!stkLive)return;stkLive=false;const i=+b.dataset.i;stkPaint(true);
+      sticks.querySelectorAll('.stick')[i].classList.add('chosen');
+      settle(i===stkLong,stkStake,4,i===stkLong?'The long one!':'Short straw.');
+    }));
+  }
+  o.querySelector('.stick-go').addEventListener('click',()=>{
+    if(busy)return;const w=stake();if(!w)return;
+    stkStake=w;stkLong=Math.floor(Math.random()*4);stkLive=true;stkPaint(false);
+    msg.textContent='Four chopsticks. One is long. Choose.';
+  });
+  stkPaint(false);
+
+  /* ---------- 5. GACHAPON ---------- */
+  const gacha=o.querySelector('.gacha');
+  o.querySelector('.gacha-go').addEventListener('click',()=>{
     if(busy)return;const w=stake();if(!w)return;busy=true;
-    const y=o.querySelector('.d-you'),br=o.querySelector('.d-bear');let t=0;
-    const iv=setInterval(()=>{y.textContent=DIE[Math.floor(Math.random()*6)];br.textContent=DIE[Math.floor(Math.random()*6)];
-      if(++t>=10){clearInterval(iv);const a=1+Math.floor(Math.random()*6),b2=1+Math.floor(Math.random()*6);
-        y.textContent=DIE[a-1];br.textContent=DIE[b2-1];
-        if(a===b2){msg.textContent='Tie! Bet returned.';busy=false;return;}
-        settle(a>b2,w,2,'You '+a+' vs '+BEAR_NAME+' '+b2+'.');busy=false;}},90);});
-  /* wheel: gold p=3/6 x2, purple 2/6 x3, red 1/6 x5 */
-  const POCKETS=['gold','gold','gold','purple','purple','red'],FACE={gold:'\ud83d\udfe1',purple:'\ud83d\udfe3',red:'\ud83d\udd34'};
-  o.querySelectorAll('.den-spin').forEach(b=>b.addEventListener('click',()=>{
-    if(busy)return;const w=stake();if(!w)return;busy=true;
-    const wh=o.querySelector('.den-wheel');let t=0;
-    const iv=setInterval(()=>{wh.textContent=FACE[POCKETS[Math.floor(Math.random()*6)]];
-      if(++t>=14){clearInterval(iv);const res=POCKETS[Math.floor(Math.random()*6)];wh.textContent=FACE[res];
-        settle(res===b.dataset.c,w,{gold:2,purple:3,red:5}[b.dataset.c],'Landed '+res+'.');busy=false;}},90);}));
+    const PRIZES=[[0,'🪨 A pebble. Nothing.',45],[1.5,'🧸 Keyring — ×1.5',30],[3,'🎎 Rare figure — ×3',18],[10,'💎 Gold capsule — ×10!',6],[50,'👑 SECRET GRAND PRIZE — ×50!!',1]];
+    let t=0;const spin=setInterval(()=>{gacha.textContent=['🎁','🫙','✨','🎰'][t%4];
+      if(++t>=14){clearInterval(spin);
+        let r=Math.random()*100,pick=PRIZES[0];
+        for(const pz of PRIZES){if(r<pz[2]){pick=pz;break;}r-=pz[2];}
+        gacha.textContent=pick[0]>=10?'💎':pick[0]>0?'🧸':'🪨';
+        if(pick[0]>0)settle(true,w,pick[0],pick[1]);
+        else settle(false,w,0,pick[1]);
+        busy=false;}},90);
+  });
+
+  /* ---------- 6. LUCKY ENVELOPE ---------- */
+  const envRow=o.querySelector('.env-row');
+  let envVals=[],envLive=false,envStake=0;
+  function envPaint(reveal,chosen){
+    envRow.innerHTML=envVals.map((v,i)=>'<button type="button" class="env'+(reveal?' open':'')+(chosen===i?' chosen':'')+'" data-i="'+i+'" '+(envLive?'':'disabled')+'>'+
+      (reveal?(v?'×'+v:'∅'):'🧧')+'</button>').join('');
+    envRow.querySelectorAll('.env').forEach(b=>b.addEventListener('click',()=>{
+      if(!envLive)return;envLive=false;const i=+b.dataset.i;envPaint(true,i);
+      const v=envVals[i];
+      if(v>0)settle(true,envStake,v,'Envelope paid ×'+v+'!');
+      else settle(false,envStake,0,'Empty envelope.');
+    }));
+  }
+  o.querySelector('.env-go').addEventListener('click',()=>{
+    if(busy)return;const w=stake();if(!w)return;
+    envStake=w;envVals=[0,0,1,2,3,10].sort(()=>Math.random()-0.5);envLive=true;envPaint(false,-1);
+    msg.textContent='Six envelopes. Pick one.';
+  });
+  envVals=[0,0,1,2,3,10];envPaint(false,-1);
+
   o.querySelector('.den-close').addEventListener('click',()=>o.remove());
   o.addEventListener('click',e=>{if(e.target===o)o.remove();});
 }
@@ -1308,8 +1723,8 @@ else{try{const s=JSON.parse(sessionStorage.getItem(STORAGE.session)||'null');if(
    HUB MODULE — Game Zone, Music, Postcards, Journey GPS, Streaks,
    Mystery Boxes, SFX, cat moods/name, Ceremony, play-time points
    ================================================================ */
-let BEAR_NAME='Mochi';
-const BEAR_NAMES=['Mochi','Neko','Yuki','Sushi','Bento','Ramen','Kimchi','Tofu'];
+let BEAR_NAME='Kimbap';
+const BEAR_NAMES=['Kimbap','Bamboo','Mochi','Yuki','Bento','Ramen','Kimchi','Tofu'];
 function setBearName(n){BEAR_NAME=n;localStorage.setItem('a26-catname',n);bearCelebrate('Call me '+n+'! 🐱');}
 /* ---- SFX + haptics (34) ---- */
 let muted=localStorage.getItem('a26-muted')==='1';let audioCtx=null;
@@ -1338,7 +1753,7 @@ function hubStory(body){
   const box=body.querySelector('.story-box'),inp=body.querySelector('.story-in');
   function paint(){box.innerHTML=lines.map((l,i)=>'<p'+(i===0?' class="story-first"':'')+'>'+escapeHtml(l)+'</p>').join('');box.scrollTop=box.scrollHeight;}
   paint();
-  body.querySelector('.story-add').addEventListener('click',()=>{const t=inp.value.trim();if(!t)return;lines.push(t);inp.value='';turn++;paint();sfx('click');bearShout('Player '+(turn%4+1)+'\u2019s turn! Pass it on! 🐱');});
+  body.querySelector('.story-add').addEventListener('click',()=>{const t=inp.value.trim();if(!t)return;lines.push(t);inp.value='';turn++;paint();sfx('click');bearShout('Player '+(turn%4+1)+'\u2019s turn! Pass it on! 🐼');});
   body.querySelector('.story-read').addEventListener('click',()=>{paint();sfx('win');bearCelebrate('What a masterpiece! 📖✨');
     try{const u=new SpeechSynthesisUtterance(lines.join(' '));u.rate=.95;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(_){/**/}});
 }
@@ -1429,7 +1844,7 @@ function openInvest(){
   if(document.querySelector('.inv'))return;
   const o=document.createElement('div');o.className='inv';
   o.innerHTML='<div class="inv-card"><button class="inv-close" type="button">✕</button>'+
-    '<div class="inv-head">📈 Mochi\u2019s Trading Floor</div>'+
+    '<div class="inv-head">📈 Kimbap\u2019s Trading Floor</div>'+
     '<div class="inv-bal">🪙 Chips: <b class="inv-chips">'+(progress.chips||0)+'</b> · Portfolio: <b class="inv-pv">0</b> chips</div>'+
     '<p class="inv-note">Invest chips in REAL markets. Crypto prices are LIVE; others use today\u2019s realistic estimate. Prices change daily — buy low, sell high! <b>This is pretend money for fun.</b></p>'+
     '<div class="inv-status"></div><div class="inv-list"></div></div>';
@@ -1492,7 +1907,7 @@ addItem({id:'top_gold_suit',cat:'Tops',name:'Golden Suit ✨',price:180,top:'jac
 /* Face */
 [['none','None',0,null],['glasses','Round Glasses',25,'glasses'],['tache','Silly Moustache',30,'tache'],['freckles','Freckles',20,'freckles'],['sun','Sunglasses 😎',45,'sun'],['star','Star Face Paint ⭐',55,'star'],['heart','Heart Face Paint 💖',55,'heart'],['warpaint','War Paint',65,'warpaint']].forEach(([id,n,p,k])=>addItem({id:'acc_'+id,cat:'Face',name:n,price:p,acc:k}));
 /* Pets */
-[['none','No Pet',0,null],['dog','Shiba Inu 🐕',60,'🐕'],['cat','Lucky Cat 🐈',60,'🐈'],['lizard','Gecko 🦎',70,'🦎'],['snake','Snake 🐍',75,'🐍'],['scorpion','Koi Carp 🐟',75,'🐟'],['burro','Sika Deer 🦌',90,'🦌'],['eagle','Crane 🕊️',90,'🕊️'],['bear','Mini Mochi 🐱',110,'🐱'],['ufo','UFO Buddy 🛸',130,'🛸'],['unicorn','Unicorn 🦄',140,'🦄'],['dragon','Dragon 🐉',160,'🐉']].forEach(([id,n,p,e])=>addItem({id:'pet_'+id,cat:'Pet',name:n,price:p,pet:e}));
+[['none','No Pet',0,null],['dog','Shiba Inu 🐕',60,'🐕'],['cat','Lucky Cat 🐈',60,'🐈'],['lizard','Gecko 🦎',70,'🦎'],['snake','Snake 🐍',75,'🐍'],['scorpion','Koi Carp 🐟',75,'🐟'],['burro','Sika Deer 🦌',90,'🦌'],['eagle','Crane 🕊️',90,'🕊️'],['bear','Mini Kimbap 🐼',110,'🐼'],['ufo','UFO Buddy 🛸',130,'🛸'],['unicorn','Unicorn 🦄',140,'🦄'],['dragon','Dragon 🐉',160,'🐉']].forEach(([id,n,p,e])=>addItem({id:'pet_'+id,cat:'Pet',name:n,price:p,pet:e}));
 /* Auras / Scenes / Nameplates */
 [['none','None',0,null],['gold','Golden Glow',80,'gold'],['stars','Star Sparkle ✨',100,'stars'],['fire','Fire Ring 🔥',120,'fire'],['ice','Ice Mist ❄️',120,'ice'],['rainbow','Rainbow Aura 🌈',180,'rainbow']].forEach(([id,n,p,a])=>addItem({id:'aura_'+id,cat:'Aura',name:n,price:p,aura:a}));
 [['locker','Locker Room',0,'locker'],['route','Tokyo Neon 🏙️',50,'tokyo'],['canyon','Kyoto Sunset ⛩️',60,'kyoto'],['beach','Mount Fuji 🗻',70,'fuji'],['vegas','Seoul Nights 🌃',90,'seoul'],['space','Outer Space 🌌',110,'space']].forEach(([id,n,p,s])=>addItem({id:'scene_'+id,cat:'Scene',name:n,price:p,scene:s}));
@@ -1676,15 +2091,15 @@ function tryOrWear(id){
   if(c.owned[id]){previewItem=null;c.equip[it.cat]=id;saveProgress();renderCharacter();renderShop();syncPlayer();sfx('click');return;}
   /* not owned: try it on first — SEE it before you buy */
   previewItem=it;renderCharacter();renderShop();sfx('click');
-  bearShout('Looking good! Buy it or keep browsing. 🐱');
+  bearShout('Looking good! Buy it or keep browsing. 🐼');
 }
 function buyOrWear(id){
   const it=SHOP_ITEMS.find(i=>i.id===id);if(!it)return;const c=char();
   if(!c.owned[id]){
-    if(!(session&&session.test)&&(progress.chips||0)<it.price){bearShout('Not enough chips! Go win some. 🐱');previewItem=null;renderCharacter();renderShop();return;}
+    if(!(session&&session.test)&&(progress.chips||0)<it.price){bearShout('Not enough chips! Go win some. 🐼');previewItem=null;renderCharacter();renderShop();return;}
     if(it.price>0 && !confirm('Spend '+it.price+' chips on '+it.name+'?\n\nRemember: chips can win you REAL money (the £15 shop dash) — spend them on outfits only if you\u2019re sure!')) {previewItem=null;renderCharacter();renderShop();return;}
     if(!(session&&session.test))progress.chips-=it.price;
-    c.owned[id]=1;sfx('coin');bearCelebrate('Nice '+it.name+'! Looking good! 🐱');
+    c.owned[id]=1;sfx('coin');bearCelebrate('Nice '+it.name+'! Looking good! 🐼');
   }
   c.equip[it.cat]=id;saveProgress();updateChips();renderCharacter();renderShop();syncPlayer();sfx('click');
 }
@@ -1916,7 +2331,7 @@ function openMysteryBox(){
 const HUB_GAMES=[
   {id:'breaker',n:'🧱 Neon Breaker',d:'Smash the neon bricks — classic breaker!'},
   {id:'roadle',n:'🟩 Asiadle',d:'Wordle, Japan & Korea edition. 6 guesses!'},
-  {id:'ttt',n:'⭕ Tic-Tac-Neko',d:'Beat '+BEAR_NAME+' at noughts & crosses. He talks trash.'},
+  {id:'ttt',n:'⭕ Tic-Tac-Panda',d:'Beat '+BEAR_NAME+' at noughts & crosses. He talks trash.'},
   {id:'headsup',n:'🙆 Heads Up!',d:'Phone on forehead — family shouts clues! (landscape)'},
   {id:'rush',n:'⚡ Neon Rush',d:'MULTIPLAYER quiz battle! 2-4 players, pass the phone.'},
   {id:'heist',n:'🥷 Ninja Heist',d:'MULTIPLAYER! Answer, then MINE, HACK or SHIELD.'},
@@ -2001,26 +2416,26 @@ function hubRoadle(body){
   }));
   activeGame={stop(){}};
 }
-/* --- Tic-Tac-Neko (13) --- */
+/* --- Tic-Tac-Panda (13) --- */
 function hubTTT(body){
-  const TRASH=['Too easy. 🐱','Is that your best move?!','I\u2019ve seen koi play better.','*yawns*','Bold. Wrong, but bold.','My grandma cat plays faster.','You fell for it!','Delicious. Like tuna.'];
+  const TRASH=['Too easy. 🐼','Is that your best move?!','I\u2019ve seen koi play better.','*yawns*','Bold. Wrong, but bold.','My grandma panda plays faster.','You fell for it!','Delicious. Like bamboo.'];
   const WIN=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
   let cells=Array(9).fill(''),over=false;
-  body.innerHTML='<div class="game-hud">📖 You are ❌. Beat '+BEAR_NAME+' the lucky cat (🐱). He WILL trash talk.</div><div class="ttt-grid">'+Array.from({length:9},(_,i)=>'<button type="button" class="ttt-cell" data-i="'+i+'"></button>').join('')+'</div><p class="game-hud ttt-msg">Your move!</p><button type="button" class="btn btn-secondary ttt-reset">New game</button>';
+  body.innerHTML='<div class="game-hud">📖 You are ❌. Beat '+BEAR_NAME+' the panda (🐼). He WILL trash talk.</div><div class="ttt-grid">'+Array.from({length:9},(_,i)=>'<button type="button" class="ttt-cell" data-i="'+i+'"></button>').join('')+'</div><p class="game-hud ttt-msg">Your move!</p><button type="button" class="btn btn-secondary ttt-reset">New game</button>';
   const msg=body.querySelector('.ttt-msg'),els9=[...body.querySelectorAll('.ttt-cell')];
   function winner(b){for(const[a,c,d]of WIN)if(b[a]&&b[a]===b[c]&&b[c]===b[d])return b[a];return b.every(x=>x)?'tie':null;}
   function bearMove(){
     const empty=cells.map((v,i)=>v?null:i).filter(v=>v!==null);
     let pick=null;
-    for(const i of empty){const t=[...cells];t[i]='🐱';if(winner(t)==='🐱'){pick=i;break;}}
+    for(const i of empty){const t=[...cells];t[i]='🐼';if(winner(t)==='🐼'){pick=i;break;}}
     if(pick===null)for(const i of empty){const t=[...cells];t[i]='❌';if(winner(t)==='❌'){pick=i;break;}}
     if(pick===null)pick=empty.includes(4)?4:empty[Math.floor(Math.random()*empty.length)];
-    cells[pick]='🐱';els9[pick].textContent='🐱';
+    cells[pick]='🐼';els9[pick].textContent='🐼';
     bearShout(TRASH[Math.floor(Math.random()*TRASH.length)]);
   }
   function check(){const w=winner(cells);if(!w)return false;over=true;
-    msg.textContent=w==='❌'?'🏆 YOU BEAT THE CAT!':w==='🐱'?'🐱 '+BEAR_NAME+' wins. Obviously.':'🤝 Tie!';
-    if(w==='❌'){sfx('win');burst(body);bearShout('WHAT?! Rematch. NOW.');}else if(w==='🐱'){sfx('lose');bearCelebrate('Told you. 😎');}
+    msg.textContent=w==='❌'?'🏆 YOU BEAT THE PANDA!':w==='🐼'?'🐼 '+BEAR_NAME+' wins. Obviously.':'🤝 Tie!';
+    if(w==='❌'){sfx('win');burst(body);bearShout('WHAT?! Rematch. NOW.');}else if(w==='🐼'){sfx('lose');bearCelebrate('Told you. 😎');}
     return true;}
   els9.forEach(b=>b.addEventListener('click',()=>{
     const i=+b.dataset.i;if(over||cells[i])return;
@@ -2215,38 +2630,77 @@ function renderPostcards(){
   const withPhotos=STOPS.filter(s=>progress.photos[s.id]?.dataUrl);
   if(!withPhotos.length){grid.innerHTML='<p class="empty">No arrival photos yet — complete a stop and your postcards appear here! 📮</p>';return;}
   grid.innerHTML='';
+  const canShareFiles=!!(navigator.canShare&&navigator.share);
   withPhotos.forEach(s=>{
     const cap=(progress.captions||{})[s.id]||'';
     const card=document.createElement('div');card.className='post-card';
     card.innerHTML='<img alt="'+escapeHtml(s.title)+'"><div class="post-meta"><b>'+escapeHtml(s.title)+'</b><span>'+escapeHtml(s.day)+'</span></div>'+
-      '<input class="post-cap" placeholder="Write a caption…" maxlength="60"><button type="button" class="btn btn-quiet post-dl">💾 Download postcard</button>';
-    card.querySelector('img').src=progress.photos[s.id].dataUrl;
+      '<input class="post-cap" placeholder="Write a caption…" maxlength="60"><button type="button" class="btn btn-primary post-dl">'+
+      (canShareFiles?'📸 Save to Photos':'💾 Download postcard')+'</button><p class="post-hint"></p>';
+    const img=card.querySelector('img');img.src=progress.photos[s.id].dataUrl;
     const inp=card.querySelector('.post-cap');inp.value=cap;
     inp.addEventListener('change',()=>{progress.captions=progress.captions||{};progress.captions[s.id]=inp.value;saveProgress();});
-    card.querySelector('.post-dl').addEventListener('click',()=>downloadPostcard(s,inp.value));
+    card.querySelector('.post-dl').addEventListener('click',()=>savePostcard(s,inp.value,img,card.querySelector('.post-hint')));
     grid.appendChild(card);
   });
 }
-function downloadPostcard(s,caption){
-  const img=new Image();img.onload=()=>{
+/* Draws the postcard from the already-loaded <img> (synchronous, so iOS keeps the
+   tap "user activation" alive) and hands it to the share sheet — on a phone that
+   gives you "Save Image", which puts it in Photos, not Files. */
+function savePostcard(s,caption,imgEl,hintEl){
+  const setHint=t=>{if(hintEl)hintEl.textContent=t;};
+  try{
+    const img=(imgEl&&imgEl.complete&&imgEl.naturalWidth)?imgEl:null;
+    if(!img){setHint('Photo still loading — try again in a second.');return;}
     const c=document.createElement('canvas');c.width=900;c.height=700;const x=c.getContext('2d');
     x.fillStyle='#eaf3fd';x.fillRect(0,0,900,700);
-    const sc=Math.max(820/img.width,480/img.height);const w=img.width*sc,h=img.height*sc;
+    const sc=Math.max(820/img.naturalWidth,480/img.naturalHeight);
+    const w=img.naturalWidth*sc,h=img.naturalHeight*sc;
     x.save();x.beginPath();x.rect(40,40,820,480);x.clip();x.drawImage(img,40+(820-w)/2,40+(480-h)/2,w,h);x.restore();
     x.strokeStyle='#0a1428';x.lineWidth=8;x.strokeRect(40,40,820,480);
     x.fillStyle='#0d3f8f';x.font='bold 44px Trebuchet MS';x.fillText(s.title.toUpperCase(),48,590);
     x.fillStyle='#5d7690';x.font='bold 26px Trebuchet MS';x.fillText(s.day+' · Asia 2026',48,628);
     x.fillStyle='#0b1b36';x.font='italic 30px Georgia';x.fillText(caption||'Wish you were here!',48,672);
     x.fillStyle='#1f6fe0';x.font='bold 60px Georgia';x.textAlign='right';x.fillText('26',860,660);x.textAlign='left';
-    const a=document.createElement('a');a.href=c.toDataURL('image/jpeg',0.85);a.download='postcard-'+s.id+'.jpg';a.click();sfx('coin');
-  };img.src=progress.photos[s.id].dataUrl;
+
+    const dataUrl=c.toDataURL('image/jpeg',0.9);
+    const name='postcard-'+s.id+'.jpg';
+    /* dataURL -> Blob, synchronously, so the tap gesture is still valid on iOS */
+    const bin=atob(dataUrl.split(',')[1]);
+    const bytes=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+    const blob=new Blob([bytes],{type:'image/jpeg'});
+    const file=new File([blob],name,{type:'image/jpeg'});
+
+    if(navigator.canShare&&navigator.canShare({files:[file]})&&navigator.share){
+      setHint('Choose "Save Image" to put it in Photos…');
+      navigator.share({files:[file],title:s.title})
+        .then(()=>{setHint('✅ Sent to your share sheet — check Photos.');sfx('coin');})
+        .catch(err=>{
+          if(err&&err.name==='AbortError'){setHint('');return;}
+          downloadBlob(blob,name);setHint('Saved to your downloads instead.');
+        });
+      return;
+    }
+    downloadBlob(blob,name);
+    setHint('Saved to your downloads.');sfx('coin');
+  }catch(e){
+    console.error('[A26] postcard failed:',e);
+    setHint('⚠️ Could not build that postcard — tell Ethan.');
+  }
+}
+function downloadBlob(blob,name){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=name;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
 }
 
 /* ---- MOCHI MOODS (32) + name + den reactions (33) ---- */
 function bearMood(){
   const h=new Date().getHours();
   if(h>=21||h<7)return {acc:'💤',lines:['*yaaaawn* five more stations…','Wake me at the next hotel. 😴','Night trains? Brave.','Zzz… huh? Oh. Hi.']};
-  if(statusForStop&&stopById('seoul')&&statusForStop('seoul')!=='ready'&&today()>=dateObj('2026-10-27'))return {acc:'🕶️',lines:['SEOUL BABY! 😎','The den never closes in Seoul!','K-pop cat, reporting in!','I look GOOD in shades.']};
+  if(statusForStop&&stopById('seoul')&&statusForStop('seoul')!=='ready'&&today()>=dateObj('2026-10-27'))return {acc:'🕶️',lines:['SEOUL BABY! 😎','The den never closes in Seoul!','K-pop panda, reporting in!','I look GOOD in shades.']};
   if(h>=11&&h<=16)return {acc:'🍜',lines:['It\u2019s ramen o\u2019clock. 🍜','Anyone got a melon soda? 🥤','Konbini run? I\u2019m in.','I\u2019m basically a cushion right now.']};
   return null;
 }
@@ -2255,7 +2709,7 @@ bearSay=function(){
   const mood=bearMood();
   const b=document.getElementById('bearBubble');if(!b)return;
   let line;
-  if(mood&&Math.random()<0.35)line=mood.lines[Math.floor(Math.random()*mood.lines.length)];
+  if(mood&&Math.random()<0.4)line=mood.lines[Math.floor(Math.random()*mood.lines.length)];
   else{let i;do{i=Math.floor(Math.random()*BEAR_LINES.length);}while(i===bearIdx);bearIdx=i;line=BEAR_LINES[i];}
   if(Math.random()<0.25)line+=' — '+BEAR_NAME;
   b.textContent=line;b.classList.add('show');setTimeout(()=>b.classList.remove('show'),4600);

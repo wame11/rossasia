@@ -1,11 +1,27 @@
 {
   "name": "Asia 2026 Family Challenge",
   "short_name": "Asia 2026",
-  "description": "Beat the arcade, snap your targets, clear the quiz — unlock Japan & South Korea!",
+  "description": "Beat the arcade, snap your targets, clear the quiz \u2014 unlock Japan & South Korea!",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0a1428",
   "theme_color": "#0a1428",
-  "icons": []
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
 }

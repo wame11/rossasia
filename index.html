@@ -6,9 +6,14 @@
   <title>Asia 2026 Family Challenge</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icon-180.png" />
-  <link rel="icon" href="icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <meta name="theme-color" content="#0a1428" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Asia 2026" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
 </head>
 <body>
   <!-- neon skyline backdrop -->
@@ -23,7 +28,7 @@
       <p class="lead">Beat the arcade, snap your targets, clear the quiz — unlock Tokyo, Kyoto and Seoul!</p>
       <form id="loginForm" class="login-form">
         <label><span>Name</span>
-          <input id="username" autocomplete="username" placeholder="Jacob, Lily, Hannah, Ethan, admin, or test" required />
+          <input id="username" autocomplete="username" placeholder="Jacob, Lily, Hannah, Ethan, Mark, admin, or test" required />
         </label>
         <label><span>Password</span>
           <input id="password" type="password" autocomplete="current-password" placeholder="Leave blank for test" />
@@ -52,14 +57,14 @@
       <button type="button" class="vtab active" data-view="homeView">🗾 Map</button>
       <button type="button" class="vtab" data-view="gamesView">🎮 Games</button>
       <button type="button" class="vtab" data-view="musicView">🎵 Music</button>
-      <button type="button" class="vtab" data-view="postView">📮 Postcards</button>
+      <button type="button" class="vtab" data-view="postView">📮 Cards</button>
     </nav>
 
     <!-- HOME / MAP VIEW -->
     <section id="homeView">
       <div id="countdown" class="countdown" aria-live="polite"></div>
       <div id="journey" class="journey hidden">
-        <div class="journey-track"><div id="journeyFill" class="journey-fill"></div><span id="journeyBear" class="journey-bear">🐱</span></div>
+        <div class="journey-track"><div id="journeyFill" class="journey-fill"></div><span id="journeyBear" class="journey-bear">🐼</span></div>
         <div class="journey-row"><span id="journeyText">Tap update to find us on the route!</span><button id="journeyBtn" class="btn btn-quiet" type="button">📍 Update</button></div>
       </div>
 
@@ -71,7 +76,7 @@
           <div class="hud-caption" id="hudCaption"></div>
         </div>
         <div class="hud-score"><span class="coin">🪙</span><b id="hudScore">0</b><span>points</span></div>
-        <div class="hud-score hud-chips"><span>🐱</span><b id="hudChips">0</b><span>chips</span></div>
+        <div class="hud-score hud-chips"><span>🐼</span><b id="hudChips">0</b><span>chips</span></div>
       </div>
 
       <div class="map-head">
@@ -131,7 +136,7 @@
 
     <!-- POSTCARDS -->
     <section id="postView" class="hidden">
-      <div class="hub-head"><h2>📮 Postcards</h2><p class="hub-earn">Your arrival photos become postcards — add a caption and download!</p></div>
+      <div class="hub-head"><h2>📮 Postcards</h2><p class="hub-earn">Your arrival photos become postcards — add a caption, then save it straight to your Photos 📸</p></div>
       <div id="postGrid" class="post-grid"></div>
     </section>
 
@@ -148,73 +153,63 @@
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');
   </script>
 
-  <!-- MOCHI the lucky cat (maneki-neko) -->
-  <button id="cornerMascot" class="corner-mascot hidden" type="button" aria-label="Open Mochi’s Neon Den">
+  <!-- KIMBAP the panda -->
+  <button id="cornerMascot" class="corner-mascot hidden" type="button" aria-label="Open Kimbap’s Neon Den">
     <span class="mascot-tap">Tap to gamble</span>
     <div id="bearBubble" class="bear-bubble"></div>
     <svg viewBox="0 0 120 120" width="86" height="86">
       <defs>
-        <radialGradient id="furHead" cx="45%" cy="32%" r="78%">
-          <stop offset="0%" stop-color="#ffffff"/><stop offset="62%" stop-color="#f2f6fb"/><stop offset="100%" stop-color="#cfdcea"/>
+        <radialGradient id="furHead" cx="42%" cy="30%" r="80%">
+          <stop offset="0%" stop-color="#ffffff"/><stop offset="66%" stop-color="#f4f7fb"/><stop offset="100%" stop-color="#cbd8e8"/>
         </radialGradient>
-        <radialGradient id="furEar" cx="40%" cy="35%" r="80%">
-          <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#c7d6e6"/>
+        <radialGradient id="furEar" cx="38%" cy="32%" r="82%">
+          <stop offset="0%" stop-color="#3a4254"/><stop offset="100%" stop-color="#121722"/>
         </radialGradient>
-        <radialGradient id="muzzle" cx="50%" cy="35%" r="80%">
-          <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#e6edf6"/>
+        <radialGradient id="patch" cx="40%" cy="32%" r="80%">
+          <stop offset="0%" stop-color="#2b3344"/><stop offset="100%" stop-color="#0d1119"/>
         </radialGradient>
-        <radialGradient id="nose" cx="40%" cy="30%" r="80%">
-          <stop offset="0%" stop-color="#ff8fb4"/><stop offset="70%" stop-color="#ff3d8b"/><stop offset="100%" stop-color="#c41f60"/>
+        <radialGradient id="eyeShine" cx="35%" cy="28%" r="72%">
+          <stop offset="0%" stop-color="#4aa3ff"/><stop offset="55%" stop-color="#0d2a63"/><stop offset="100%" stop-color="#03070f"/>
         </radialGradient>
-        <radialGradient id="eyeShine" cx="35%" cy="30%" r="70%">
-          <stop offset="0%" stop-color="#1f6fe0"/><stop offset="55%" stop-color="#0d2a63"/><stop offset="100%" stop-color="#050b18"/>
+        <radialGradient id="nose" cx="38%" cy="28%" r="80%">
+          <stop offset="0%" stop-color="#3b4356"/><stop offset="70%" stop-color="#161b26"/><stop offset="100%" stop-color="#05070c"/>
         </radialGradient>
-        <linearGradient id="collar" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#ff3d8b"/><stop offset="100%" stop-color="#d7263d"/>
-        </linearGradient>
       </defs>
       <!-- ears -->
-      <g class="bear-ear-l"><path d="M18 40 26 10 46 27Z" fill="url(#furEar)" stroke="#0a1428" stroke-width="3" stroke-linejoin="round"/><path d="M26 34 30 19 39 28Z" fill="#ffb3cf"/></g>
-      <g class="bear-ear-r"><path d="M102 40 94 10 74 27Z" fill="url(#furEar)" stroke="#0a1428" stroke-width="3" stroke-linejoin="round"/><path d="M94 34 90 19 81 28Z" fill="#ffb3cf"/></g>
+      <g class="bear-ear-l"><circle cx="26" cy="24" r="15" fill="url(#furEar)" stroke="#05070c" stroke-width="2.6"/></g>
+      <g class="bear-ear-r"><circle cx="94" cy="24" r="15" fill="url(#furEar)" stroke="#05070c" stroke-width="2.6"/></g>
       <!-- head -->
-      <ellipse cx="60" cy="62" rx="44" ry="40" fill="url(#furHead)" stroke="#0a1428" stroke-width="3"/>
-      <!-- patch + fur -->
-      <path d="M78 26c14 6 22 20 22 34 0 6-1 11-3 16-6-18-16-32-30-40 4-6 7-9 11-10z" fill="#bfe4ff" opacity=".5"/>
-      <g stroke="#9fb9d4" stroke-width="1.5" stroke-linecap="round" opacity=".6">
-        <path d="M22 50c3-3 7-5 11-6M18 62c3-2 6-3 9-3M23 76c3 0 6 1 8 3"/>
-        <path d="M98 50c-3-3-7-5-11-6M102 62c-3-2-6-3-9-3M97 76c-3 0-6 1-8 3"/>
+      <ellipse cx="60" cy="62" rx="45" ry="41" fill="url(#furHead)" stroke="#0a1428" stroke-width="3"/>
+      <!-- eye patches -->
+      <g class="bear-eyes">
+        <ellipse cx="42" cy="56" rx="14" ry="17" fill="url(#patch)" transform="rotate(-18 42 56)"/>
+        <ellipse cx="78" cy="56" rx="14" ry="17" fill="url(#patch)" transform="rotate(18 78 56)"/>
+        <circle cx="43" cy="57" r="6" fill="url(#eyeShine)"/>
+        <circle cx="77" cy="57" r="6" fill="url(#eyeShine)"/>
+        <circle cx="41" cy="54.5" r="2.3" fill="#fff" opacity=".95"/>
+        <circle cx="75" cy="54.5" r="2.3" fill="#fff" opacity=".95"/>
+        <circle cx="45.5" cy="59.5" r="1.1" fill="#7df9ff" opacity=".85"/>
+        <circle cx="79.5" cy="59.5" r="1.1" fill="#7df9ff" opacity=".85"/>
+      </g>
+      <g class="bear-lids" opacity="0">
+        <ellipse cx="42" cy="56" rx="14.4" ry="17.4" fill="#1b2130" transform="rotate(-18 42 56)"/>
+        <ellipse cx="78" cy="56" rx="14.4" ry="17.4" fill="#1b2130" transform="rotate(18 78 56)"/>
       </g>
       <!-- muzzle -->
-      <ellipse cx="60" cy="78" rx="21" ry="15" fill="url(#muzzle)"/>
-      <!-- nose -->
-      <path d="M53 70h14l-7 8z" fill="url(#nose)" stroke="#0a1428" stroke-width="1.6" stroke-linejoin="round"/>
-      <!-- mouth -->
-      <path d="M60 78v4M60 82c-3.5 3.5-8.5 3-11-1M60 82c3.5 3.5 8.5 3 11-1" stroke="#0a1428" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-      <!-- whiskers -->
-      <g stroke="#7f96b0" stroke-width="1.8" stroke-linecap="round">
-        <path d="M38 72 18 68M38 78 17 79M82 72 102 68M82 78 103 79"/>
-      </g>
-      <!-- eyes -->
-      <g class="bear-eyes">
-        <ellipse cx="45" cy="56" rx="6" ry="7" fill="url(#eyeShine)"/>
-        <ellipse cx="75" cy="56" rx="6" ry="7" fill="url(#eyeShine)"/>
-        <circle cx="43" cy="53.5" r="2.1" fill="#fff" opacity=".95"/>
-        <circle cx="73" cy="53.5" r="2.1" fill="#fff" opacity=".95"/>
-        <circle cx="47" cy="58" r="1" fill="#7df9ff" opacity=".8"/>
-        <circle cx="77" cy="58" r="1" fill="#7df9ff" opacity=".8"/>
-      </g>
-      <g class="bear-lids" opacity="0"><ellipse cx="45" cy="56" rx="6.4" ry="7.2" fill="#f2f6fb"/><ellipse cx="75" cy="56" rx="6.4" ry="7.2" fill="#f2f6fb"/></g>
+      <ellipse cx="60" cy="80" rx="19" ry="13" fill="#ffffff"/>
+      <ellipse cx="60" cy="74" rx="8" ry="6" fill="url(#nose)"/>
+      <path d="M60 80v4M60 84c-3.2 3.4-8 3-10.5-1M60 84c3.2 3.4 8 3 10.5-1" stroke="#0a1428" stroke-width="2.6" fill="none" stroke-linecap="round"/>
       <!-- blush -->
-      <ellipse cx="33" cy="68" rx="7" ry="4.2" fill="#ff8fb4" opacity=".45"/>
-      <ellipse cx="87" cy="68" rx="7" ry="4.2" fill="#ff8fb4" opacity=".45"/>
-      <!-- collar + bell -->
-      <path d="M30 92a44 44 0 0060 0" fill="none" stroke="url(#collar)" stroke-width="8" stroke-linecap="round"/>
-      <circle cx="60" cy="100" r="8" fill="#ffd23f" stroke="#0a1428" stroke-width="2.4"/>
-      <path d="M53 99h14M60 100v6" stroke="#0a1428" stroke-width="2"/>
-      <!-- beckoning paw -->
+      <ellipse cx="28" cy="74" rx="6.5" ry="4" fill="#ff8fb4" opacity=".4"/>
+      <ellipse cx="92" cy="74" rx="6.5" ry="4" fill="#ff8fb4" opacity=".4"/>
+      <!-- waving paw holding a kimbap roll -->
       <g class="bear-wave">
-        <ellipse cx="103" cy="86" rx="11" ry="13" fill="#fff" stroke="#0a1428" stroke-width="2.6"/>
-        <g fill="#ffb3cf"><circle cx="98" cy="79" r="2.5"/><circle cx="103" cy="77.5" r="2.5"/><circle cx="108" cy="79.5" r="2.5"/><ellipse cx="103" cy="87" rx="5.2" ry="4.2"/></g>
+        <ellipse cx="103" cy="88" rx="11" ry="12.5" fill="url(#furEar)" stroke="#05070c" stroke-width="2.4"/>
+        <g fill="#4a5468"><circle cx="98" cy="81" r="2.4"/><circle cx="103" cy="79.5" r="2.4"/><circle cx="108" cy="81.5" r="2.4"/></g>
+        <circle cx="103" cy="90" r="7" fill="#1b2130" stroke="#05070c" stroke-width="1.6"/>
+        <circle cx="103" cy="90" r="5" fill="#fdfaf2"/>
+        <circle cx="103" cy="90" r="2.2" fill="#ff8a3d"/>
+        <path d="M103 87.8a2.2 2.2 0 010 4.4" fill="#12b38a"/>
       </g>
     </svg>
   </button>

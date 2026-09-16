@@ -1,5 +1,5 @@
-const CACHE_NAME = 'asia2026-v1';
-const ASSETS = ['./','./index.html','./styles.css','./app.js','./stops.js'];
+const CACHE_NAME = 'asia2026-v2';
+const ASSETS = ['./','./index.html','./styles.css','./app.js','./stops.js','./icon-180.png','./icon-192.png'];
 self.addEventListener('install', (e) => { self.skipWaiting(); e.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(ASSETS))); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((names) => Promise.all(names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', (e) => {
