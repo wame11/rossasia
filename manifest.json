@@ -1,0 +1,11 @@
+{
+  "name": "Asia 2026 Family Challenge",
+  "short_name": "Asia 2026",
+  "description": "Beat the arcade, snap your targets, clear the quiz — unlock Japan & South Korea!",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a1428",
+  "theme_color": "#0a1428",
+  "icons": []
+}
