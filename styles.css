@@ -964,3 +964,21 @@ h1,.map-head h2,.hub-head h2,.section-head h2,.reward h2{text-shadow:2px 2px 0 r
 /* iOS standalone: keep content clear of the status bar / notch */
 .app{padding-top:max(14px,env(safe-area-inset-top))}
 .login-screen{padding-top:max(20px,env(safe-area-inset-top))}
+
+/* ---- den: custom bet amount ---- */
+.den-wager{display:grid;gap:8px;justify-items:center;margin-bottom:14px}
+.den-wager-lbl{font-size:.7rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#9fc9e8}
+.den-amt-row{display:flex;align-items:stretch;gap:8px}
+.den-step{width:48px;border:3px solid var(--neon);border-radius:12px;background:rgba(0,229,255,.12);
+  color:var(--neon);font-size:1.5rem;font-weight:900;line-height:1}
+.den-step:active{transform:translateY(2px)}
+.den-amt{width:132px;text-align:center;font-size:1.5rem;font-weight:900;font-variant-numeric:tabular-nums;
+  border:3px solid var(--neon);border-radius:12px;background:#08142e;color:#fff;padding:8px 6px;
+  box-shadow:inset 0 0 16px rgba(0,229,255,.25)}
+.den-amt:focus{outline:none;border-color:#fff;box-shadow:inset 0 0 16px rgba(0,229,255,.35),0 0 0 4px rgba(0,229,255,.3)}
+.den-amt:read-only{opacity:.85;border-style:dashed}
+.den-amt::-webkit-outer-spin-button,.den-amt::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.den-amt{-moz-appearance:textfield}
+.den-allin{min-width:150px;border:3px solid #ffd23f;border-radius:12px;background:transparent;color:#ffd23f;
+  font-weight:900;letter-spacing:.1em;text-transform:uppercase;padding:9px 16px;font-size:.82rem}
+.den-allin.on{background:linear-gradient(180deg,#ffd23f,#d79a00);color:#2a1c00;box-shadow:0 0 20px rgba(255,210,63,.55)}

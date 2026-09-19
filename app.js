@@ -1505,7 +1505,15 @@ function openDen(){
     '<button type="button" class="den-close">✕</button>'+
     '<div class="den-head">🐒 KIMBAP’S NEON DEN</div>'+
     '<div class="den-balance">🪙 Chips: <b>'+(progress.chips||0)+'</b></div>'+
-    '<div class="den-wager">Bet: '+[5,10,25].map(v=>'<button type="button" class="den-bet" data-v="'+v+'">'+v+'</button>').join('')+'<button type="button" class="den-bet" data-v="all">ALL IN</button></div>'+
+    '<div class="den-wager">'+
+      '<span class="den-wager-lbl">Your bet</span>'+
+      '<div class="den-amt-row">'+
+        '<button type="button" class="den-step" data-d="-5" aria-label="Lower bet">−</button>'+
+        '<input class="den-amt" type="number" inputmode="numeric" pattern="[0-9]*" min="1" step="1" value="10" aria-label="Bet amount">'+
+        '<button type="button" class="den-step" data-d="5" aria-label="Raise bet">+</button>'+
+      '</div>'+
+      '<button type="button" class="den-bet den-allin" data-v="all">ALL IN</button>'+
+    '</div>'+
     '<div class="den-games">'+
 
       '<div class="den-game"><h4>🪙 Coin Flip ×2</h4>'+
@@ -1541,18 +1549,45 @@ function openDen(){
         '<p class="den-mini">Six envelopes. Two are empty, one pays ×10.</p></div>'+
 
     '</div>'+
-    '<p class="den-msg">Pick a bet at the top, then choose a game.</p>'+
+    '<p class="den-msg">Type how much you want to bet, then choose a game.</p>'+
     '<p class="den-instr">📖 HOW IT WORKS: set your bet, then play. Win = your bet multiplied. Lose = bet gone. MOST CHIPS AT THE END OF THE TRIP = EXTRA £15! (30-second shop dash — grab anything up to £15!)</p>'+
   '</div>';
   document.body.appendChild(o);
   const msg=o.querySelector('.den-msg');
-  const bets=[...o.querySelectorAll('.den-bet')];
-  function setBet(b){bets.forEach(x=>x.classList.toggle('on',x===b));denWager=b.dataset.v;}
-  bets.forEach(b=>b.addEventListener('click',()=>setBet(b)));setBet(bets[0]);
-  function stake(){const c=progress.chips||0;const w=denWager==='all'?c:Math.min(Number(denWager),c);
+  /* ---- bet: type any amount, or go ALL IN ---- */
+  const amtEl=o.querySelector('.den-amt'),allBtn=o.querySelector('.den-allin');
+  let denAllIn=false;
+  const purse=()=>Math.max(0,progress.chips||0);
+  function clampAmt(){
+    let v=Math.floor(Number(amtEl.value));
+    if(!Number.isFinite(v)||v<1)v=1;
+    const c=purse(); if(c>0&&v>c)v=c;
+    return v;
+  }
+  function syncWager(write){
+    amtEl.max=Math.max(1,purse());
+    if(denAllIn){
+      denWager='all';allBtn.classList.add('on');amtEl.readOnly=true;amtEl.value=purse();
+    }else{
+      const v=clampAmt();denWager=String(v);allBtn.classList.remove('on');amtEl.readOnly=false;
+      if(write)amtEl.value=v;
+    }
+  }
+  amtEl.addEventListener('input',()=>{denAllIn=false;syncWager(false);});
+  amtEl.addEventListener('change',()=>{denAllIn=false;syncWager(true);});
+  amtEl.addEventListener('focus',()=>{if(denAllIn){denAllIn=false;syncWager(true);}amtEl.select();});
+  o.querySelectorAll('.den-step').forEach(b=>b.addEventListener('click',()=>{
+    denAllIn=false;
+    amtEl.value=Math.max(1,clampAmt()+Number(b.dataset.d));
+    syncWager(true);sfx('click');
+  }));
+  allBtn.addEventListener('click',()=>{denAllIn=!denAllIn;syncWager(true);sfx('click');});
+  amtEl.value=Math.min(10,Math.max(1,purse()||10));
+  syncWager(true);
+  function stake(){const c=purse();const w=denAllIn?c:Math.min(Number(denWager)||0,c);
     if(w<=0){msg.textContent='No chips! Beat an arcade game (+10) and come back.';return 0;}
     return w;}
-  function pay(delta){progress.chips=Math.max(0,(progress.chips||0)+delta);saveProgress();updateChips();syncPlayer();}
+  function pay(delta){progress.chips=Math.max(0,(progress.chips||0)+delta);saveProgress();updateChips();syncPlayer();syncWager(true);}
   function settle(win,w,mult,label){
     pay(win?(w*mult-w):-w);
     msg.textContent=win?('🎉 '+label+' You win '+Math.round(w*mult-w)+' chips!'):('💀 '+label+' Lost '+w+' chips.');
