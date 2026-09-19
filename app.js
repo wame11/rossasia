@@ -1438,7 +1438,7 @@ async function openSite(){
 els.loginForm.addEventListener('submit',async e=>{e.preventDefault();els.loginError.textContent='';if(!await doLogin(els.username.value,els.password.value))els.loginError.textContent='Wrong name or password.';});
 els.logoutBtn.addEventListener('click',()=>{sessionStorage.removeItem(STORAGE.session);session=null;stopGame();els.site.classList.add('hidden');els.login.classList.remove('hidden');document.getElementById('cornerMascot')?.classList.add('hidden');clearInterval(bearTimer);});
 els.backBtn.addEventListener('click',showHome);
-els.syncBtn.addEventListener('click',syncShared);
+els.syncBtn.addEventListener('click',()=>{checkForUpdate(true);syncShared();});
 els.adminRefreshBtn.addEventListener('click',syncShared);
 els.exportCsvBtn.addEventListener('click',exportCsv);
 els.amazonBtn.addEventListener('click',()=>{if(!els.amazonBtn.disabled)jackpot(()=>els.voucher.classList.remove('hidden'));});
@@ -1726,6 +1726,44 @@ function openDen(){
   o.querySelector('.den-close').addEventListener('click',()=>o.remove());
   o.addEventListener('click',e=>{if(e.target===o)o.remove();});
 }
+/* ============================================================
+   SELF-UPDATE — the app notices a new build and refreshes itself.
+   version.json is fetched with no-store, so it is never a cached answer.
+   Guarded by a per-build sessionStorage flag so it can never loop.
+   ?fresh=1 in the address bar force-wipes every cache and the worker.
+   ============================================================ */
+const BUILD=(typeof window!=='undefined'&&window.__BUILD__)||'dev';
+function nukeCaches(){
+  const jobs=[];
+  try{if(window.caches&&caches.keys)jobs.push(caches.keys().then(ks=>Promise.all(ks.map(k=>caches.delete(k)))));}catch(_){/**/}
+  try{if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations)
+    jobs.push(navigator.serviceWorker.getRegistrations().then(rs=>Promise.all(rs.map(r=>r.unregister()))));}catch(_){/**/}
+  return Promise.all(jobs).catch(()=>{});
+}
+function checkForUpdate(loud){
+  return fetch('version.json?t='+Date.now(),{cache:'no-store'})
+    .then(r=>r.json())
+    .then(d=>{
+      if(!d||!d.build)return false;
+      if(d.build===BUILD){if(loud)toast('✅ You are on the latest version.');return false;}
+      let tried='';
+      try{tried=sessionStorage.getItem('a26-updating')||'';}catch(_){/**/}
+      if(tried===d.build&&!loud)return false;
+      try{sessionStorage.setItem('a26-updating',d.build);}catch(_){/**/}
+      if(loud)toast('⬇️ New version found — updating…',4000);
+      return nukeCaches().then(()=>{setTimeout(()=>location.reload(),loud?700:0);return true;});
+    })
+    .catch(()=>false);
+}
+try{
+  if(new URLSearchParams(location.search).get('fresh')==='1'){
+    nukeCaches().then(()=>location.replace(location.pathname));
+  }else{
+    setTimeout(()=>checkForUpdate(false),1200);
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkForUpdate(false);});
+  }
+}catch(_){/**/}
+
 /* ---- neon skyline backdrop: build the skyscrapers once ---- */
 function buildCity(){
   document.querySelectorAll('.city').forEach(city=>{

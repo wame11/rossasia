@@ -36,3 +36,29 @@ Pages reverts to `wame11.github.io/rossasia/`.
 
 DNS at GoDaddy: four `A` records on `@` → `185.199.108.153`, `185.199.109.153`,
 `185.199.110.153`, `185.199.111.153`, plus a `CNAME` on `www` → `wame11.github.io`.
+
+## Deploying a change
+
+Every asset is stamped with a build id so nobody can get a half-updated app.
+
+1. Pick a new build id, e.g. `2026-09-20-1`.
+2. Put it in **three** places: `version.json`, the `BUILD` constant at the top of
+   `service-worker.js`, and the `?v=` / `window.__BUILD__` values in `index.html`.
+3. Commit and push. That is it.
+
+How it heals itself:
+
+- `version.json` is fetched with `no-store` on load and whenever the app is
+  brought back to the foreground. If the deployed build differs from the running
+  one, the app clears every cache, unregisters the worker and reloads **once**
+  (guarded by a per-build session flag, so it cannot loop).
+- The service worker sends navigations to the network with `cache: 'no-store'`,
+  so an online device can never be served yesterday's `index.html`.
+- `?v=<build>` on the script and stylesheet URLs means new HTML always pulls new
+  JS and CSS, regardless of the browser's HTTP cache.
+- A failed asset request never falls back to `index.html`. Serving HTML in place
+  of `app.js` is what silently broke the app before.
+- **Escape hatch:** `https://ross.asia/?fresh=1` wipes all caches and the service
+  worker, then reloads clean. Use this if a device is ever stuck.
+- The **Sync** button also checks for a new build and says either "You are on the
+  latest version" or "New version found — updating…".

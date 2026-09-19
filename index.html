@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Asia 2026 Family Challenge</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=2026-09-19-1" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png" />
@@ -147,10 +147,21 @@
     </section>
   </main>
 
-  <script src="stops.js"></script>
-  <script src="app.js"></script>
+  <script>window.__BUILD__='2026-09-19-1';</script>
+  <script src="stops.js?v=2026-09-19-1"></script>
+  <script src="app.js?v=2026-09-19-1"></script>
   <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./service-worker.js').then(function(reg){
+    reg.addEventListener('updatefound', function(){
+      var w = reg.installing;
+      if (w) w.addEventListener('statechange', function(){
+        if (w.state === 'installed' && navigator.serviceWorker.controller) w.postMessage('skipWaiting');
+      });
+    });
+    setInterval(function(){ reg.update().catch(function(){}); }, 60 * 60 * 1000);
+  }).catch(function(){});
+}
   </script>
 
   <!-- KIMBAP the Japanese macaque (snow monkey) -->
