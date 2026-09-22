@@ -9,11 +9,16 @@ const ACCOUNTS={
   admin:{role:'admin',hash:'7f3d56bb44da1a1f5239ac9db712488db90f135d999290ed9104eba8691096e2'}
 };
 /* Paste your Google Apps Script /exec URL into sheetEndpoint to sync across devices. */
-const DATA_VERSION='asia-2026-10-A'; /* bump this to force every device to start fresh */
+const DATA_VERSION='asia-2026-10-B'; /* bump this to force every device to start fresh */
 const CONFIG={sheetEndpoint:'https://script.google.com/macros/s/AKfycbx_qOmtVWPm7BuClVf1Yj-w4pV7OyWgEzxntc89hgxNeQ9FB-acd6j5NcC0rO7wgkGy/exec',sheetUrl:'',youtubeKey:'AIzaSyC97QvLqWtLZ339RY01Zfv2ghEVJWr14TE'};
 /* Departure: 16 Oct 2026, 19:35 UK time (BST = UTC+1) — KE908 LHR → ICN */
 const DEPARTURE=Date.UTC(2026,9,16,18,35,0);
 const SCORE_PER_STOP=100;
+/* SEASON START: the spreadsheet is shared with the Route 66 game, so anything on it older than this
+   (submissions, chip grants, player chip counts) is ignored. The admin RESET button moves it forward. */
+const SEASON_START=Date.parse('2026-09-22T21:00:00Z');
+const RESET_MARKER='__RESET__';
+const START_CHIPS=0;
 const PLAYER_NAMES=Object.keys(ACCOUNTS).filter(n=>ACCOUNTS[n].role==='player');
 /* ⚠️ RESET SWITCH: change v4 -> v5 -> v6 ... to wipe EVERY device's saved progress automatically */
 const STORAGE={session:'asia26-session-v1',shared:'asia26-shared-v1',progressPrefix:'asia26-progress-v1-'};
@@ -57,8 +62,8 @@ const els={
     console.log('[A26] fresh start applied');
   }catch(_){/**/}
 })();
-function freshProgress(){return {completed:{},submitted:{},photos:{},hunt:{},huntPhotos:{},game:{},quiz:{},points:{},chips:85,chipGrant:{}};}
-function freshShared(){return {submissions:[],updatedAt:null,players:[],grants:[]};}
+function freshProgress(){return {completed:{},submitted:{},photos:{},hunt:{},huntPhotos:{},game:{},quiz:{},points:{},chips:START_CHIPS,chipGrant:{}};}
+function freshShared(){return {submissions:[],updatedAt:null,players:[],grants:[],seasonStart:SEASON_START};}
 function readJson(k,f=null){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch{return f;}}
 function writeJson(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch{return false;}}
 function progressKey(){return STORAGE.progressPrefix+(session?.username||'guest');}
@@ -87,7 +92,7 @@ function purgeOldPhotos(aggressive){
   });
   return freed;
 }
-function mergeProgress(s){const m=freshProgress();if(!s||typeof s!=='object')return m;Object.keys(m).forEach(k=>{if(k==='chips'){m.chips=Number.isFinite(s.chips)?s.chips:85;}else{m[k]=s[k]&&typeof s[k]==='object'?s[k]:m[k];}});return m;}
+function mergeProgress(s){const m=freshProgress();if(!s||typeof s!=='object')return m;Object.keys(m).forEach(k=>{if(k==='chips'){m.chips=Number.isFinite(s.chips)?s.chips:START_CHIPS;}else{m[k]=s[k]&&typeof s[k]==='object'?s[k]:m[k];}});return m;}
 function loadShared(){shared=normaliseShared(readJson(STORAGE.shared,freshShared()));}
 function saveShared(){shared.updatedAt=new Date().toISOString();writeJson(STORAGE.shared,shared);}
 
@@ -1150,33 +1155,20 @@ function bigPhoto(src,label){
   document.body.appendChild(o);
 }
 
-/* ---- ADMIN: wipe everything and start the game over ---- */
-async function resetEverything(){
-  if(!isAdmin())return;
-  if(!confirm('RESET THE WHOLE GAME?\n\nThis clears every submission, all points, all chips, characters and season progress for EVERYONE.\n\nThis cannot be undone.'))return;
-  if(!confirm('Really sure? Everyone goes back to zero (85 starting chips).'))return;
-  const st=document.querySelector('.reset-status');
-  if(st)st.textContent='Wiping the server…';
-  const r=await apiPost({action:'resetAll',adminKey:session.adminKey});
-  /* wipe this device too */
-  try{Object.keys(localStorage).forEach(k=>{if(/^(asia26|route66)-/.test(k))localStorage.removeItem(k);});}catch(_){}
-  if(st)st.textContent=(r&&r.ok)?'✅ Server wiped. Reloading…':'⚠️ Server not reachable — this device is wiped. Redeploy or check the backend.';
-  setTimeout(()=>location.reload(),1400);
-}
-
 /* ---- ADMIN: give bonus chips to any player ---- */
 async function resetEverything(){
   if(!isAdmin())return;
-  if(!confirm('RESET EVERYTHING?\n\nThis wipes all points, chips, photos, submissions and characters for EVERY player on EVERY device.\nEveryone restarts with 85 chips and 0 points.\n\nThis cannot be undone.'))return;
+  if(!confirm('RESET EVERYTHING?\n\nEvery player goes back to 0 chips, 0 points and no stops cleared, on EVERY device.\n\nThis cannot be undone.'))return;
   if(!confirm('Really sure? Last chance.'))return;
   const st=document.querySelector('.reset-status');
   if(st)st.textContent='Resetting…';
-  const r=await apiPost({action:'resetAll',adminKey:session.adminKey,createdBy:session.username});
+  /* the backend has no reset action, so drop a marker row in ChipGrants — every app ignores anything older */
+  const r=await apiPost({action:'grantChips',username:RESET_MARKER,amount:0,reason:'RESET EVERYTHING',createdBy:session.username,adminKey:session.adminKey});
   if(r&&r.ok){
     if(st)st.textContent='✅ Everything reset. Other devices wipe themselves next time they open the app.';
-    wipeLocal(String(r.resetStamp||Date.now()));
+    wipeLocal(String(r.id||Date.now()));
     setTimeout(()=>location.reload(),1500);
-  } else if(st)st.textContent='❌ Could not reach the server — check the backend is connected.';
+  } else if(st)st.textContent='❌ Could not reach the server'+(r&&r.error?' — '+r.error:'')+'.';
 }
 function renderResetBox(){
   if(!isAdmin())return;
@@ -1187,7 +1179,7 @@ function renderResetBox(){
     '<button type="button" class="btn btn-quiet reset-shared">♻️ Clear cached submissions only</button></div>'+
     '<p class="grant-status reset-status"></p>';
   host.querySelector('.reset-go').addEventListener('click',()=>{
-    if(!confirm('Wipe ALL saved data on this device?\n\nEveryone signed in on this phone starts from zero (85 chips, 0 points).'))return;
+    if(!confirm('Wipe ALL saved data on this device?\n\nEveryone signed in on this phone starts from zero (0 chips, 0 points).'))return;
     try{
       Object.keys(localStorage).filter(k=>/^(asia26|a26|route66|r66)/i.test(k)).forEach(k=>localStorage.removeItem(k));
       sessionStorage.clear();
@@ -1220,7 +1212,6 @@ function renderChipGrant(){
     '<div class="reset-zone"><button type="button" class="btn btn-danger reset-all">♻️ RESET EVERYTHING (all players, all devices)</button><p class="reset-status"></p></div>'+'<div class="grant-standings">Current chips — '+(chips.size?[...chips.entries()].sort((a,b)=>b[1]-a[1]).map(([n,c])=>escapeHtml(n)+': <b>'+c+'</b>').join(' · '):'none reported yet')+'</div>';
   host.querySelectorAll('.grant-chip').forEach(b=>b.addEventListener('click',()=>{host.querySelector('.grant-amt').value=b.dataset.n;}));
   host.querySelector('.reset-all')?.addEventListener('click',resetEverything);
-  host.querySelector('.reset-all')?.addEventListener('click',resetEverything);
   host.querySelector('.grant-go').addEventListener('click',async()=>{
     const who=host.querySelector('.grant-who').value;
     const amt=Number(host.querySelector('.grant-amt').value)||0;
@@ -1230,7 +1221,7 @@ function renderChipGrant(){
     st.textContent='Sending…';
     const r=await apiPost({action:'grantChips',username:who,amount:amt,reason:why,createdBy:session.username,adminKey:session.adminKey});
     if(r&&r.ok){st.textContent='✅ '+(amt>0?'Gave ':'Took ')+Math.abs(amt)+' chips '+(amt>0?'to ':'from ')+who+(why?' — "'+why+'"':'')+'. They get it next time they open the app.';
-      host.querySelector('.grant-why').value='';shared.grants=r.grants||shared.grants;saveShared();toast('✅ Chips sent to '+who);}
+      host.querySelector('.grant-why').value='';shared.grants=r.grants?normaliseShared({grants:r.grants}).grants:shared.grants;saveShared();toast('✅ Chips sent to '+who);}
     else {const msg=(r&&r.error)?r.error:'Unknown error';st.textContent='❌ '+msg;toast('❌ '+msg,5000);console.error('[A26] grantChips failed:',r);}
   });
 }
@@ -1346,8 +1337,9 @@ async function syncShared(){
   if(!CONFIG.sheetEndpoint){loadShared();applySharedToProgress();renderHome();return;}
   try{const url=new URL(CONFIG.sheetEndpoint);url.searchParams.set('action','state');url.searchParams.set('t',Date.now());
     const r=await fetch(url.toString());const raw=await r.json();
-    if(checkRemoteReset(raw))return;
-    shared=normaliseShared(raw);saveShared();}catch{loadShared();}
+    const fresh=normaliseShared(raw);
+    if(checkRemoteReset(fresh))return;
+    shared=fresh;saveShared();}catch{loadShared();}
   applySharedToProgress();applyGrants();
   try{if(purgeOldPhotos()){writeJson(progressKey(),progress);}}catch(_){/**/}
   renderHome();syncPlayer();
@@ -1398,14 +1390,22 @@ function checkRemoteReset(data){
   return false;
 }
 function normaliseShared(data){
-  const c=freshShared();c.updatedAt=data?.updatedAt||null;c.players=Array.isArray(data?.players)?data.players:[];c.grants=Array.isArray(data?.grants)?data.grants:[];c.resetStamp=data?.resetStamp||null;
+  const c=freshShared();c.updatedAt=data?.updatedAt||null;
+  /* the admin RESET writes a marker row into ChipGrants; the newest one starts a fresh season */
+  const rawGrants=Array.isArray(data?.grants)?data.grants:[];
+  const markers=rawGrants.filter(g=>g&&g.username===RESET_MARKER).sort((a,b)=>timestamp(b.createdAt)-timestamp(a.createdAt));
+  const since=Math.max(SEASON_START,markers.length?timestamp(markers[0].createdAt):0,Number(data?.seasonStart)||0);
+  c.seasonStart=since;
+  c.resetStamp=markers.length?String(markers[0].id):(data?.resetStamp||null);
+  c.players=(Array.isArray(data?.players)?data.players:[]).filter(p=>p&&timestamp(p.updatedAt)>=since);
+  c.grants=rawGrants.filter(g=>g&&g.username!==RESET_MARKER&&timestamp(g.createdAt)>=since);
   c.submissions=Array.isArray(data?.submissions)?data.submissions.map(i=>({
     id:String(i.id||i.ID||''),username:String(i.username||i.Username||''),stopId:String(i.stopId||i.StopID||''),
     stopTitle:String(i.stopTitle||i.StopTitle||''),day:String(i.day||i.Day||''),hotel:String(i.hotel||i.Hotel||''),
     score:Number(i.score||i.Score||SCORE_PER_STOP),bonus:Number(i.bonus||i.Bonus||0),status:String(i.status||i.Status||'pending').toLowerCase(),
     submittedAt:String(i.submittedAt||i.SubmittedAt||''),updatedAt:String(i.updatedAt||i.UpdatedAt||''),approvedAt:String(i.approvedAt||i.ApprovedAt||''),
     approvedBy:String(i.approvedBy||i.ApprovedBy||''),suggestBonus:Number(i.suggestBonus||i.SuggestBonus||0),chips:Number(i.chips||i.Chips||0),playBonus:Number(i.playBonus||i.PlayBonus||0),proofName:String(i.proofName||i.ProofName||''),proofImage:String(i.proofImage||i.ProofImage||''),activity:String(i.activity||i.Activity||'')
-  })).filter(i=>i.id&&i.username&&i.stopId):[];
+  })).filter(i=>i.id&&i.username&&i.stopId&&stopById(i.stopId)&&timestamp(i.submittedAt||i.updatedAt)>=since):[];
   return c;
 }
 function exportCsv(){
