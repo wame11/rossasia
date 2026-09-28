@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Asia 2026 Family Challenge</title>
-  <link rel="stylesheet" href="styles.css?v=2026-09-22-1" />
+  <link rel="stylesheet" href="styles.css?v=2026-09-28-1" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png" />
@@ -56,7 +56,6 @@
     <nav class="viewtabs">
       <button type="button" class="vtab active" data-view="homeView">🗾 Map</button>
       <button type="button" class="vtab" data-view="gamesView">🎮 Games</button>
-      <button type="button" class="vtab" data-view="musicView">🎵 Music</button>
       <button type="button" class="vtab" data-view="postView">📮 Cards</button>
     </nav>
 
@@ -122,18 +121,6 @@
       <div id="hubStage" class="hub-stage hidden"><button id="hubBack" class="btn btn-back" type="button">← All games</button><div id="hubBody"></div></div>
     </section>
 
-    <!-- MUSIC -->
-    <section id="musicView" class="hidden">
-      <div class="hub-head"><h2>🎵 Music</h2><p class="hub-earn">Type a song — it plays right here in the app (needs internet)</p></div>
-      <div class="music-box">
-        <div class="music-search"><input id="musicInput" placeholder="Type any song, e.g. Dynamite" /><button id="musicBtn" class="btn btn-primary" type="button">▶️ Play</button></div>
-        <div class="music-quick"><b>Japan &amp; Korea playlist:</b> <span class="mq">Dynamite BTS</span><span class="mq">Gangnam Style</span><span class="mq">Blackpink DDU-DU DDU-DU</span><span class="mq">Sukiyaki Kyu Sakamoto</span><span class="mq">Pokemon Theme</span><span class="mq">Tokyo Drift</span><span class="mq">Butter BTS</span><span class="mq">Super Shy NewJeans</span></div>
-        <div id="musicPlayerBox" class="music-player">
-          <p class="music-note">Type a song and hit Play — it plays right here in the app. 🎵</p>
-        </div>
-      </div>
-    </section>
-
     <!-- POSTCARDS -->
     <section id="postView" class="hidden">
       <div class="hub-head"><h2>📮 Postcards</h2><p class="hub-earn">Your arrival photos become postcards — add a caption, then save it straight to your Photos 📸</p></div>
@@ -147,9 +134,10 @@
     </section>
   </main>
 
-  <script>window.__BUILD__='2026-09-22-1';</script>
-  <script src="stops.js?v=2026-09-22-1"></script>
-  <script src="app.js?v=2026-09-22-1"></script>
+  <script>window.__BUILD__='2026-09-28-1';</script>
+  <script src="stops.js?v=2026-09-28-1"></script>
+  <script src="app.js?v=2026-09-28-1"></script>
+  <script src="games.js?v=2026-09-28-1"></script>
   <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js').then(function(reg){

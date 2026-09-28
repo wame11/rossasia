@@ -4,7 +4,7 @@ Japan & South Korea — Ross Family, 16–31 October 2026.
 
 A phone-first web game that turns the trip itinerary into a level map. Each stop
 is a mission: take an arrival photo, complete your own scavenger-hunt photos,
-beat one of five arcade games, and clear the boss quiz — then submit it for
+beat one of three themed activity games, and clear a five-question boss quiz — then submit it for
 approval. The admin login approves missions, awards bonus points and hands out
 chips.
 
@@ -15,8 +15,9 @@ and Korea: white and Japanese-blue, with a neon skyline behind everything.
 | File | What it is |
 |---|---|
 | `index.html` | App shell, login, mascot |
-| `stops.js` | All 43 stops — facts, hunt items, games, quizzes |
-| `app.js` | Game engine, arcade, admin, sync |
+| `stops.js` | All 47 stops, in itinerary order — facts, 7 hunt items (5 per player), 3 games, 7 quiz questions (5 per player) |
+| `games.js` | The 19 activity-game engines (packing, merge, match-3, climb, crossing, conveyor, spot-the-difference, path, pipes, lanterns, maze, pachinko, crane, throw, cooking, balance, archery, word search, sliding puzzle) |
+| `app.js` | Level pages, quiz, hunts, Games tab, den, admin, sync |
 | `styles.css` | Neon Tokyo/Seoul theme |
 | `service-worker.js` | Offline cache |
 

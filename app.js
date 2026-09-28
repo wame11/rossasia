@@ -10,7 +10,7 @@ const ACCOUNTS={
 };
 /* Paste your Google Apps Script /exec URL into sheetEndpoint to sync across devices. */
 const DATA_VERSION='asia-2026-10-B'; /* bump this to force every device to start fresh */
-const CONFIG={sheetEndpoint:'https://script.google.com/macros/s/AKfycbx_qOmtVWPm7BuClVf1Yj-w4pV7OyWgEzxntc89hgxNeQ9FB-acd6j5NcC0rO7wgkGy/exec',sheetUrl:'',youtubeKey:'AIzaSyC97QvLqWtLZ339RY01Zfv2ghEVJWr14TE'};
+const CONFIG={sheetEndpoint:'https://script.google.com/macros/s/AKfycbx_qOmtVWPm7BuClVf1Yj-w4pV7OyWgEzxntc89hgxNeQ9FB-acd6j5NcC0rO7wgkGy/exec',sheetUrl:''};
 /* Departure: 16 Oct 2026, 19:35 UK time (BST = UTC+1) — KE908 LHR → ICN */
 const DEPARTURE=Date.UTC(2026,9,16,18,35,0);
 const SCORE_PER_STOP=100;
@@ -19,6 +19,7 @@ const SCORE_PER_STOP=100;
 const SEASON_START=Date.parse('2026-09-22T21:00:00Z');
 const RESET_MARKER='__RESET__';
 const START_CHIPS=0;
+const CONTENT_VERSION=2; /* bump when stop games, hunts or quizzes are rebuilt */
 const PLAYER_NAMES=Object.keys(ACCOUNTS).filter(n=>ACCOUNTS[n].role==='player');
 /* ⚠️ RESET SWITCH: change v4 -> v5 -> v6 ... to wipe EVERY device's saved progress automatically */
 const STORAGE={session:'asia26-session-v1',shared:'asia26-shared-v1',progressPrefix:'asia26-progress-v1-'};
@@ -62,12 +63,20 @@ const els={
     console.log('[A26] fresh start applied');
   }catch(_){/**/}
 })();
-function freshProgress(){return {completed:{},submitted:{},photos:{},hunt:{},huntPhotos:{},game:{},quiz:{},points:{},chips:START_CHIPS,chipGrant:{}};}
+function freshProgress(){return {completed:{},submitted:{},photos:{},hunt:{},huntPhotos:{},game:{},quiz:{},points:{},chips:START_CHIPS,chipGrant:{},contentVer:CONTENT_VERSION};}
 function freshShared(){return {submissions:[],updatedAt:null,players:[],grants:[],seasonStart:SEASON_START};}
 function readJson(k,f=null){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch{return f;}}
 function writeJson(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch{return false;}}
 function progressKey(){return STORAGE.progressPrefix+(session?.username||'guest');}
-function loadProgress(){progress=mergeProgress(readJson(progressKey(),null));if(session&&session.test)progress.chips=999999;}
+function loadProgress(){progress=mergeProgress(readJson(progressKey(),null));if(session&&session.test)progress.chips=999999;
+  if((progress.contentVer||1)<CONTENT_VERSION){
+    /* the per-stop games, hunt lists and quiz questions changed, so old answers/wins no longer line up.
+       Photos, character and submissions are kept. */
+    progress.game={};progress.quiz={};progress.hunt={};progress.huntPhotos={};progress.chipGrant={};
+    /* chips were inflated by a loading bug that re-paid grants and streak bonuses — start clean once.
+       Admin grants since the season start are paid again exactly once (grantsApplied cleared). */
+    progress.chips=START_CHIPS;progress.chipsEarned=0;progress.seasonClaimed=[];progress.grantsApplied={};progress.invest={};
+    progress.contentVer=CONTENT_VERSION;saveProgress();}}
 function saveProgress(){
   if(session?.role==='admin')return;
   if(writeJson(progressKey(),progress))return;
@@ -92,7 +101,10 @@ function purgeOldPhotos(aggressive){
   });
   return freed;
 }
-function mergeProgress(s){const m=freshProgress();if(!s||typeof s!=='object')return m;Object.keys(m).forEach(k=>{if(k==='chips'){m.chips=Number.isFinite(s.chips)?s.chips:START_CHIPS;}else{m[k]=s[k]&&typeof s[k]==='object'?s[k]:m[k];}});return m;}
+/* keep EVERYTHING that was saved (character, investments, streak, grants already paid, captions…) and only
+   repair the core fields. The old version dropped unknown keys, so grants and streak bonuses re-paid on every reload. */
+function mergeProgress(s){const m=freshProgress();if(!s||typeof s!=='object')return m;const out={...s};
+  Object.keys(m).forEach(k=>{if(k==='chips'){out.chips=Number.isFinite(s.chips)?s.chips:START_CHIPS;}else if(k==='contentVer'){out.contentVer=s.contentVer||1;}else{out[k]=s[k]&&typeof s[k]==='object'?s[k]:m[k];}});return out;}
 function loadShared(){shared=normaliseShared(readJson(STORAGE.shared,freshShared()));}
 function saveShared(){shared.updatedAt=new Date().toISOString();writeJson(STORAGE.shared,shared);}
 
@@ -117,7 +129,11 @@ function pickFor(user,stopId,arr,n){
   return idx.slice(0,n).sort((a,b)=>a-b).map(i=>arr[i]);
 }
 function myHunt(stop){return pickFor(session?.username||'test',stop.id,stop.huntPool,5);}
-function myQuiz(stop){return pickFor(session?.username||'test',stop.id,stop.quizPool,3);}
+function myQuiz(stop){return pickFor(session?.username||'test',stop.id,stop.quizPool,5);}
+/* answer options in a per-player shuffled order, so the right answer isn't always first */
+function quizOptions(stop,q,i){const opts=(q[2]||['true','false']).slice();if(!q[2])return opts;
+  const rnd=mulberry(seedFrom((session?.username||'test')+'|'+stop.id+'|q'+i+'|'+q[0]));
+  for(let k=opts.length-1;k>0;k--){const j=Math.floor(rnd()*(k+1));[opts[k],opts[j]]=[opts[j],opts[k]];}return opts;}
 
 /* ---------- status / unlock ---------- */
 function statusForStop(id){
@@ -295,7 +311,7 @@ function renderLevel(index){
   root.querySelector('h1').textContent=stop.title;
   root.querySelector('.hero-meta').textContent='Level '+(index+1)+' · '+stop.day+' · '+stop.loc;
   root.querySelector('.facts').innerHTML=stop.facts.map(f=>'<li>'+escapeHtml(f)+'</li>').join('');
-  root.querySelector('.game-name').textContent='Arcade — 5 games';
+  root.querySelector('.game-name').textContent='Arcade — '+(stop.games||[]).length+' games';
   root.querySelector('.game-prompt').textContent='Pick a game below. Win any ONE to clear this objective — beat more for bonus points!';
   root.querySelector('.intel').classList.add('task-complete');
 
@@ -404,654 +420,7 @@ function renderHunt(root,stop){
   });
 }
 
-/* ============================================================
-   ARCADE — 12 endless engines, 5 games per stop, lives & high scores
-   Win the target in ANY game to clear the objective; extra wins = suggested bonus.
-   ============================================================ */
-const WIN_BONUS_PER_EXTRA=5;
-/* Crisp SVG sprites (real art, not emoji) — always work offline */
-const SPRITES={
-TORII:'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="#d7263d" stroke="#5c0d1a" stroke-width="3" stroke-linejoin="round"><path d="M6 20h88l-6 10H12z"/><rect x="14" y="34" width="72" height="9" rx="2"/><rect x="22" y="30" width="12" height="62" rx="3"/><rect x="66" y="30" width="12" height="62" rx="3"/></g></svg>'),
-SHIBA:'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g stroke="#5a3316" stroke-width="3" stroke-linejoin="round"><path d="M26 34 30 10 48 26Z" fill="#d79a4e"/><path d="M74 34 70 10 52 26Z" fill="#d79a4e"/><ellipse cx="50" cy="56" rx="34" ry="30" fill="#e0a95c"/><ellipse cx="50" cy="68" rx="18" ry="13" fill="#fff5e4"/></g><ellipse cx="50" cy="62" rx="6" ry="4.5" fill="#2b1a0c"/><circle cx="38" cy="50" r="4" fill="#2b1a0c"/><circle cx="62" cy="50" r="4" fill="#2b1a0c"/><path d="M42 74c4 4 12 4 16 0" stroke="#2b1a0c" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>'),
-PAGODA:'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="#0d3f8f" stroke="#04182f" stroke-width="2.6" stroke-linejoin="round"><path d="M50 6 78 24H22z"/><rect x="40" y="24" width="20" height="10"/><path d="M50 30 86 48H14z"/><rect x="38" y="48" width="24" height="12"/><path d="M50 54 92 74H8z"/><rect x="34" y="74" width="32" height="20"/></g><rect x="45" y="80" width="10" height="14" fill="#00e5ff"/></svg>')
-};
-function spriteEl(key,size){const im=new Image();im.src=SPRITES[key];im.width=size||44;im.height=size||44;im.className='sprite';return im;}
-function isSprite(v){return typeof v==='string'&&SPRITES[v];}
-function drawIcon(ctx,v,x,y,size,cache){
-  if(isSprite(v)){let im=cache[v];if(!im){im=new Image();im.src=SPRITES[v];cache[v]=im;}
-    if(im.complete)ctx.drawImage(im,x-size/2,y-size/2,size,size);return;}
-  ctx.font=size+'px serif';ctx.textAlign='center';ctx.fillText(v,x,y+size*0.35);
-}
-/* per-stop game state */
-function gameState(stopId){const g=progress.game[stopId];return (g&&g.perGame)?g:{perGame:{},complete:false};}
-function gamesFor(stop){return stop.games.map(([t,n,o])=>({t,n,o:o||{}}));}
-function winsCount(stop){const st=gameState(stop.id);return gamesFor(stop).filter((_,i)=>st.perGame[i]?.won).length;}
-function reportScore(root,stop,gi,score,won){
-  const st=gameState(stop.id);
-  const cur=st.perGame[gi]||{best:0,won:false};
-  st.perGame[gi]={best:Math.max(cur.best,score),won:cur.won||won};
-  st.complete=Object.values(st.perGame).some(g=>g.won);
-  progress.game[stop.id]=st;
-  const gk=stop.id+'-'+gi;
-  if(won&&!progress.chipGrant[gk]){progress.chipGrant[gk]=true;progress.chips=(progress.chips||0)+10;grantEarn(10);updateChips();syncPlayer();sfx('coin');bearShout('+10 chips! Come gamble them with me! 🐒🪙');setTimeout(maybeMysteryBox,1200);}
-  saveProgress();refreshTaskTags(root,stop);
-  const badge=root.querySelector('.gm-tab[data-gi="'+gi+'"] .gm-best');
-  if(badge)badge.textContent=st.perGame[gi].best+(st.perGame[gi].won?' 🏆':'');
-  if(won)burst(root.querySelector('.arcade'));
-}
-const TARGETS={runner:400,catch:15,whack:15,dodge:30,timing:5,tap:40,memory:2,simon:6,hl:5,reels:20,wheel:20,dice21:20,taiko:20,stack:8,snake:8,flappy:6,sort:15,slice:20};
-const INSTR={runner:'Tap anywhere to start, tap to JUMP over obstacles. One crash ends the run — it gets faster!',
-catch:'Tap to start, then SLIDE your finger to move the catcher. Catch the good stuff, avoid the bad. 3 lives!',
-whack:'Tap any square to start. Tap the targets FAST when they pop up — don\u2019t tap decoys, don\u2019t let them escape. 3 lives!',
-dodge:'Tap to start, SLIDE to dodge everything falling. It speeds up. 3 lives!',
-timing:'Tap SNAP when the white marker is inside the gold zone. 3 misses and you\u2019re out — the zone shrinks!',
-tap:'Tap the moving target as many times as you can in 30 seconds. Missing costs a second!',
-memory:'Flip cards to find matching pairs. Clear the whole board before the timer — each round gets faster!',
-simon:'Watch the pads light up, then repeat the sequence by tapping them in order. One wrong tap ends it!',
-hl:'Guess if the next card is HIGHER or LOWER (2 low, Ace high). Build your streak — one wrong guess ends it!',
-reels:'Tap SPIN (costs 1 chip). Match 2 symbols = +4, all 3 = JACKPOT +20. Run out = new stack.',
-wheel:'Bet a chip on a colour: gold pays \u00d72 (likely), purple \u00d73, red \u00d75 (rare). Reach the goal!',
-dice21:'Roll dice toward 21 without going bust, or STICK to beat the bank\u2019s roll. Hit exactly 21 = +8 chips!',
-taiko:'Notes fall in two lanes. Tap the LEFT or RIGHT side of the screen exactly as a note crosses the neon line. 3 lives!',
-stack:'Tap to start, then tap to drop each block onto the one below. Whatever hangs over the edge gets sliced off \u2014 keep it lined up!',
-snake:'Swipe on the board or use the arrows to steer. Eat to grow, but do not hit the wall or your own tail!',
-flappy:'Tap to start, then keep tapping to flap. Fly through the gap in each gate \u2014 touch anything and you are done.',
-sort:'An item appears \u2014 decide FAST: safe to eat, or not? Wrong answer or running out of time costs a life. 3 lives!',
-slice:'Tap to start, then swipe your finger through the food to slice it. Slice a bomb and you lose a life. 3 lives!'};
-function targetText(t,v){return {taiko:v+' clean hits',stack:'Stack '+v,snake:'Eat '+v,flappy:'Pass '+v+' gates',sort:'Sort '+v,slice:'Slice '+v,runner:'Score '+v,catch:'Catch '+v,whack:'Bop '+v,dodge:'Survive '+v+'s',timing:v+' perfect snaps',tap:v+' taps in 30s',memory:'Clear '+v+' rounds',simon:'Sequence of '+v,hl:'Streak of '+v,reels:'Reach '+v+' chips',wheel:'Reach '+v+' chips',dice21:'Reach '+v+' chips'}[t];}
-function renderArcade(root,stop){
-  const host=root.querySelector('.arcade');
-  const games=gamesFor(stop);const st=gameState(stop.id);
-  host.innerHTML='<p class="arcade-rule">🏆 Beat the goal in <b>ANY 1</b> of the 5 games to clear this objective. Every EXTRA game you beat = bonus points from the boss. Games are endless — chase the family high score!</p>'+
-    '<div class="gm-tabs">'+games.map((g,i)=>'<button type="button" class="gm-tab" data-gi="'+i+'"><span class="gm-name">'+escapeHtml(g.n)+'</span><span class="gm-best">'+((st.perGame[i]?.best||0)+(st.perGame[i]?.won?' 🏆':''))+'</span></button>').join('')+'</div>'+
-    '<div class="arcade-goal"></div><div class="arcade-stage"></div>';
-  const stage=host.querySelector('.arcade-stage'),goal=host.querySelector('.arcade-goal');
-  const engines={runner:egRunner,catch:egCatch,whack:egWhack,dodge:egDodge,timing:egTiming,tap:egTap,memory:egMemory,simon:egSimon,hl:egHL,reels:egReels,wheel:egWheel,dice21:egDice21,taiko:egTaiko,stack:egStack,snake:egSnake,flappy:egFlappy,sort:egSort,slice:egSlice};
-  function open(i){
-    stopGame();host.querySelectorAll('.gm-tab').forEach(b=>b.classList.toggle('active',+b.dataset.gi===i));
-    const g=games[i];const target=g.o.target||TARGETS[g.t];
-    goal.innerHTML='🎯 <b>'+targetText(g.t,target)+'</b> to win · endless after that!<br><span class="arcade-instr">📖 '+INSTR[g.t]+'</span>';
-    stage.innerHTML='';
-    activeGame=engines[g.t](stage,{...g.o,target,title:g.n},(score,won)=>reportScore(root,stop,i,score,won));
-  }
-  host.querySelectorAll('.gm-tab').forEach(b=>b.addEventListener('click',()=>open(+b.dataset.gi)));
-  open(0);
-}
-/* helpers */
-function makeCanvas(stage,h){const c=document.createElement('canvas');c.width=600;c.height=h||300;c.className='game-canvas';stage.appendChild(c);return c;}
-function hudLine(stage){const d=document.createElement('div');d.className='game-hud';stage.prepend(d);return d;}
-function hearts(n){return '❤️'.repeat(Math.max(0,n))+'🖤'.repeat(Math.max(0,3-n));}
-
-/* 1 RUNNER — endless, crash = game over */
-function egRunner(stage,g,report){
-  const hud=hudLine(stage),c=makeCanvas(stage),ctx=c.getContext('2d'),cache={};
-  let raf,run=false,y=0,vy=0,obs=[],score=0,speed=4.2,t=0,won=false;
-  function frame(){
-    t++;score++;if(t%70===0)speed+=0.15;
-    if(t%Math.max(42,95-Math.floor(speed*7))===0)obs.push({x:640});
-    vy+=0.7;y=Math.min(0,y+vy);if(y===0)vy=0;
-    obs.forEach(o=>o.x-=speed);obs=obs.filter(o=>o.x>-40);
-    for(const o of obs)if(Math.abs(o.x-90)<32&&y>-36)return over();
-    ctx.clearRect(0,0,600,300);ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);
-    ctx.fillStyle='#050b18';ctx.fillRect(0,266,600,40);
-    ctx.strokeStyle='#00e5ff';ctx.setLineDash([18,14]);ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,286);ctx.lineTo(600,286);ctx.stroke();ctx.setLineDash([]);
-    drawIcon(ctx,g.p,90,240+y,42,cache);
-    obs.forEach(o=>drawIcon(ctx,g.o,o.x,244,40,cache));
-    if(!won&&score>=g.target){won=true;report(score,true);}
-    hud.innerHTML='Score <b>'+score+'</b> · Speed '+speed.toFixed(1)+(won?' · 🏆':'');
-    raf=requestAnimationFrame(frame);
-  }
-  function over(){run=false;cancelAnimationFrame(raf);report(score,won);
-    ctx.fillStyle='rgba(5,11,24,.85)';ctx.fillRect(0,0,600,300);ctx.fillStyle='#00e5ff';ctx.textAlign='center';
-    ctx.font='bold 30px sans-serif';ctx.fillText('💥 CRASH! Score '+score,300,140);ctx.font='bold 17px sans-serif';ctx.fillText('Tap to run again',300,175);}
-  c.addEventListener('pointerdown',()=>{if(run){if(y===0)vy=-13.5;}else{y=0;vy=0;obs=[];score=0;speed=4.2;t=0;won=false;run=true;frame();}});
-  ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);ctx.fillStyle='#cfeeff';ctx.font='bold 24px sans-serif';ctx.textAlign='center';ctx.fillText('Tap to start · tap to jump',300,150);
-  hud.innerHTML='Endless run — how far can you get?';
-  return {stop(){run=false;cancelAnimationFrame(raf);}};
-}
-/* 2 CATCH — 3 lives */
-function egCatch(stage,g,report){
-  const hud=hudLine(stage),c=makeCanvas(stage),ctx=c.getContext('2d'),cache={};
-  let raf,run=false,items=[],caught=0,lives=3,bx=300,t=0,speed=1,won=false;
-  function frame(){
-    t++;if(t%36===0){const bad=Math.random()<0.3;const arr=bad?g.bad:g.good;items.push({x:40+Math.random()*520,y:-20,v:(2.1+Math.random()*2)*speed,e:arr[Math.floor(Math.random()*arr.length)],bad});}
-    if(t%400===0)speed+=0.15;
-    items.forEach(i=>i.y+=i.v);
-    items=items.filter(i=>{
-      if(i.y>232&&Math.abs(i.x-bx)<46){if(i.bad){lives--;}else caught++;return false;}
-      if(i.y>=306){if(!i.bad)lives--;return false;}
-      return true;});
-    ctx.clearRect(0,0,600,300);ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);
-    ctx.fillStyle='#050b18';ctx.fillRect(0,272,600,28);
-    items.forEach(i=>drawIcon(ctx,i.e,i.x,i.y,34,cache));
-    drawIcon(ctx,g.catcher,bx,252,46,cache);
-    if(!won&&caught>=g.target){won=true;report(caught,true);}
-    hud.innerHTML='Caught <b>'+caught+'</b> · '+hearts(lives)+(won?' · 🏆':'');
-    if(lives<=0)return over();
-    raf=requestAnimationFrame(frame);
-  }
-  function over(){run=false;cancelAnimationFrame(raf);report(caught,won);
-    ctx.fillStyle='rgba(5,11,24,.85)';ctx.fillRect(0,0,600,300);ctx.fillStyle='#00e5ff';ctx.textAlign='center';ctx.font='bold 30px sans-serif';ctx.fillText('Out of lives! '+caught+' caught',300,140);ctx.font='bold 17px sans-serif';ctx.fillText('Tap to play again',300,175);}
-  c.addEventListener('pointermove',e=>{e.preventDefault();const r=c.getBoundingClientRect();bx=(e.clientX-r.left)*600/r.width;});
-  c.addEventListener('pointerdown',e=>{e.preventDefault();try{c.setPointerCapture(e.pointerId);}catch(_){/**/}
-    const r=c.getBoundingClientRect();bx=(e.clientX-r.left)*600/r.width;
-    if(!run){items=[];caught=0;lives=3;t=0;speed=1;won=false;run=true;frame();}});
-  c.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
-  ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);ctx.fillStyle='#cfeeff';ctx.font='bold 24px sans-serif';ctx.textAlign='center';ctx.fillText('Tap to start · slide to catch · 3 lives',300,150);
-  hud.innerHTML='Miss a good one or catch a bad one = lose a life!';
-  return {stop(){run=false;cancelAnimationFrame(raf);}};
-}
-/* 3 WHACK — endless waves, speeds up, 3 misses */
-function egWhack(stage,g,report){
-  stage.innerHTML='<div class="game-hud"></div><div class="whack-grid"></div>';
-  const hud=stage.querySelector('.game-hud'),grid=stage.querySelector('.whack-grid');
-  const cells=[];for(let i=0;i<9;i++){const b=document.createElement('button');b.type='button';b.className='whack-cell';grid.appendChild(b);cells.push(b);}
-  let score=0,lives=3,delay=850,popper=null,running=false,won=false,escapeTimer=null;
-  function setCell(b,v){b.innerHTML='';if(isSprite(v))b.appendChild(spriteEl(v,46));else b.textContent=v;}
-  function pop(){
-    cells.forEach(x=>{x.innerHTML='';x.dataset.kind='';});
-    clearTimeout(escapeTimer);
-    const i=Math.floor(Math.random()*9),isMole=Math.random()<0.7;
-    setCell(cells[i],isMole?g.mole:g.decoy);cells[i].dataset.kind=isMole?'mole':'decoy';
-    if(isMole)escapeTimer=setTimeout(()=>{if(running&&cells[i].dataset.kind==='mole'){lives--;update();if(lives<=0)finish();}},delay*1.25);
-    popper=setTimeout(pop,delay);
-  }
-  function update(){hud.innerHTML='Bopped <b>'+score+'</b> · '+hearts(lives)+(won?' · 🏆':'')+' · speed up!';}
-  function start(){running=true;score=0;lives=3;delay=850;won=false;update();pop();}
-  function finish(){running=false;clearTimeout(popper);clearTimeout(escapeTimer);cells.forEach(x=>{x.innerHTML='';x.dataset.kind='';});report(score,won);hud.innerHTML='💥 Game over — <b>'+score+'</b> bopped. Tap any square to retry.';}
-  cells.forEach(b=>b.addEventListener('pointerdown',()=>{
-    if(!running){start();return;}
-    if(b.dataset.kind==='mole'){score++;b.classList.add('hit');setTimeout(()=>b.classList.remove('hit'),140);delay=Math.max(380,delay-14);
-      if(!won&&score>=g.target){won=true;report(score,true);}
-      clearTimeout(popper);clearTimeout(escapeTimer);pop();update();}
-    else if(b.dataset.kind==='decoy'){lives--;update();if(lives<=0)finish();}
-  }));
-  hud.innerHTML='Tap any square to start · 3 lives · misses count!';
-  return {stop(){clearTimeout(popper);clearTimeout(escapeTimer);running=false;}};
-}
-/* 4 DODGE — survive, one hit per life, endless */
-function egDodge(stage,g,report){
-  const hud=hudLine(stage),c=makeCanvas(stage),ctx=c.getContext('2d'),cache={};
-  let raf,run=false,obs=[],px=300,secs=0,t=0,speed=1,lives=3,won=false;
-  function frame(){
-    t++;if(t%60===0){secs++;if(secs%10===0)speed+=0.25;}
-    if(t%Math.max(16,34-Math.floor(speed*4))===0)obs.push({x:30+Math.random()*540,y:-20,v:(2.6+Math.random()*2.2)*speed});
-    obs.forEach(o=>o.y+=o.v);
-    obs=obs.filter(o=>{
-      if(o.y>232&&o.y<286&&Math.abs(o.x-px)<38){lives--;return false;}
-      return o.y<320;});
-    ctx.clearRect(0,0,600,300);ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);
-    obs.forEach(o=>drawIcon(ctx,g.o,o.x,o.y,36,cache));
-    drawIcon(ctx,g.p,px,258,44,cache);
-    if(!won&&secs>=g.target){won=true;report(secs,true);}
-    hud.innerHTML='Survived <b>'+secs+'s</b> · '+hearts(lives)+(won?' · 🏆':'');
-    if(lives<=0)return over();
-    raf=requestAnimationFrame(frame);
-  }
-  function over(){run=false;cancelAnimationFrame(raf);report(secs,won);
-    ctx.fillStyle='rgba(5,11,24,.85)';ctx.fillRect(0,0,600,300);ctx.fillStyle='#00e5ff';ctx.textAlign='center';ctx.font='bold 30px sans-serif';ctx.fillText('💥 Survived '+secs+'s',300,140);ctx.font='bold 17px sans-serif';ctx.fillText('Tap to retry',300,175);}
-  c.addEventListener('pointermove',e=>{e.preventDefault();const r=c.getBoundingClientRect();px=(e.clientX-r.left)*600/r.width;});
-  c.addEventListener('pointerdown',e=>{e.preventDefault();try{c.setPointerCapture(e.pointerId);}catch(_){/**/}
-    const r=c.getBoundingClientRect();px=(e.clientX-r.left)*600/r.width;
-    if(!run){obs=[];secs=0;t=0;speed=1;lives=3;won=false;run=true;frame();}});
-  c.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
-  ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);ctx.fillStyle='#cfeeff';ctx.font='bold 24px sans-serif';ctx.textAlign='center';ctx.fillText('Tap to start · slide to dodge · 3 lives',300,150);
-  hud.innerHTML='Dodge everything falling — it gets faster!';
-  return {stop(){run=false;cancelAnimationFrame(raf);}};
-}
-/* 5 TIMING — endless, shrinking zone, 3 misses */
-function egTiming(stage,g,report){
-  stage.innerHTML='<div class="game-hud"></div><div class="time-bar"><div class="time-zone"></div><div class="time-marker"></div></div><button class="btn btn-primary time-btn" type="button">📸 SNAP!</button>';
-  const hud=stage.querySelector('.game-hud'),marker=stage.querySelector('.time-marker'),zone=stage.querySelector('.time-zone'),btn=stage.querySelector('.time-btn');
-  let pos=0,dir=1,hits=0,misses=0,speed=1.6,zw=20,zs=35,raf,running=true,won=false;
-  function place(){zs=10+Math.random()*(88-zw);zone.style.left=zs+'%';zone.style.width=zw+'%';}
-  function frame(){if(!running)return;pos+=dir*speed;if(pos>=100){pos=100;dir=-1;}if(pos<=0){pos=0;dir=1;}marker.style.left=pos+'%';raf=requestAnimationFrame(frame);}
-  function update(){hud.innerHTML='Perfect snaps <b>'+hits+'</b> · '+hearts(3-misses)+(won?' · 🏆':'');}
-  btn.addEventListener('click',()=>{
-    if(!running){hits=0;misses=0;speed=1.6;zw=20;won=false;running=true;place();frame();update();btn.textContent='📸 SNAP!';return;}
-    if(pos>=zs&&pos<=zs+zw){hits++;speed+=0.35;zw=Math.max(7,zw-1.2);place();
-      if(!won&&hits>=g.target){won=true;report(hits,true);}}
-    else misses++;
-    update();
-    if(misses>=3){running=false;cancelAnimationFrame(raf);report(hits,won);hud.innerHTML='💥 Out of film! <b>'+hits+'</b> perfect snaps.';btn.textContent='🔁 New roll of film';}
-  });
-  place();frame();update();
-  return {stop(){running=false;cancelAnimationFrame(raf);}};
-}
-/* 6 TAP FRENZY — 30s rounds, moving shrinking target, misses cost time */
-function egTap(stage,g,report){
-  stage.innerHTML='<div class="game-hud"></div><div class="tap-arena"><button type="button" class="tap-target"></button></div>';
-  const hud=stage.querySelector('.game-hud'),arena=stage.querySelector('.tap-arena'),tg=stage.querySelector('.tap-target');
-  tg.textContent=g.t;let taps=0,timeLeft=30,timer=null,running=false,won=false,size=72;
-  function move(){size=Math.max(40,size-0.6);tg.style.width=tg.style.height=size+'px';tg.style.left=(5+Math.random()*80)+'%';tg.style.top=(5+Math.random()*70)+'%';}
-  function update(){hud.innerHTML='Taps <b>'+taps+'</b> · ⏱️ '+timeLeft+'s'+(won?' · 🏆':'');}
-  function start(){running=true;taps=0;timeLeft=30;size=72;won=false;move();update();
-    timer=setInterval(()=>{timeLeft--;update();if(timeLeft<=0){running=false;clearInterval(timer);report(taps,won);hud.innerHTML='⏱️ Time! <b>'+taps+'</b> taps. Tap target to retry.';}},1000);}
-  tg.addEventListener('pointerdown',e=>{e.preventDefault();
-    if(!running){start();return;}
-    taps++;if(!won&&taps>=g.target){won=true;report(taps,true);}move();update();});
-  arena.addEventListener('pointerdown',e=>{if(running&&e.target===arena){timeLeft=Math.max(1,timeLeft-1);update();}});
-  hud.innerHTML='Tap the target to start · 30 seconds · missing costs a second!';move();
-  return {stop(){clearInterval(timer);running=false;}};
-}
-/* 7 MEMORY — timed rounds, endless, faster each round */
-function egMemory(stage,g,report){
-  stage.innerHTML='<div class="game-hud"></div><div class="mem-grid"></div>';
-  const hud=stage.querySelector('.game-hud'),grid=stage.querySelector('.mem-grid');
-  let round=1,timeLeft=45,timer=null,open=[],lock=false,matched=0,running=false,won=false;
-  function update(){hud.innerHTML='Round <b>'+round+'</b> · ⏱️ '+timeLeft+'s'+(won?' · 🏆':'');}
-  function deal(){
-    grid.innerHTML='';open=[];matched=0;lock=false;
-    const icons=[...g.icons,...g.icons].sort(()=>Math.random()-0.5);
-    icons.forEach(icon=>{const card=document.createElement('button');card.type='button';card.className='mem-card';
-      card.innerHTML='<span class="mem-inner"><span class="mem-front">❓</span><span class="mem-back">'+icon+'</span></span>';card.dataset.icon=icon;
-      card.addEventListener('click',()=>{
-        if(!running){start();return;}
-        if(lock||card.classList.contains('flip'))return;
-        card.classList.add('flip');open.push(card);
-        if(open.length===2){lock=true;const[a,b]=open;
-          setTimeout(()=>{if(a.dataset.icon===b.dataset.icon){a.classList.add('matched');b.classList.add('matched');matched+=2;
-              if(matched===icons.length){if(!won&&round>=g.target){won=true;report(round,true);}round++;timeLeft=Math.max(18,45-round*5);deal();update();}}
-            else{a.classList.remove('flip');b.classList.remove('flip');}
-            open=[];lock=false;},520);}
-      });grid.appendChild(card);});
-  }
-  function start(){running=true;round=1;timeLeft=45;won=false;deal();update();
-    timer=setInterval(()=>{timeLeft--;update();if(timeLeft<=0){running=false;clearInterval(timer);report(round-1,won);hud.innerHTML='⏱️ Time! Cleared <b>'+(round-1)+'</b> rounds. Tap a card to retry.';}},1000);}
-  hud.innerHTML='Tap any card to start · clear the board before time runs out!';deal();
-  return {stop(){clearInterval(timer);running=false;}};
-}
-/* 8 SIMON — repeat the growing light sequence */
-function egSimon(stage,g,report){
-  stage.innerHTML='<div class="game-hud"></div><div class="simon-grid">'+[0,1,2,3].map(i=>'<button type="button" class="simon-pad p'+i+'" data-i="'+i+'"></button>').join('')+'</div>';
-  const hud=stage.querySelector('.game-hud'),pads=[...stage.querySelectorAll('.simon-pad')];
-  let seq=[],pos=0,playing=false,running=false,won=false;
-  function flash(i,d){return new Promise(res=>{pads[i].classList.add('lit');setTimeout(()=>{pads[i].classList.remove('lit');setTimeout(res,120);},d);});}
-  async function playSeq(){playing=true;hud.innerHTML='👀 Watch… length <b>'+seq.length+'</b>'+(won?' · 🏆':'');
-    for(const i of seq)await flash(i,Math.max(220,520-seq.length*30));
-    playing=false;pos=0;hud.innerHTML='🫵 Your turn! Length <b>'+seq.length+'</b>'+(won?' · 🏆':'');}
-  function next(){seq.push(Math.floor(Math.random()*4));playSeq();}
-  function start(){running=true;won=false;seq=[];next();}
-  pads.forEach(p=>p.addEventListener('pointerdown',async()=>{
-    if(!running){start();return;}
-    if(playing)return;
-    const i=+p.dataset.i;flash(i,160);
-    if(i===seq[pos]){pos++;
-      if(pos===seq.length){if(!won&&seq.length>=g.target){won=true;report(seq.length,true);}setTimeout(next,650);}}
-    else{running=false;report(seq.length-1,won);hud.innerHTML='💥 Wrong pad! You reached <b>'+(seq.length-1)+'</b>. Tap any pad to retry.';}
-  }));
-  hud.innerHTML='Tap any pad to start · repeat the light sequence!';
-  return {stop(){running=false;}};
-}
-/* 9 HIGHER / LOWER — card streaks */
-function egHL(stage,g,report){
-  stage.innerHTML='<div class="game-hud"></div><div class="hl-card">?</div><div class="hl-btns"><button class="btn btn-primary" type="button" data-d="1">⬆️ Higher</button><button class="btn btn-secondary" type="button" data-d="-1">⬇️ Lower</button></div>';
-  const hud=stage.querySelector('.game-hud'),card=stage.querySelector('.hl-card');
-  let cur=draw(),streak=0,running=true,won=false;
-  function draw(){return 2+Math.floor(Math.random()*11);}
-  function label(n){return {11:'J',12:'Q',13:'A'}[n]||n;}
-  function update(){card.textContent=label(cur);hud.innerHTML='Streak <b>'+streak+'</b>'+(won?' · 🏆':'')+' · cards run 2 → A';}
-  stage.querySelectorAll('.hl-btns .btn').forEach(b=>b.addEventListener('click',()=>{
-    if(!running){streak=0;cur=draw();running=true;won=false;update();return;}
-    const d=+b.dataset.d;let nxt=draw();while(nxt===cur)nxt=draw();
-    const ok=(d===1&&nxt>cur)||(d===-1&&nxt<cur);
-    cur=nxt;
-    if(ok){streak++;if(!won&&streak>=g.target){won=true;report(streak,true);}}
-    else{running=false;report(streak,won);update();hud.innerHTML='💥 Busted at streak <b>'+streak+'</b>! It was '+label(nxt)+'. Tap a button to retry.';return;}
-    update();
-  }));
-  update();
-  return {stop(){running=false;}};
-}
-/* 10 REELS — chip-based slots: 10 chips, spin costs 1, match pays */
-function egReels(stage,g,report){
-  stage.innerHTML='<div class="game-hud"></div><div class="reels"></div><button class="btn btn-primary spin-btn" type="button">🎰 SPIN (1 chip)</button>';
-  const hud=stage.querySelector('.game-hud'),wrap=stage.querySelector('.reels'),btn=stage.querySelector('.spin-btn');
-  const reels=[];for(let r=0;r<3;r++){const el=document.createElement('div');el.className='reel';el.textContent='❔';wrap.appendChild(el);reels.push(el);}
-  let chips=10,best=10,spinning=false,won=false;
-  function update(msg){hud.innerHTML='🪙 Chips <b>'+chips+'</b>'+(won?' · 🏆':'')+(msg?' · '+msg:'');}
-  btn.addEventListener('click',()=>{
-    if(spinning)return;
-    if(chips<=0){chips=10;best=Math.max(best,10);won=false;update('New stack of chips!');return;}
-    chips--;spinning=true;update('Spinning…');
-    let ticks=0;const iv=setInterval(()=>{reels.forEach(el=>el.textContent=g.icons[Math.floor(Math.random()*g.icons.length)]);
-      if(++ticks>=14){clearInterval(iv);spinning=false;
-        const v=reels.map(e=>e.textContent);
-        if(v[0]===v[1]&&v[1]===v[2]){chips+=20;update('💎 JACKPOT +20!');burstNear(stage);}
-        else if(v[0]===v[1]||v[1]===v[2]||v[0]===v[2]){chips+=4;update('Pair! +4');}
-        else update('No match');
-        best=Math.max(best,chips);
-        if(!won&&chips>=g.target){won=true;report(best,true);}else report(best,won);
-        if(chips<=0)update('Out of chips — tap SPIN for a new stack');
-      }},90);
-  });
-  update('Start with 10 chips — reach '+g.target+'!');
-  return {stop(){spinning=false;}};
-}
-/* 11 WHEEL — bet a chip on a colour */
-function egWheel(stage,g,report){
-  stage.innerHTML='<div class="game-hud"></div><div class="wheel-face">🎡</div><div class="hl-btns">'+
-    '<button class="btn btn-primary" type="button" data-c="gold">🟡 Gold ×2</button>'+
-    '<button class="btn btn-secondary" type="button" data-c="purple">🟣 Purple ×3</button>'+
-    '<button class="btn btn-danger" type="button" data-c="red">🔴 Red ×5</button></div>';
-  const hud=stage.querySelector('.game-hud'),face=stage.querySelector('.wheel-face');
-  let chips=10,best=10,spinning=false,won=false;
-  const POCKETS=['gold','gold','gold','purple','purple','red'];
-  const FACE={gold:'🟡',purple:'🟣',red:'🔴'};
-  function update(m){hud.innerHTML='🪙 Chips <b>'+chips+'</b>'+(won?' · 🏆':'')+(m?' · '+m:'');}
-  stage.querySelectorAll('.hl-btns .btn').forEach(b=>b.addEventListener('click',()=>{
-    if(spinning)return;
-    if(chips<=0){chips=10;won=false;update('New stack!');return;}
-    chips--;spinning=true;const pick=b.dataset.c;update('Spinning…');
-    let ticks=0;const iv=setInterval(()=>{face.textContent=FACE[POCKETS[Math.floor(Math.random()*POCKETS.length)]];
-      if(++ticks>=16){clearInterval(iv);spinning=false;
-        const res=POCKETS[Math.floor(Math.random()*POCKETS.length)];face.textContent=FACE[res];
-        if(res===pick){const pay={gold:2,purple:3,red:5}[pick];chips+=pay;update('🎉 '+res.toUpperCase()+'! +'+pay);}
-        else update('Landed '+res);
-        best=Math.max(best,chips);
-        if(!won&&chips>=g.target){won=true;report(best,true);}else report(best,won);
-      }},90);
-  }));
-  update('Bet 1 chip on a colour — reach '+g.target+'!');
-  return {stop(){spinning=false;}};
-}
-/* 12 DICE 21 — twist or stick toward 21, chips */
-function egDice21(stage,g,report){
-  stage.innerHTML='<div class="game-hud"></div><div class="dice-row"></div><div class="hl-btns"><button class="btn btn-primary" type="button" data-a="hit">🎲 Roll</button><button class="btn btn-secondary" type="button" data-a="stick">✋ Stick</button></div>';
-  const hud=stage.querySelector('.game-hud'),row=stage.querySelector('.dice-row');
-  const DICE=['⚀','⚁','⚂','⚃','⚄','⚅'];
-  let chips=10,best=10,total=0,inRound=false,won=false;
-  function update(m){hud.innerHTML='🪙 Chips <b>'+chips+'</b> · Total <b>'+total+'</b>/21'+(won?' · 🏆':'')+(m?' · '+m:'');}
-  function endRound(msg){inRound=false;total=0;best=Math.max(best,chips);
-    if(!won&&chips>=g.target){won=true;report(best,true);}else report(best,won);
-    update(msg);row.innerHTML+=' <b>'+msg+'</b>';}
-  stage.querySelectorAll('.hl-btns .btn').forEach(b=>b.addEventListener('click',()=>{
-    if(b.dataset.a==='hit'){
-      if(!inRound){if(chips<=0){chips=10;won=false;update('New stack!');return;}chips--;total=0;row.innerHTML='';inRound=true;}
-      const d=1+Math.floor(Math.random()*6);total+=d;row.innerHTML+='<span class="die">'+DICE[d-1]+'</span>';
-      if(total===21){chips+=8;endRound('💎 21! +8 chips');}
-      else if(total>21)endRound('💥 Bust!');
-      else update('Roll again or stick?');
-    }else if(inRound){
-      const bank=1+Math.floor(Math.random()*6)+ (1+Math.floor(Math.random()*6));
-      if(total>=bank&&total<=21){chips+=3;endRound('Beat the bank ('+bank+')! +3');}
-      else endRound('Bank had '+bank+' — lost the chip');
-    }
-  }));
-  update('1 chip per round · hit 21 for +8 · reach '+g.target+'!');
-  return {stop(){inRound=false;}};
-}
-/* ============================================================
-   NEW ENGINES 13–18 — added so no two stops feel the same
-   ============================================================ */
-
-/* 13 TAIKO — rhythm drums: tap the side the note lands on */
-function egTaiko(stage,g,report){
-  const hud=hudLine(stage),c=makeCanvas(stage),ctx=c.getContext('2d'),cache={};
-  const L=g.l||'🥁',R=g.r||'🎏',LINE=246;
-  let raf,run=false,notes=[],hits=0,lives=3,t=0,speed=2.8,won=false;
-  function frame(){
-    t++;
-    if(t%Math.max(30,72-Math.floor(speed*7))===0)notes.push({lane:Math.random()<0.5?0:1,y:-24});
-    notes.forEach(n=>n.y+=speed);
-    notes=notes.filter(n=>{if(n.y>LINE+44){lives--;return false;}return true;});
-    if(t%420===0)speed+=0.3;
-    ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);
-    ctx.fillStyle='rgba(255,255,255,.05)';ctx.fillRect(0,0,300,300);
-    ctx.strokeStyle='#00e5ff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,LINE);ctx.lineTo(600,LINE);ctx.stroke();
-    ctx.fillStyle='#8fc6f6';ctx.font='bold 15px sans-serif';ctx.textAlign='center';
-    ctx.fillText('TAP THIS SIDE',150,286);ctx.fillText('TAP THIS SIDE',450,286);
-    notes.forEach(n=>drawIcon(ctx,n.lane?R:L,n.lane?450:150,n.y,44,cache));
-    if(!won&&hits>=g.target){won=true;report(hits,true);}
-    hud.innerHTML='Hits <b>'+hits+'</b> · '+hearts(lives)+(won?' · 🏆':'');
-    if(lives<=0)return over();
-    raf=requestAnimationFrame(frame);
-  }
-  function over(){run=false;cancelAnimationFrame(raf);report(hits,won);
-    ctx.fillStyle='rgba(5,11,24,.85)';ctx.fillRect(0,0,600,300);ctx.fillStyle='#00e5ff';ctx.textAlign='center';
-    ctx.font='bold 30px sans-serif';ctx.fillText('🥁 '+hits+' hits!',300,140);ctx.font='bold 17px sans-serif';ctx.fillText('Tap to play again',300,175);}
-  c.addEventListener('pointerdown',e=>{e.preventDefault();
-    if(!run){notes=[];hits=0;lives=3;t=0;speed=2.8;won=false;run=true;frame();return;}
-    const r=c.getBoundingClientRect(),x=(e.clientX-r.left)*600/r.width,lane=x<300?0:1;
-    let best=-1,bd=1e9;
-    notes.forEach((n,i)=>{if(n.lane!==lane)return;const d=Math.abs(n.y-LINE);if(d<bd){bd=d;best=i;}});
-    if(best>=0&&bd<48){hits++;notes.splice(best,1);sfx('coin');}else lives--;
-  });
-  ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);ctx.fillStyle='#cfeeff';ctx.font='bold 22px sans-serif';ctx.textAlign='center';
-  ctx.fillText('Tap to start — hit the drums in time',300,150);
-  hud.innerHTML='Tap the side a note is on, as it crosses the line.';
-  return {stop(){run=false;cancelAnimationFrame(raf);}};
-}
-
-/* 14 STACK — tower stacker, the overhang gets sliced off */
-function egStack(stage,g,report){
-  const hud=hudLine(stage),c=makeCanvas(stage),ctx=c.getContext('2d');
-  const H=26,VIS=8;
-  let raf,run=false,stack=[],cur={x:0,w:200},dir=1,speed=3.4,score=0,won=false;
-  function reset(){stack=[{x:200,w:200}];score=0;speed=3.4;won=false;newBlock();}
-  function newBlock(){cur={x:0,w:stack[stack.length-1].w};dir=1;}
-  function draw(){
-    ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);
-    const base=292,off=Math.max(0,stack.length-VIS);
-    stack.forEach((b,i)=>{if(i<off)return;const y=base-(i-off+1)*H;
-      ctx.fillStyle=i%2?'#1f6fe0':'#00e5ff';ctx.fillRect(b.x,y,b.w,H-3);
-      ctx.fillStyle='rgba(255,255,255,.18)';ctx.fillRect(b.x,y,b.w,4);});
-    const y=base-(stack.length-off+1)*H;
-    ctx.fillStyle='#ff3d8b';ctx.fillRect(cur.x,Math.max(y,4),cur.w,H-3);
-    hud.innerHTML='Stacked <b>'+score+'</b> · block '+Math.round(cur.w)+'px'+(won?' · 🏆':'');
-  }
-  function frame(){cur.x+=dir*speed;
-    if(cur.x<=0){cur.x=0;dir=1;}
-    if(cur.x+cur.w>=600){cur.x=600-cur.w;dir=-1;}
-    draw();raf=requestAnimationFrame(frame);}
-  function drop(){
-    const top=stack[stack.length-1];
-    const left=Math.max(cur.x,top.x),right=Math.min(cur.x+cur.w,top.x+top.w),w=right-left;
-    if(w<=4){run=false;cancelAnimationFrame(raf);report(score,won);
-      ctx.fillStyle='rgba(5,11,24,.85)';ctx.fillRect(0,0,600,300);ctx.fillStyle='#00e5ff';ctx.textAlign='center';
-      ctx.font='bold 30px sans-serif';ctx.fillText('💥 Toppled on '+score,300,140);
-      ctx.font='bold 17px sans-serif';ctx.fillText('Tap to rebuild',300,175);return;}
-    stack.push({x:left,w:w});score++;speed=Math.min(9,speed+0.25);sfx('click');
-    if(!won&&score>=g.target){won=true;report(score,true);}
-    newBlock();
-  }
-  c.addEventListener('pointerdown',e=>{e.preventDefault();if(!run){reset();run=true;frame();}else drop();});
-  ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);ctx.fillStyle='#cfeeff';ctx.font='bold 22px sans-serif';ctx.textAlign='center';
-  ctx.fillText('Tap to start — tap again to drop',300,150);
-  hud.innerHTML='Drop each block on the one below. Miss and it gets narrower!';
-  return {stop(){run=false;cancelAnimationFrame(raf);}};
-}
-
-/* 15 SNAKE — classic, with a d-pad for phones */
-function egSnake(stage,g,report){
-  stage.innerHTML='<div class="game-hud"></div>';
-  const hud=stage.querySelector('.game-hud');
-  const c=makeCanvas(stage,300),ctx=c.getContext('2d'),cache={};
-  const pad=document.createElement('div');pad.className='dpad';
-  pad.innerHTML='<button type="button" data-d="u">⬆️</button><div><button type="button" data-d="l">⬅️</button>'+
-    '<button type="button" data-d="d">⬇️</button><button type="button" data-d="r">➡️</button></div>';
-  stage.appendChild(pad);
-  const CELL=30,COLS=20,ROWS=10,FOOD=g.food||'🍙';
-  let raf,run=false,snake=[],dir={x:1,y:0},next={x:1,y:0},food={x:12,y:5},score=0,won=false,tick=0,speed=9;
-  function reset(){snake=[{x:3,y:5},{x:2,y:5},{x:1,y:5}];dir={x:1,y:0};next={x:1,y:0};score=0;speed=9;won=false;place();}
-  function place(){do{food={x:Math.floor(Math.random()*COLS),y:Math.floor(Math.random()*ROWS)};}
-    while(snake.some(s=>s.x===food.x&&s.y===food.y));}
-  function turn(d){
-    const m={u:{x:0,y:-1},d:{x:0,y:1},l:{x:-1,y:0},r:{x:1,y:0}}[d];
-    if(!m)return; if(m.x===-dir.x&&m.y===-dir.y)return; next=m;
-  }
-  function step(){
-    dir=next;
-    const h={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
-    if(h.x<0||h.y<0||h.x>=COLS||h.y>=ROWS||snake.some(s=>s.x===h.x&&s.y===h.y))return over();
-    snake.unshift(h);
-    if(h.x===food.x&&h.y===food.y){score++;place();sfx('coin');speed=Math.max(4,speed-0.28);
-      if(!won&&score>=g.target){won=true;report(score,true);}}
-    else snake.pop();
-  }
-  function draw(){
-    ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);
-    ctx.strokeStyle='rgba(0,229,255,.08)';ctx.lineWidth=1;
-    for(let i=1;i<COLS;i++){ctx.beginPath();ctx.moveTo(i*CELL,0);ctx.lineTo(i*CELL,300);ctx.stroke();}
-    for(let j=1;j<ROWS;j++){ctx.beginPath();ctx.moveTo(0,j*CELL);ctx.lineTo(600,j*CELL);ctx.stroke();}
-    drawIcon(ctx,FOOD,food.x*CELL+CELL/2,food.y*CELL+CELL/2,26,cache);
-    snake.forEach((sg,i)=>{ctx.fillStyle=i?'#1f6fe0':'#00e5ff';
-      ctx.fillRect(sg.x*CELL+3,sg.y*CELL+3,CELL-6,CELL-6);});
-    hud.innerHTML='Eaten <b>'+score+'</b>'+(won?' · 🏆':'')+' · length '+snake.length;
-  }
-  function frame(){tick++;if(tick%Math.round(speed)===0)step();draw();if(run)raf=requestAnimationFrame(frame);}
-  function over(){run=false;cancelAnimationFrame(raf);report(score,won);
-    ctx.fillStyle='rgba(5,11,24,.85)';ctx.fillRect(0,0,600,300);ctx.fillStyle='#00e5ff';ctx.textAlign='center';
-    ctx.font='bold 30px sans-serif';ctx.fillText('💥 Ate '+score,300,140);
-    ctx.font='bold 17px sans-serif';ctx.fillText('Tap the board to play again',300,175);}
-  pad.querySelectorAll('button').forEach(b=>b.addEventListener('pointerdown',e=>{
-    e.preventDefault();if(!run){reset();run=true;frame();}turn(b.dataset.d);}));
-  let sx=0,sy=0;
-  c.addEventListener('pointerdown',e=>{e.preventDefault();sx=e.clientX;sy=e.clientY;
-    if(!run){reset();run=true;frame();}});
-  c.addEventListener('pointerup',e=>{const dx=e.clientX-sx,dy=e.clientY-sy;
-    if(Math.abs(dx)<14&&Math.abs(dy)<14)return;
-    turn(Math.abs(dx)>Math.abs(dy)?(dx>0?'r':'l'):(dy>0?'d':'u'));});
-  c.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
-  ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);ctx.fillStyle='#cfeeff';ctx.font='bold 22px sans-serif';ctx.textAlign='center';
-  ctx.fillText('Tap to start — swipe or use the arrows',300,150);
-  hud.innerHTML='Eat, grow, do not bite yourself.';
-  return {stop(){run=false;cancelAnimationFrame(raf);}};
-}
-
-/* 16 FLAPPY — tap to flap through the torii gates */
-function egFlappy(stage,g,report){
-  const hud=hudLine(stage),c=makeCanvas(stage),ctx=c.getContext('2d'),cache={};
-  const BIRD=g.p||'🕊️';
-  let raf,run=false,y=140,vy=0,gates=[],score=0,won=false,t=0,speed=2.9;
-  function reset(){y=140;vy=0;gates=[];score=0;t=0;speed=2.9;won=false;}
-  function frame(){
-    t++;vy+=0.52;y+=vy;
-    if(t%Math.max(72,120-Math.floor(speed*10))===0)gates.push({x:620,gap:70+Math.random()*120,passed:false});
-    gates.forEach(gt=>gt.x-=speed);
-    gates=gates.filter(gt=>gt.x>-70);
-    if(t%480===0)speed+=0.2;
-    ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);
-    gates.forEach(gt=>{
-      ctx.fillStyle='#d7263d';
-      ctx.fillRect(gt.x,0,54,gt.gap-46);ctx.fillRect(gt.x,gt.gap+46,54,300-(gt.gap+46));
-      ctx.fillStyle='#0a1428';ctx.fillRect(gt.x-8,gt.gap-56,70,10);ctx.fillRect(gt.x-8,gt.gap+46,70,10);
-      if(!gt.passed&&gt.x+54<110){gt.passed=true;score++;sfx('coin');
-        if(!won&&score>=g.target){won=true;report(score,true);}}
-      if(gt.x<134&&gt.x+54>86&&(y<gt.gap-46||y>gt.gap+46))return over();
-    });
-    if(y<0||y>296)return over();
-    drawIcon(ctx,BIRD,110,y,38,cache);
-    hud.innerHTML='Gates <b>'+score+'</b>'+(won?' · 🏆':'');
-    if(run)raf=requestAnimationFrame(frame);
-  }
-  function over(){if(!run)return;run=false;cancelAnimationFrame(raf);report(score,won);
-    ctx.fillStyle='rgba(5,11,24,.85)';ctx.fillRect(0,0,600,300);ctx.fillStyle='#00e5ff';ctx.textAlign='center';
-    ctx.font='bold 30px sans-serif';ctx.fillText('💥 '+score+' gates',300,140);
-    ctx.font='bold 17px sans-serif';ctx.fillText('Tap to fly again',300,175);}
-  c.addEventListener('pointerdown',e=>{e.preventDefault();
-    if(!run){reset();run=true;frame();}vy=-7.4;});
-  ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);ctx.fillStyle='#cfeeff';ctx.font='bold 22px sans-serif';ctx.textAlign='center';
-  ctx.fillText('Tap to start — keep tapping to fly',300,150);
-  hud.innerHTML='Fly through the gates. Do not touch anything.';
-  return {stop(){run=false;cancelAnimationFrame(raf);}};
-}
-
-/* 17 SORT — two bins, is it safe to eat or not? */
-function egSort(stage,g,report){
-  stage.innerHTML='<div class="game-hud"></div><div class="sort-arena"><div class="sort-bar"><i></i></div>'+
-    '<div class="sort-item"></div></div><div class="sort-btns">'+
-    '<button type="button" class="btn btn-primary sort-go" data-s="1">✅ '+(g.okLabel||'SAFE')+'</button>'+
-    '<button type="button" class="btn btn-danger sort-go" data-s="0">🚫 '+(g.noLabel||'NOPE')+'</button></div>';
-  const hud=stage.querySelector('.game-hud'),item=stage.querySelector('.sort-item'),bar=stage.querySelector('.sort-bar i');
-  const good=g.good||['🍙','🍣'],bad=g.bad||['🦐','🦀'];
-  let score=0,lives=3,running=false,won=false,cur=null,left=0,timer=null,limit=2600;
-  function next(){
-    const isGood=Math.random()<0.55;
-    const arr=isGood?good:bad;
-    cur={e:arr[Math.floor(Math.random()*arr.length)],ok:isGood};
-    item.textContent=cur.e;item.classList.remove('pop');void item.offsetWidth;item.classList.add('pop');
-    left=limit;
-  }
-  function update(){hud.innerHTML='Sorted <b>'+score+'</b> · '+hearts(lives)+(won?' · 🏆':'');}
-  function tick(){
-    left-=60;bar.style.width=Math.max(0,left/limit*100)+'%';
-    if(left<=0){lives--;update();if(lives<=0)return finish();next();}
-  }
-  function choose(sayOk){
-    if(!running){start();return;}
-    if(!cur)return;
-    if(sayOk===cur.ok){score++;sfx('coin');limit=Math.max(900,limit-55);
-      if(!won&&score>=g.target){won=true;report(score,true);}}
-    else{lives--;sfx('lose');}
-    update();if(lives<=0)return finish();next();
-  }
-  function start(){running=true;score=0;lives=3;limit=2600;won=false;update();next();
-    clearInterval(timer);timer=setInterval(tick,60);}
-  function finish(){running=false;clearInterval(timer);report(score,won);
-    item.textContent='💥';hud.innerHTML='Out of lives — <b>'+score+'</b> sorted. Tap a button to retry.';}
-  stage.querySelectorAll('.sort-go').forEach(b=>b.addEventListener('click',()=>choose(b.dataset.s==='1')));
-  item.textContent='❓';hud.innerHTML='Tap a button to start. Safe to eat, or not?';
-  return {stop(){running=false;clearInterval(timer);}};
-}
-
-/* 18 SLICE — swipe through the food, miss the bombs */
-function egSlice(stage,g,report){
-  const hud=hudLine(stage),c=makeCanvas(stage),ctx=c.getContext('2d'),cache={};
-  const good=g.good||['🍣','🍙','🍡'],bomb=g.bomb||'💣';
-  let raf,run=false,items=[],trail=[],down=false,score=0,lives=3,t=0,won=false,rate=52;
-  function reset(){items=[];trail=[];score=0;lives=3;t=0;rate=52;won=false;}
-  function spawn(){
-    const isBomb=Math.random()<0.22;
-    items.push({x:60+Math.random()*480,y:320,vx:(Math.random()-0.5)*3.2,vy:-(9.5+Math.random()*2.6),
-      e:isBomb?bomb:good[Math.floor(Math.random()*good.length)],bomb:isBomb,dead:false});
-  }
-  function frame(){
-    t++;if(t%Math.max(26,rate)===0){spawn();if(t%600===0)rate=Math.max(26,rate-4);}
-    items.forEach(i=>{i.x+=i.vx;i.y+=i.vy;i.vy+=0.22;});
-    items=items.filter(i=>{
-      if(i.y>340&&i.vy>0){if(!i.bomb&&!i.dead)lives--;return false;}
-      return true;});
-    ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);
-    items.forEach(i=>{if(!i.dead)drawIcon(ctx,i.e,i.x,i.y,40,cache);});
-    if(trail.length>1){ctx.strokeStyle='#00e5ff';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();
-      ctx.moveTo(trail[0].x,trail[0].y);trail.forEach(pt=>ctx.lineTo(pt.x,pt.y));ctx.stroke();}
-    if(trail.length>7)trail.shift();
-    if(!won&&score>=g.target){won=true;report(score,true);}
-    hud.innerHTML='Sliced <b>'+score+'</b> · '+hearts(lives)+(won?' · 🏆':'');
-    if(lives<=0)return over();
-    raf=requestAnimationFrame(frame);
-  }
-  function over(){run=false;cancelAnimationFrame(raf);report(score,won);
-    ctx.fillStyle='rgba(5,11,24,.85)';ctx.fillRect(0,0,600,300);ctx.fillStyle='#00e5ff';ctx.textAlign='center';
-    ctx.font='bold 30px sans-serif';ctx.fillText('🔪 '+score+' sliced',300,140);
-    ctx.font='bold 17px sans-serif';ctx.fillText('Tap to play again',300,175);}
-  function at(e){const r=c.getBoundingClientRect();
-    return {x:(e.clientX-r.left)*600/r.width,y:(e.clientY-r.top)*300/r.height};}
-  function cut(p){
-    items.forEach(i=>{
-      if(i.dead)return;
-      if(Math.hypot(i.x-p.x,i.y-p.y)<30){
-        i.dead=true;
-        if(i.bomb){lives--;sfx('lose');}
-        else{score++;sfx('coin');}
-      }});
-  }
-  c.addEventListener('pointerdown',e=>{e.preventDefault();
-    try{c.setPointerCapture(e.pointerId);}catch(_){/**/}
-    if(!run){reset();run=true;frame();return;}
-    down=true;trail=[at(e)];cut(at(e));});
-  c.addEventListener('pointermove',e=>{if(!down||!run)return;e.preventDefault();
-    const p=at(e);trail.push(p);cut(p);});
-  c.addEventListener('pointerup',()=>{down=false;trail=[];});
-  c.addEventListener('pointerleave',()=>{down=false;trail=[];});
-  c.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
-  ctx.fillStyle='#0d1f45';ctx.fillRect(0,0,600,300);ctx.fillStyle='#cfeeff';ctx.font='bold 22px sans-serif';ctx.textAlign='center';
-  ctx.fillText('Tap to start — then swipe to slice',300,150);
-  hud.innerHTML='Slice the food. Do not slice the bombs.';
-  return {stop(){run=false;cancelAnimationFrame(raf);}};
-}
-
+/* ARCADE: the activity games live in games.js */
 function burstNear(host){burst(host.closest('.task-block')||host);}
 /* confetti burst */
 function burst(host){
@@ -1069,7 +438,7 @@ function renderQuiz(root,stop){
     const block=document.createElement('div');block.className='question';
     const p=document.createElement('p');p.textContent=(i+1)+'. '+q[0];
     const opts=document.createElement('div');opts.className='options';
-    (q[2]||['true','false']).forEach(val=>{
+    quizOptions(stop,q,i).forEach(val=>{
       const l=document.createElement('label'),inp=document.createElement('input'),sp=document.createElement('span');
       inp.type='radio';inp.name=stop.id+'-'+i;inp.value=val;inp.checked=saved.answers[i]===val;
       sp.textContent=val==='true'?'True':val==='false'?'False':val;
@@ -1082,9 +451,11 @@ function renderQuiz(root,stop){
   root.querySelector('.check').addEventListener('click',()=>{
     const cur=progress.quiz[stop.id]||{answers:{}};
     if(quiz.some((_,i)=>cur.answers[i]===undefined)){res.textContent='Answer every question first.';return;}
-    const correct=quiz.every((q,i)=>cur.answers[i]===q[1]);
+    const right=quiz.map((q,i)=>cur.answers[i]===q[1]);const correct=right.every(Boolean);
     progress.quiz[stop.id]={answers:cur.answers,checked:true,correct};saveProgress();
-    res.textContent=correct?'Boss defeated! ✓':'Not quite — try again!';
+    wrap.querySelectorAll('.question').forEach((b,i)=>{b.classList.toggle('q-right',right[i]);b.classList.toggle('q-wrong',!right[i]);});
+    const n=right.filter(Boolean).length;
+    res.textContent=correct?'Boss defeated! 5 out of 5 ✓':(n+' out of '+quiz.length+' right — the red ones are wrong. Change them and check again!');
     refreshTaskTags(root,stop);
   });
 }
@@ -1815,40 +1186,6 @@ function sfx(kind){
 document.getElementById('muteBtn')?.addEventListener('click',()=>{muted=!muted;localStorage.setItem('a26-muted',muted?'1':'0');document.getElementById('muteBtn').textContent=muted?'🔇':'🔊';});
 if(document.getElementById('muteBtn'))document.getElementById('muteBtn').textContent=muted?'🔇':'🔊';
 
-/* ===== STORY CHAIN (12) — pass & play ===== */
-const STORY_STARTS=['Mochi the cat woke up on the bullet train and shouted...','At Shibuya Crossing, Jacob looked up and suddenly...','A monkey in Arashiyama stole Lily\u2019s hat and then...','In Akihabara a claw machine started flashing and out came...','Somewhere on the Tokyo subway the train stopped and Dad...','A giant robot landed in Seoul and asked the family for...'];
-function hubStory(body){
-  let lines=[],turn=0;
-  const start=STORY_STARTS[Math.floor(Math.random()*STORY_STARTS.length)];lines.push(start);
-  body.innerHTML='<div class="game-hud">📖 Add ONE sentence, then pass the phone. Tap READ to hear the whole tale!</div>'+
-    '<div class="story-box"></div><textarea class="story-in" rows="2" placeholder="...and then..."></textarea>'+
-    '<div class="den-row"><button class="btn btn-primary story-add" type="button">➕ Add & pass</button><button class="btn btn-secondary story-read" type="button">📢 Read it all</button></div>';
-  const box=body.querySelector('.story-box'),inp=body.querySelector('.story-in');
-  function paint(){box.innerHTML=lines.map((l,i)=>'<p'+(i===0?' class="story-first"':'')+'>'+escapeHtml(l)+'</p>').join('');box.scrollTop=box.scrollHeight;}
-  paint();
-  body.querySelector('.story-add').addEventListener('click',()=>{const t=inp.value.trim();if(!t)return;lines.push(t);inp.value='';turn++;paint();sfx('click');bearShout('Player '+(turn%4+1)+'\u2019s turn! Pass it on! 🐒');});
-  body.querySelector('.story-read').addEventListener('click',()=>{paint();sfx('win');bearCelebrate('What a masterpiece! 📖✨');
-    try{const u=new SpeechSynthesisUtterance(lines.join(' '));u.rate=.95;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(_){/**/}});
-}
-
-/* ===== ACCENT ROULETTE (14) — 5 min timer ===== */
-const ACCENTS=['🤖 Robot','👑 Posh British','🥷 Ninja Whisper','🎬 Movie Trailer Voice','👶 Baby Talk','🦸 Superhero','🐉 Dragon Roar','🎤 K-pop Idol','📢 Train Announcer','🧙 Wizard','🐨 Aussie','🍜 Ramen Chef'];
-function hubAccent(body){
-  body.innerHTML='<div class="game-hud">🎭 Spin the wheel — everyone must talk in that accent for 5 minutes!</div>'+
-    '<div class="accent-face">🎭</div><div class="accent-res"></div>'+
-    '<div class="den-row"><button class="btn btn-primary accent-spin" type="button">🎡 SPIN</button></div>'+
-    '<div class="accent-timer"></div>';
-  const face=body.querySelector('.accent-face'),res=body.querySelector('.accent-res'),tEl=body.querySelector('.accent-timer');
-  let spinning=false,acc=null;
-  body.querySelector('.accent-spin').addEventListener('click',()=>{
-    if(spinning)return;spinning=true;res.textContent='';let t=0;
-    const iv=setInterval(()=>{acc=ACCENTS[Math.floor(Math.random()*ACCENTS.length)];face.textContent=acc.split(' ')[0];
-      if(++t>=18){clearInterval(iv);spinning=false;res.textContent=acc;sfx('win');bearCelebrate('Do the '+acc.replace(/^\S+\s/,'')+' voice! 🎭');
-        let left=300;tEl.textContent='⏱️ 5:00 left';const cd=setInterval(()=>{left--;tEl.textContent='⏱️ '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0')+' left';
-          if(left<=0){clearInterval(cd);tEl.textContent='✅ Time! You survived.';bearShout('You can talk normally now! 😅');}},1000);}
-    },90);});
-}
-
 /* ===== DOODLE DUEL (1) — pass & play ===== */
 const DOODLE_WORDS=['torii gate','bullet train','Mount Fuji','sushi','ramen bowl','neon sign','pagoda','lucky cat','vending machine','monkey','fox statue','lantern','kimono','skyscraper','chopsticks','koi carp','castle','suitcase','camera','bubble tea'];
 function hubDoodle(body){
@@ -2211,130 +1548,10 @@ function renderSeason(){
     return '<div class="season-node'+(done?' done':'')+'"><div class="season-req">'+r[0]+'</div><div class="season-rew">'+r[1]+'</div></div>';
   }).join('');
 }
-/* ============================================================
-   ONLINE MULTIPLAYER — room codes, everyone on own device
-   Host is authoritative: host owns the questions & scoring,
-   others poll and submit answers. Works for Rush + Heist.
-   ============================================================ */
-function roomCode(){let s='';for(let i=0;i<4;i++)s+='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*31)];return s;}
-let mpPoll=null,mpHostLoop=null;
-function mpStop(){clearInterval(mpPoll);clearInterval(mpHostLoop);mpPoll=null;mpHostLoop=null;}
-
-/* entry: choose Online or Pass-and-play */
-function mpChooser(body,game,localFn){
-  mpStop();
-  const title=game==='rush'?'⚡ NEON RUSH':'🥷 NINJA HEIST';
-  if(!CONFIG.sheetEndpoint){
-    body.innerHTML='<div class="mp-turn">'+title+'</div><p class="hub-earn">🌐 Online play needs the backend connected (ask Ethan). Playing pass-and-play instead!</p>';
-    setTimeout(()=>localFn(body),1400);return;
-  }
-  body.innerHTML='<div class="mp-turn">'+title+'</div>'+
-    '<div class="mp-choose">'+
-      '<button class="btn btn-primary mp-online" type="button">🌐 Online Room<span>everyone on their own device</span></button>'+
-      '<button class="btn btn-secondary mp-local" type="button">📱 Pass & Play<span>share one phone</span></button>'+
-    '</div>';
-  body.querySelector('.mp-local').addEventListener('click',()=>localFn(body));
-  body.querySelector('.mp-online').addEventListener('click',()=>mpLobby(body,game));
-}
-
-/* lobby: create or join */
-function mpLobby(body,game){
-  const me=session.test?'Guest'+Math.floor(Math.random()*99):session.username;
-  body.innerHTML='<div class="mp-turn">🌐 Online '+(game==='rush'?'Neon Rush':'Ninja Heist')+'</div>'+
-    '<div class="mp-lobby">'+
-      '<button class="btn btn-primary mp-host" type="button">➕ Create Room</button>'+
-      '<div class="mp-join-row"><input class="mp-code-in" placeholder="CODE" maxlength="4" style="text-transform:uppercase"><button class="btn btn-secondary mp-join" type="button">Join</button></div>'+
-    '</div><p class="mp-lobby-msg"></p>';
-  const msg=body.querySelector('.mp-lobby-msg');
-  body.querySelector('.mp-host').addEventListener('click',async()=>{
-    const code=roomCode();msg.textContent='Creating room…';
-    const r=await roomCreate(code,game,me);
-    if(!r||!r.ok){msg.textContent='Could not reach server. Try pass & play.';return;}
-    mpRoom(body,game,code,me,true);
-  });
-  body.querySelector('.mp-join').addEventListener('click',async()=>{
-    const code=(body.querySelector('.mp-code-in').value||'').toUpperCase().trim();
-    if(code.length<4){msg.textContent='Enter the 4-letter code.';return;}
-    msg.textContent='Joining…';const r=await roomJoin(code,me);
-    if(!r||!r.ok||!r.room){msg.textContent='Room not found — check the code.';return;}
-    mpRoom(body,game,code,me,false);
-  });
-}
-function roomCreate(code,game,host){return apiPost({action:'roomCreate',code,game,host});}
-function roomJoin(code,name){return apiPost({action:'roomJoin',code,name});}
-function roomWrite(code,state){return apiPost({action:'roomWrite',code,state});}
-function roomAnswer(code,name,answer,round){return apiPost({action:'roomAnswer',code,name,answer,round});}
-function roomPoll(code){return apiGet({action:'room',code});}
-
-/* the live room */
-function mpRoom(body,game,code,me,isHost){
-  mpStop();
-  const bank=questionBank();
-  let last=0;
-  function render(st){
-    if(!st)return;
-    if(st.phase==='lobby'){
-      body.innerHTML='<div class="mp-turn">Room <b class="mp-code">'+code+'</b></div>'+
-        '<p class="hub-earn">Share this code! Players join on their own phones.</p>'+
-        '<div class="mp-players">'+st.players.map(p=>'<span class="mp-chip">'+escapeHtml(p)+(p===st.host?' 👑':'')+'</span>').join('')+'</div>'+
-        (isHost?'<button class="btn btn-primary mp-start" type="button">▶️ Start ('+st.players.length+' in)</button>':'<p class="mp-wait">Waiting for host to start…</p>');
-      const sb=body.querySelector('.mp-start');if(sb)sb.addEventListener('click',()=>hostNext(st,true));
-    }else if(st.phase==='question'){
-      const Q=st.question;const answered=st.answers&&st.answers[me]&&st.answers[me].r===st.round;
-      body.innerHTML='<div class="mp-scores">'+st.players.map(p=>escapeHtml(p)+': <b>'+(st.scores[p]||0)+'</b>').join(' · ')+'</div>'+
-        '<div class="mp-q">Q'+st.round+': '+escapeHtml(Q.q)+'</div>'+
-        (answered?'<p class="mp-wait">✅ Answer locked — waiting for others…</p>':
-          '<div class="mp-opts">'+Q.opts.map(o=>'<button type="button" class="btn btn-quiet mp-opt">'+escapeHtml(o)+'</button>').join('')+'</div>');
-      body.querySelectorAll('.mp-opt').forEach(b=>b.addEventListener('click',()=>{roomAnswer(code,me,b.textContent,st.round);sfx('click');b.parentNode.innerHTML='<p class="mp-wait">✅ Locked in!</p>';}));
-    }else if(st.phase==='reveal'){
-      body.innerHTML='<div class="mp-turn">Answer: <b>'+escapeHtml(st.question.a)+'</b></div>'+
-        '<div class="mp-scores">'+rankScores(st).map((p,i)=>(i===0?'🥇 ':'')+escapeHtml(p[0])+': <b>'+p[1]+'</b>').join('<br>')+'</div>'+
-        (isHost?'<button class="btn btn-primary mp-next" type="button">Next ▶️</button>':'<p class="mp-wait">Next question soon…</p>');
-      const nb=body.querySelector('.mp-next');if(nb)nb.addEventListener('click',()=>hostNext(st,false));
-    }else if(st.phase==='done'){
-      mpStop();const rank=rankScores(st);
-      body.innerHTML='<div class="mp-turn">🏆 WINNER: '+escapeHtml(rank[0][0])+'!</div>'+
-        '<div class="mp-scores">'+rank.map((p,i)=>['🥇','🥈','🥉'][i]||('#'+(i+1))+' '+escapeHtml(p[0])+': <b>'+p[1]+'</b>').map((s,idx)=>['🥇','🥈','🥉'][idx]?s+' '+escapeHtml(rank[idx][0])+': <b>'+rank[idx][1]+'</b>':s).join('<br>')+'</div>'+
-        '<button class="btn btn-primary" type="button" onclick="showView(\'gamesView\')">Back to games</button>';
-      sfx('jackpot');bearCelebrate('GG! '+rank[0][0]+' takes it! 🏆');
-    }
-  }
-  function rankScores(st){return st.players.map(p=>[p,st.scores[p]||0]).sort((a,b)=>b[1]-a[1]);}
-  /* host advances the game */
-  function hostNext(st,first){
-    if(first){st.round=0;st.scores={};st.players.forEach(p=>st.scores[p]=0);}
-    st.round++;
-    if(st.round>Math.max(6,st.players.length*4)){st.phase='done';roomWrite(code,st);return;}
-    const Q=bank[(seedFrom(code+st.round))%bank.length];
-    st.question={q:Q.q,opts:[...Q.opts].sort(()=>Math.random()-0.5),a:Q.a};
-    st.answers={};st.phase='question';st.qStart=Date.now();
-    roomWrite(code,st);
-  }
-  /* host scoring loop */
-  if(isHost){
-    mpHostLoop=setInterval(async()=>{
-      const r=await roomPoll(code);const st=r&&r.room;if(!st)return;
-      if(st.phase==='question'){
-        const ans=st.answers||{};const inRound=st.players.filter(p=>ans[p]&&ans[p].r===st.round);
-        const timeUp=Date.now()-(st.qStart||0)>20000;
-        if(inRound.length>=st.players.length||timeUp){
-          st.players.forEach(p=>{if(ans[p]&&ans[p].r===st.round&&ans[p].a===st.question.a)st.scores[p]=(st.scores[p]||0)+100;});
-          st.phase='reveal';roomWrite(code,st);
-        }
-      }
-    },1800);
-  }
-  /* everyone polls to render */
-  mpPoll=setInterval(async()=>{
-    const r=await roomPoll(code);if(r&&r.room){if(r.room.updatedAt!==last){last=r.room.updatedAt;render(r.room);}}
-  },1600);
-  roomPoll(code).then(r=>render(r&&r.room));
-}
-
 /* ---- view switching ---- */
-const VIEWS=['homeView','gamesView','musicView','postView'];
+const VIEWS=['homeView','gamesView','postView'];
 function showView(id){
-  showSubmitBar(false);CURRENT_LEVEL=null;stopGame();stopHeadsUp();if(typeof mpStop==='function')mpStop();
+  showSubmitBar(false);CURRENT_LEVEL=null;stopGame();stopHeadsUp();
   document.getElementById('levelView').classList.add('hidden');
   VIEWS.forEach(v=>document.getElementById(v)?.classList.toggle('hidden',v!==id));
   document.querySelectorAll('.vtab').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
@@ -2402,15 +1619,10 @@ function openMysteryBox(){
 
 /* ---- GAME ZONE hub (9,11,13 + Heads Up + multiplayer) ---- */
 const HUB_GAMES=[
+  {id:'doodle',n:'✏️ Doodle Duel',d:'One draws, the rest guess. Pass-and-play!'},
+  {id:'headsup',n:'🙆 Heads Up!',d:'Phone on forehead — family shouts clues! (landscape)'},
   {id:'breaker',n:'🧱 Neon Breaker',d:'Smash the neon bricks — classic breaker!'},
   {id:'roadle',n:'🟩 Asiadle',d:'Wordle, Japan & Korea edition. 6 guesses!'},
-  {id:'ttt',n:'⭕ Tic-Tac-Macaque',d:'Beat '+BEAR_NAME+' at noughts & crosses. He talks trash.'},
-  {id:'headsup',n:'🙆 Heads Up!',d:'Phone on forehead — family shouts clues! (landscape)'},
-  {id:'rush',n:'⚡ Neon Rush',d:'MULTIPLAYER quiz battle! 2-4 players, pass the phone.'},
-  {id:'heist',n:'🥷 Ninja Heist',d:'MULTIPLAYER! Answer, then MINE, HACK or SHIELD.'},
-  {id:'story',n:'📖 Story Chain',d:'Pass the phone — build a mad Japan story together!'},
-  {id:'accent',n:'🎭 Accent Roulette',d:'Spin for a silly accent to use for 5 minutes!'},
-  {id:'doodle',n:'✏️ Doodle Duel',d:'One draws, the rest guess. Pass-and-play!'},
 ];
 function renderHub(){
   const grid=document.getElementById('hubGrid');if(!grid)return;
@@ -2418,13 +1630,13 @@ function renderHub(){
   grid.innerHTML=HUB_GAMES.map(g=>'<button type="button" class="hub-card" data-g="'+g.id+'"><span class="hub-name">'+g.n+'</span><span class="hub-desc">'+g.d+'</span></button>').join('');
   grid.querySelectorAll('.hub-card').forEach(b=>b.addEventListener('click',()=>openHubGame(b.dataset.g)));
 }
-document.getElementById('hubBack')?.addEventListener('click',()=>{stopGame();stopHeadsUp();if(typeof mpStop==='function')mpStop();renderHub();});
+document.getElementById('hubBack')?.addEventListener('click',()=>{stopGame();stopHeadsUp();renderHub();});
 function openHubGame(id){
   stopGame();sfx('click');
   document.getElementById('hubGrid').classList.add('hidden');
   const st=document.getElementById('hubStage');st.classList.remove('hidden');
   const body=document.getElementById('hubBody');body.innerHTML='';
-  const dispatch={breaker:hubBreaker,roadle:hubRoadle,ttt:hubTTT,headsup:hubHeadsUp,story:hubStory,accent:hubAccent,doodle:hubDoodle,rush:b=>mpChooser(b,'rush',hubRush),heist:b=>mpChooser(b,'heist',hubHeist)};dispatch[id](body);
+  const dispatch={breaker:hubBreaker,roadle:hubRoadle,headsup:hubHeadsUp,doodle:hubDoodle};dispatch[id](body);
   window.scrollTo(0,0);
 }
 /* --- Brick breaker (9) --- */
@@ -2489,41 +1701,12 @@ function hubRoadle(body){
   }));
   activeGame={stop(){}};
 }
-/* --- Tic-Tac-Macaque (13) --- */
-function hubTTT(body){
-  const TRASH=['Too easy. 🐒','Is that your best move?!','I\u2019ve seen koi play better.','*yawns*','Bold. Wrong, but bold.','My grandma macaque plays faster.','You fell for it!','Delicious. Like a stolen peach.'];
-  const WIN=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-  let cells=Array(9).fill(''),over=false;
-  body.innerHTML='<div class="game-hud">📖 You are ❌. Beat '+BEAR_NAME+' the snow monkey (🐒). He WILL trash talk.</div><div class="ttt-grid">'+Array.from({length:9},(_,i)=>'<button type="button" class="ttt-cell" data-i="'+i+'"></button>').join('')+'</div><p class="game-hud ttt-msg">Your move!</p><button type="button" class="btn btn-secondary ttt-reset">New game</button>';
-  const msg=body.querySelector('.ttt-msg'),els9=[...body.querySelectorAll('.ttt-cell')];
-  function winner(b){for(const[a,c,d]of WIN)if(b[a]&&b[a]===b[c]&&b[c]===b[d])return b[a];return b.every(x=>x)?'tie':null;}
-  function bearMove(){
-    const empty=cells.map((v,i)=>v?null:i).filter(v=>v!==null);
-    let pick=null;
-    for(const i of empty){const t=[...cells];t[i]='🐒';if(winner(t)==='🐒'){pick=i;break;}}
-    if(pick===null)for(const i of empty){const t=[...cells];t[i]='❌';if(winner(t)==='❌'){pick=i;break;}}
-    if(pick===null)pick=empty.includes(4)?4:empty[Math.floor(Math.random()*empty.length)];
-    cells[pick]='🐒';els9[pick].textContent='🐒';
-    bearShout(TRASH[Math.floor(Math.random()*TRASH.length)]);
-  }
-  function check(){const w=winner(cells);if(!w)return false;over=true;
-    msg.textContent=w==='❌'?'🏆 YOU BEAT THE MONKEY!':w==='🐒'?'🐒 '+BEAR_NAME+' wins. Obviously.':'🤝 Tie!';
-    if(w==='❌'){sfx('win');burst(body);bearShout('WHAT?! Rematch. NOW.');}else if(w==='🐒'){sfx('lose');bearCelebrate('Told you. 😎');}
-    return true;}
-  els9.forEach(b=>b.addEventListener('click',()=>{
-    const i=+b.dataset.i;if(over||cells[i])return;
-    cells[i]='❌';b.textContent='❌';sfx('click');
-    if(check())return;bearMove();check();
-  }));
-  body.querySelector('.ttt-reset').addEventListener('click',()=>hubTTT(body));
-  activeGame={stop(){}};
-}
 /* --- Heads Up (custom) --- */
 const HEADSUP_DECKS={
   '🦊 Animals':['Fox','Deer','Monkey','Koi carp','Crane','Tanuki','Shiba Inu','Cat','Panda','Owl','Turtle','Dragon','Rabbit','Penguin','Jellyfish','Frog'],
-  '🗾 Our Trip':['Mount Fuji','Bullet train','Tokyo Skytree','Shibuya Crossing','Torii gate','teamLab','Disneyland','Fushimi Inari','Nijo Castle','Gwangjang Market','Seoul Sky','Vending machine','Konbini','Hotel breakfast','Suitcase','Airport security'],
+  '🗾 Our Trip':['Mount Fuji','Bullet train','Tokyo Skytree','Shibuya Crossing','Torii gate','teamLab','Disneyland','Fushimi Inari','Nara deer','Monkey park','DMZ tunnel','Rainbow fountain','Vending machine','Konbini','Suitcase','Airport security'],
   '🎬 Act It Out':['Bowing','Taking a selfie','Ninja','Sleeping on a train','Plane taking off','Slot machine','Eating ramen','Using chopsticks','Packing a suitcase','Riding a bullet train','Hiking a shrine path','Karaoke','Jet lag','Swimming','K-pop dance','Sumo wrestler'],
-  '🍜 Food':['Ramen','Sushi','Gimbap','Mochi','Takoyaki','Matcha','Tempura','Kimchi','Bibimbap','Melon pan','Taiyaki','Udon','Onigiri','Bubble tea','Dumplings','Katsu curry'],
+  '🍜 Food':['Ramen','Sushi','Gimbap','Mochi','Hotteok','Matcha','Tempura','Kimchi','Bibimbap','Melon pan','Taiyaki','Udon','Onigiri','Bubble tea','Dumplings','Tamagoyaki'],
 };
 let headsUpTimer=null;
 function stopHeadsUp(){clearInterval(headsUpTimer);headsUpTimer=null;document.querySelector('.hu-full')?.remove();}
@@ -2549,135 +1732,6 @@ function startHeadsUp(deck){
   o.querySelector('.hu-pass').addEventListener('click',()=>{sfx('click');i++;show();});
   show();
 }
-/* --- shared question bank for multiplayer (from every stop) --- */
-function questionBank(){
-  const bank=[];
-  STOPS.forEach(s=>s.quizPool.forEach(q=>{
-    const opts=q[2]||['True','False'];
-    const ans=q[1]==='true'?'True':q[1]==='false'?'False':q[1];
-    bank.push({q:'['+s.title+'] '+q[0],a:ans,opts:opts.map(o=>o==='true'?'True':o==='false'?'False':o)});
-  }));
-  return bank.sort(()=>Math.random()-0.5);
-}
-function playerPicker(body,title,cb){
-  body.innerHTML='<div class="game-hud">'+title+' — pick 2-4 players, then pass the phone each turn!</div>'+
-    '<div class="mp-picks">'+PLAYER_NAMES.map(n=>'<label class="mp-pick"><input type="checkbox" value="'+n+'"> '+n+'</label>').join('')+'</label></div>'+
-    '<button type="button" class="btn btn-primary mp-start">Start!</button><p class="game-hud mp-err"></p>';
-  body.querySelector('.mp-start').addEventListener('click',()=>{
-    const picked=[...body.querySelectorAll('.mp-pick input:checked')].map(i=>i.value);
-    if(picked.length<2){body.querySelector('.mp-err').textContent='Pick at least 2 players!';return;}
-    cb(picked);
-  });
-}
-/* --- Neon Rush (blooket-style quiz race) --- */
-function hubRush(body){
-  playerPicker(body,'⚡ NEON RUSH',players=>{
-    const bank=questionBank();let qi=0,turn=0;const scores=Object.fromEntries(players.map(p=>[p,0]));
-    const ROUNDS=players.length*6;
-    function next(){
-      if(qi>=ROUNDS||qi>=bank.length)return finish();
-      const p=players[turn%players.length],Q=bank[qi];
-      const opts=[...Q.opts].sort(()=>Math.random()-0.5);
-      body.innerHTML='<div class="mp-turn">📱 Pass to <b>'+p+'</b>!</div><div class="mp-q">'+escapeHtml(Q.q)+'</div>'+
-        '<div class="mp-opts">'+opts.map(o=>'<button type="button" class="btn btn-quiet mp-opt">'+escapeHtml(o)+'</button>').join('')+'</div>'+
-        '<div class="mp-scores">'+players.map(x=>x+': <b>'+scores[x]+'</b>').join(' · ')+'</div>';
-      body.querySelectorAll('.mp-opt').forEach(b=>b.addEventListener('click',()=>{
-        const right=b.textContent===Q.a;qi++;turn++;
-        if(right){scores[p]+=100;sfx('win');
-          body.innerHTML='<div class="mp-turn">✅ Correct, '+p+'! +100 — now PICK A BOX!</div><div class="mbox-row">'+[0,1,2].map(i=>'<button type="button" class="mbox-box">🎁</button>').join('')+'</div>';
-          const boxes=[['+50 rush points!',50],['+100 RUSH POINTS!',100],['-30 points 😈',-30],['Steal 50 from the leader!','steal']];
-          body.querySelectorAll('.mbox-box').forEach(bx=>bx.addEventListener('click',()=>{
-            const prize=boxes[Math.floor(Math.random()*boxes.length)];
-            if(prize[1]==='steal'){const leader=players.reduce((a,b2)=>scores[a]>=scores[b2]?a:b2);if(leader!==p){scores[leader]-=50;scores[p]+=50;}}
-            else scores[p]=Math.max(0,scores[p]+prize[1]);
-            sfx(prize[1]==='steal'||prize[1]>0?'coin':'lose');
-            body.innerHTML='<div class="mp-turn">'+prize[0]+'</div>';setTimeout(next,1300);
-          }));
-        }else{sfx('lose');body.innerHTML='<div class="mp-turn">❌ Nope! It was <b>'+escapeHtml(Q.a)+'</b></div>';setTimeout(next,1400);}
-      }));
-    }
-    function finish(){
-      const rows=players.map(p=>[p,scores[p]]).sort((a,b)=>b[1]-a[1]);
-      body.innerHTML='<div class="mp-turn">🏆 '+rows[0][0]+' WINS ROUTE RUSH!</div><div class="mp-scores big">'+rows.map((r,i)=>(i+1)+'. '+r[0]+' — '+r[1]).join('<br>')+'</div><button type="button" class="btn btn-primary mp-start">Play again</button>';
-      sfx('jackpot');burst(body);bearCelebrate(rows[0][0]+' is the Rush champ! ⚡');
-      body.querySelector('.mp-start').addEventListener('click',()=>hubRush(body));
-    }
-    next();
-  });
-  activeGame={stop(){}};
-}
-/* --- Ninja Heist (crypto-hack style) --- */
-function hubHeist(body){
-  playerPicker(body,'🥷 NINJA HEIST',players=>{
-    const bank=questionBank();let qi=0,turn=0;
-    const gold=Object.fromEntries(players.map(p=>[p,50]));const shield={};
-    const ROUNDS=players.length*6;
-    function next(){
-      if(qi>=ROUNDS||qi>=bank.length)return finish();
-      const p=players[turn%players.length],Q=bank[qi];
-      const opts=[...Q.opts].sort(()=>Math.random()-0.5);
-      body.innerHTML='<div class="mp-turn">📱 Pass to <b>'+p+'</b>'+(shield[p]?' 🛡️':'')+'</div><div class="mp-q">'+escapeHtml(Q.q)+'</div>'+
-        '<div class="mp-opts">'+opts.map(o=>'<button type="button" class="btn btn-quiet mp-opt">'+escapeHtml(o)+'</button>').join('')+'</div>'+
-        '<div class="mp-scores">'+players.map(x=>x+': <b>'+gold[x]+'</b>🪙'+(shield[x]?'🛡️':'')).join(' · ')+'</div>';
-      body.querySelectorAll('.mp-opt').forEach(b=>b.addEventListener('click',()=>{
-        const right=b.textContent===Q.a;qi++;turn++;
-        if(!right){sfx('lose');body.innerHTML='<div class="mp-turn">❌ Wrong! It was <b>'+escapeHtml(Q.a)+'</b>. No action for you.</div>';setTimeout(next,1400);return;}
-        sfx('win');
-        body.innerHTML='<div class="mp-turn">✅ Correct, '+p+'! Choose your move:</div><div class="mp-opts">'+
-          '<button type="button" class="btn btn-primary h-mine">⛏️ MINE (+20 safe)</button>'+
-          '<button type="button" class="btn btn-danger h-hack">💻 HACK the leader (55%: steal 30 / fail: -10)</button>'+
-          '<button type="button" class="btn btn-secondary h-shield">🛡️ SHIELD (block next hack on you)</button></div>';
-        body.querySelector('.h-mine').addEventListener('click',()=>{gold[p]+=20;sfx('coin');step('⛏️ '+p+' mined +20 gold.');});
-        body.querySelector('.h-shield').addEventListener('click',()=>{shield[p]=true;sfx('click');step('🛡️ '+p+' raised a shield.');});
-        body.querySelector('.h-hack').addEventListener('click',()=>{
-          const others=players.filter(x=>x!==p);const leader=others.reduce((a,b2)=>gold[a]>=gold[b2]?a:b2);
-          if(shield[leader]){shield[leader]=false;sfx('lose');step('🛡️ '+leader+' BLOCKED the hack!');return;}
-          if(Math.random()<0.55){const take=Math.min(30,gold[leader]);gold[leader]-=take;gold[p]+=take;sfx('jackpot');step('💻 '+p+' hacked '+leader+' for '+take+' gold!!');}
-          else{gold[p]=Math.max(0,gold[p]-10);sfx('lose');step('🚨 Hack FAILED! '+p+' loses 10.');}
-        });
-        function step(msg){body.innerHTML='<div class="mp-turn">'+msg+'</div>';setTimeout(next,1500);}
-      }));
-    }
-    function finish(){
-      const rows=players.map(p=>[p,gold[p]]).sort((a,b)=>b[1]-a[1]);
-      body.innerHTML='<div class="mp-turn">🏆 '+rows[0][0]+' pulls off the HEIST!</div><div class="mp-scores big">'+rows.map((r,i)=>(i+1)+'. '+r[0]+' — '+r[1]+'🪙').join('<br>')+'</div><button type="button" class="btn btn-primary mp-start">Play again</button>';
-      sfx('jackpot');burst(body);bearCelebrate(rows[0][0]+' is a master ninja! 🥷');
-      body.querySelector('.mp-start').addEventListener('click',()=>hubHeist(body));
-    }
-    next();
-  });
-  activeGame={stop(){}};
-}
-
-/* ---- MUSIC: in-app player. iTunes preview (no key) or full YouTube (with free key) ---- */
-async function playSong(q){
-  q=(q||'').trim();if(!q)return;
-  const wrap=document.getElementById('musicPlayerBox');if(!wrap)return;
-  wrap.innerHTML='<p class="music-note">🔎 Finding "'+escapeHtml(q)+'"…</p>';
-  if(CONFIG.youtubeKey){
-    try{
-      const r=await fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q='+encodeURIComponent(q+' lyrics')+'&key='+CONFIG.youtubeKey);
-      const d=await r.json();const vid=d.items&&d.items[0]&&d.items[0].id.videoId;
-      if(vid){wrap.innerHTML='<iframe class="music-frame" src="https://www.youtube.com/embed/'+vid+'?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen frameborder="0"></iframe>';return;}
-    }catch(_){/* fall through */}
-  }
-  try{
-    const r=await fetch('https://itunes.apple.com/search?media=music&limit=1&term='+encodeURIComponent(q));
-    const d=await r.json();const t=d.results&&d.results[0];
-    if(t&&t.previewUrl){
-      wrap.innerHTML='<div class="music-card"><img class="music-art" src="'+t.artworkUrl100.replace('100x100','300x300')+'" alt="">'+
-        '<div class="music-meta"><b>'+escapeHtml(t.trackName)+'</b><span>'+escapeHtml(t.artistName)+'</span>'+
-        '<audio controls autoplay src="'+t.previewUrl+'"></audio>'+
-        '<span class="music-small">30-sec preview · <a href="https://www.youtube.com/results?search_query='+encodeURIComponent(q+' lyrics')+'" target="_blank" rel="noopener">full song on YouTube ↗</a></span></div></div>';
-      return;
-    }
-  }catch(_){/**/}
-  wrap.innerHTML='<p class="music-note">Couldn\u2019t find that one — check spelling or <a href="https://www.youtube.com/results?search_query='+encodeURIComponent(q)+'" target="_blank" rel="noopener">search YouTube ↗</a></p>';
-}
-document.getElementById('musicBtn')?.addEventListener('click',()=>playSong(document.getElementById('musicInput').value));
-document.getElementById('musicInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')playSong(e.target.value);});
-document.querySelectorAll('.mq').forEach(s=>s.addEventListener('click',()=>{const inp=document.getElementById('musicInput');inp.value=s.textContent;playSong(s.textContent);}));
-
 /* ---- JOURNEY BAR with GPS (36) ---- */
 function haversine(a,b){const R=6371,toR=x=>x*Math.PI/180;const dLat=toR(b[0]-a[0]),dLon=toR(b[1]-a[1]);const h=Math.sin(dLat/2)**2+Math.cos(toR(a[0]))*Math.cos(toR(b[0]))*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 document.getElementById('journeyBtn')?.addEventListener('click',()=>{
@@ -2703,13 +1757,12 @@ function renderPostcards(){
   const withPhotos=STOPS.filter(s=>progress.photos[s.id]?.dataUrl);
   if(!withPhotos.length){grid.innerHTML='<p class="empty">No arrival photos yet — complete a stop and your postcards appear here! 📮</p>';return;}
   grid.innerHTML='';
-  const canShareFiles=!!(navigator.canShare&&navigator.share);
   withPhotos.forEach(s=>{
     const cap=(progress.captions||{})[s.id]||'';
     const card=document.createElement('div');card.className='post-card';
     card.innerHTML='<img alt="'+escapeHtml(s.title)+'"><div class="post-meta"><b>'+escapeHtml(s.title)+'</b><span>'+escapeHtml(s.day)+'</span></div>'+
       '<input class="post-cap" placeholder="Write a caption…" maxlength="60"><button type="button" class="btn btn-primary post-dl">'+
-      (canShareFiles?'📸 Save to Photos':'💾 Download postcard')+'</button><p class="post-hint"></p>';
+      '📸 Save to Photos'+'</button><p class="post-hint"></p>';
     const img=card.querySelector('img');img.src=progress.photos[s.id].dataUrl;
     const inp=card.querySelector('.post-cap');inp.value=cap;
     inp.addEventListener('change',()=>{progress.captions=progress.captions||{};progress.captions[s.id]=inp.value;saveProgress();});
@@ -2745,28 +1798,38 @@ function savePostcard(s,caption,imgEl,hintEl){
     const blob=new Blob([bytes],{type:'image/jpeg'});
     const file=new File([blob],name,{type:'image/jpeg'});
 
-    if(navigator.canShare&&navigator.canShare({files:[file]})&&navigator.share){
+    if(canShareFile(file)){
       setHint('Choose "Save Image" to put it in Photos…');
       navigator.share({files:[file],title:s.title})
-        .then(()=>{setHint('✅ Sent to your share sheet — check Photos.');sfx('coin');})
+        .then(()=>{setHint('✅ Choose "Save Image" — it goes straight into Photos.');sfx('coin');})
         .catch(err=>{
           if(err&&err.name==='AbortError'){setHint('');return;}
-          downloadBlob(blob,name);setHint('Saved to your downloads instead.');
+          /* the home-screen web app sometimes refuses the share sheet — never download, show it to save instead */
+          setHint('');postcardViewer(dataUrl,file,s.title);
         });
       return;
     }
-    downloadBlob(blob,name);
-    setHint('Saved to your downloads.');sfx('coin');
+    setHint('');postcardViewer(dataUrl,file,s.title);
   }catch(e){
     console.error('[A26] postcard failed:',e);
     setHint('⚠️ Could not build that postcard — tell Ethan.');
   }
 }
-function downloadBlob(blob,name){
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=name;
-  document.body.appendChild(a);a.click();a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),4000);
+function canShareFile(file){try{return !!(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]}));}catch(_){return false;}}
+/* Full-screen postcard. Press-and-hold the picture gives iPhone's "Save to Photos" —
+   this works inside the home-screen web app too, where downloads end up in Files. */
+function postcardViewer(dataUrl,file,title){
+  document.querySelector('.pc-view')?.remove();
+  const o=document.createElement('div');o.className='pc-view';
+  o.innerHTML='<div class="pc-inner"><img class="pc-img" alt="Postcard"><p class="pc-tip">📸 <b>Press and hold the postcard</b>, then tap <b>Save to Photos</b>.</p>'+
+    '<div class="pc-actions">'+(canShareFile(file)?'<button type="button" class="btn btn-primary pc-share">📤 Share / Save Image</button>':'')+
+    '<button type="button" class="btn btn-quiet pc-close">Done</button></div></div>';
+  o.querySelector('.pc-img').src=dataUrl;
+  o.querySelector('.pc-img').alt=title||'Postcard';
+  o.querySelector('.pc-share')?.addEventListener('click',()=>{navigator.share({files:[file],title:title||'Postcard'}).catch(()=>{});});
+  o.querySelector('.pc-close').addEventListener('click',()=>o.remove());
+  o.addEventListener('click',e=>{if(e.target===o)o.remove();});
+  document.body.appendChild(o);
 }
 
 /* ---- MOCHI MOODS (32) + name + den reactions (33) ---- */

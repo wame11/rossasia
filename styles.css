@@ -406,7 +406,7 @@ tbody tr:nth-child(1) td{font-weight:900;color:var(--orange-deep)}
 
 
 /* ===== view tabs ===== */
-.viewtabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.viewtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
 .vtab{min-height:46px;border:3px solid var(--asphalt);border-radius:12px;background:#eef6ff;font-weight:900;font-size:.82rem;box-shadow:0 3px 0 var(--asphalt);text-transform:uppercase;letter-spacing:.02em}
 .vtab.active{background:linear-gradient(180deg,var(--gold),var(--mustard))}
 @media(max-width:420px){.vtab{font-size:.7rem;padding:4px}}
@@ -878,7 +878,7 @@ h1,.map-head h2,.hub-head h2,.section-head h2,.reward h2{text-shadow:2px 2px 0 r
 .gm-tab{min-width:0;padding:9px 4px}
 .gm-name{word-break:break-word;overflow-wrap:anywhere;font-size:.62rem}
 @media(max-width:380px){.gm-name{font-size:.56rem}}
-.viewtabs{grid-template-columns:repeat(4,minmax(0,1fr))}
+.viewtabs{grid-template-columns:repeat(3,minmax(0,1fr))}
 .vtab{min-width:0;overflow-wrap:anywhere}
 .hu-decks{grid-template-columns:repeat(2,minmax(0,1fr))}
 .mp-picks{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -982,3 +982,83 @@ h1,.map-head h2,.hub-head h2,.section-head h2,.reward h2{text-shadow:2px 2px 0 r
 .den-allin{min-width:150px;border:3px solid #ffd23f;border-radius:12px;background:transparent;color:#ffd23f;
   font-weight:900;letter-spacing:.1em;text-transform:uppercase;padding:9px 16px;font-size:.82rem}
 .den-allin.on{background:linear-gradient(180deg,#ffd23f,#d79a00);color:#2a1c00;box-shadow:0 0 20px rgba(255,210,63,.55)}
+
+/* ---- postcard viewer: press-and-hold to Save to Photos ---- */
+.pc-view{position:fixed;inset:0;z-index:9999;background:rgba(5,11,24,.92);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}
+.pc-inner{width:100%;max-width:560px;text-align:center}
+.pc-img{width:100%;height:auto;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.5);-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto;pointer-events:auto}
+.pc-tip{color:#fff;font-weight:800;margin:14px 0 12px;font-size:1rem;line-height:1.4}
+.pc-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.pc-actions .btn-quiet{background:#fff}
+
+/* ============ activity games, second edition ============ */
+.g2-canvas{max-width:460px;margin:0 auto}
+.gm-tab{min-height:62px}
+.gm-name{font-weight:900;font-size:.8rem;line-height:1.15}
+.gm-best{font-size:.7rem;color:var(--muted);font-weight:800}
+.gm-tab.active .gm-best{color:#fff}
+.g2-pad{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px auto 0;max-width:460px}
+.g2-btn{flex:1 1 0;min-width:54px;min-height:52px;border:3px solid var(--asphalt);border-radius:14px;background:#eef6ff;font-weight:900;font-size:1.15rem;box-shadow:0 3px 0 var(--asphalt);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.g2-btn.wide{flex:2 1 0;font-size:.95rem}
+.g2-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--asphalt);background:#d6ebff}
+.arcade-stage .game-hud{margin:0 0 8px}
+/* merge */
+.mg-wrap{max-width:420px;margin:0 auto}
+.mg-board{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;background:#0d1f45;padding:8px;border-radius:14px;border:3px solid var(--asphalt);touch-action:none;-webkit-user-select:none;user-select:none}
+.mg-cell{aspect-ratio:1;border-radius:10px;background:rgba(255,255,255,.08);display:grid;place-items:center;position:relative}
+.mg-cell span{font-size:clamp(1.6rem,9vw,2.6rem);line-height:1}
+.mg-cell small{position:absolute;right:6px;bottom:3px;font-size:.62rem;font-weight:900;color:rgba(255,255,255,.75)}
+.mg-cell.t0{background:#2a4d8f}.mg-cell.t1{background:#2f63b8}.mg-cell.t2{background:#1f7fd6}.mg-cell.t3{background:#0fa3c8}.mg-cell.t4{background:#12b38a}.mg-cell.t5{background:#7cbf3a}
+.mg-cell.t6{background:#f0a830}.mg-cell.t7{background:#ef7a2e}.mg-cell.t8{background:#e0452b}.mg-cell.t9{background:#d7263d}.mg-cell.t10{background:#b0268f}.mg-cell.t11{background:#6a2bd6}
+.mg-cell.pop{animation:g2pop .22s ease}.mg-cell.new{animation:g2in .2s ease}
+.mg-chain{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px;margin-top:8px;font-size:1.2rem}
+.mg-chain i{font-style:normal;color:var(--muted);font-size:.8rem}
+.mg-chain .goal{outline:3px solid var(--rust);border-radius:8px;padding:0 2px;background:#fff}
+@keyframes g2pop{50%{transform:scale(1.18)}}
+@keyframes g2in{from{transform:scale(.3);opacity:0}}
+/* swap */
+.sw-board{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:440px;margin:0 auto;background:#12264d;padding:6px;border-radius:14px;border:3px solid var(--asphalt);touch-action:none;-webkit-user-select:none;user-select:none}
+.sw-cell{aspect-ratio:1;border:0;border-radius:9px;background:rgba(255,255,255,.1);font-size:clamp(1.2rem,6.4vw,1.9rem);line-height:1;padding:0;display:grid;place-items:center;transition:transform .12s}
+.sw-cell.sel{background:#ffd166;transform:scale(1.08)}
+.sw-cell.boom{animation:g2boom .23s ease forwards}
+@keyframes g2boom{to{transform:scale(0);opacity:0}}
+/* shared puzzle grid */
+.pz-wrap{max-width:440px;margin:0 auto}
+.pz-board{display:grid;gap:4px;background:#0d1f45;padding:6px;border-radius:14px;border:3px solid var(--asphalt);touch-action:none;-webkit-user-select:none;user-select:none}
+.pz-cell{aspect-ratio:1;border:0;border-radius:8px;background:#f6efe0;display:grid;place-items:center;font-size:clamp(1rem,6vw,1.7rem);padding:0;transition:background .12s}
+.pz-cell.rock{background:#546072}
+.pz-cell.on{box-shadow:inset 0 0 0 3px rgba(13,63,143,.35)}
+.pz-cell.head{box-shadow:inset 0 0 0 4px #1f6fe0}
+.pz-tools{display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.pz-tools .btn{min-height:42px;padding:8px 14px;font-size:.85rem}
+/* pipes */
+.pp .pp-cell{background:#08142c;position:relative;border-radius:6px}
+.pp-svg{width:100%;height:100%;display:block}
+.pp-cell.lit{background:#0f2a57}
+.pp-ico{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(.9rem,5vw,1.4rem);pointer-events:none}
+.pp-ico.dim{filter:grayscale(1) brightness(.6)}
+/* lights */
+.lt .lt-cell{background:#1b2440;filter:grayscale(1) brightness(.45);font-size:clamp(1.4rem,9vw,2.4rem)}
+.lt .lt-cell.on{background:#3a1f10;filter:none;box-shadow:0 0 18px rgba(255,140,40,.8) inset}
+/* word search */
+.ws-list{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:8px}
+.ws-list span{padding:4px 9px;border-radius:999px;background:#eef6ff;border:2px solid var(--asphalt);font-weight:900;font-size:.78rem;letter-spacing:.05em}
+.ws-list span.got{background:#12b38a;color:#fff;text-decoration:line-through}
+.ws{gap:2px;padding:4px}
+.ws-cell{aspect-ratio:1;display:grid;place-items:center;background:#fff;border-radius:5px;font-weight:900;font-size:clamp(.72rem,4.2vw,1.1rem);color:var(--ink)}
+.ws-cell.sel{background:#ffd166}
+.ws-cell.got{background:#bff0dd}
+/* slide */
+.sl{gap:3px}
+.sl-cell{aspect-ratio:1;border:0;border-radius:6px;background-color:#0d1f45;background-repeat:no-repeat;padding:0}
+.sl-cell.gap{background:transparent}
+.sl-peek{display:flex;align-items:center;gap:10px;margin-top:10px;justify-content:center;font-weight:800;color:var(--muted);font-size:.8rem}
+.sl-peek img{width:64px;height:64px;border-radius:8px;border:2px solid var(--asphalt)}
+/* game buttons sit above the corner mascot so it can never block a control */
+.g2-pad{position:relative;z-index:70}
+.gm-tab .gm-name{overflow-wrap:normal;word-break:normal;hyphens:manual;font-size:.74rem}
+@media(max-width:360px){.gm-tab .gm-name{font-size:.66rem}}
+/* quiz feedback */
+.question{border-left:5px solid transparent;padding-left:10px;border-radius:6px;transition:background .2s}
+.question.q-wrong{border-left-color:#d7263d;background:#fff0f2}
+.question.q-right{border-left-color:#12b38a;background:#effbf6}
