@@ -19,7 +19,7 @@ const SCORE_PER_STOP=100;
 const SEASON_START=Date.parse('2026-09-22T21:00:00Z');
 const RESET_MARKER='__RESET__';
 const START_CHIPS=0;
-const CONTENT_VERSION=2; /* bump when stop games, hunts or quizzes are rebuilt */
+const CONTENT_VERSION=3; /* bump when stop games, hunts or quizzes are rebuilt */
 const PLAYER_NAMES=Object.keys(ACCOUNTS).filter(n=>ACCOUNTS[n].role==='player');
 /* ⚠️ RESET SWITCH: change v4 -> v5 -> v6 ... to wipe EVERY device's saved progress automatically */
 const STORAGE={session:'asia26-session-v1',shared:'asia26-shared-v1',progressPrefix:'asia26-progress-v1-'};
@@ -69,7 +69,14 @@ function readJson(k,f=null){try{const v=localStorage.getItem(k);return v?JSON.pa
 function writeJson(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch{return false;}}
 function progressKey(){return STORAGE.progressPrefix+(session?.username||'guest');}
 function loadProgress(){progress=mergeProgress(readJson(progressKey(),null));if(session&&session.test)progress.chips=999999;
-  if((progress.contentVer||1)<CONTENT_VERSION){
+  const cv=progress.contentVer||1;
+  if(cv<3&&cv>=2){
+    /* v3 (5 Oct plan): only the stops that changed lose their game/hunt/quiz state. Chips untouched. */
+    ['shibuya','shinjuku','odaiba','imperial','kanda','akihabara','ikseondong','insadong','jogyesa','seongsu','starfield','disneysea','nara','sanjusangendo'].forEach(id=>{
+      delete progress.game[id];delete progress.quiz[id];delete progress.hunt[id];delete progress.huntPhotos[id];
+      Object.keys(progress.chipGrant||{}).forEach(k=>{if(k.startsWith(id+'-'))delete progress.chipGrant[k];});});
+    progress.contentVer=CONTENT_VERSION;saveProgress();}
+  if(cv<2){
     /* the per-stop games, hunt lists and quiz questions changed, so old answers/wins no longer line up.
        Photos, character and submissions are kept. */
     progress.game={};progress.quiz={};progress.hunt={};progress.huntPhotos={};progress.chipGrant={};
@@ -1704,7 +1711,7 @@ function hubRoadle(body){
 /* --- Heads Up (custom) --- */
 const HEADSUP_DECKS={
   '🦊 Animals':['Fox','Deer','Monkey','Koi carp','Crane','Tanuki','Shiba Inu','Cat','Panda','Owl','Turtle','Dragon','Rabbit','Penguin','Jellyfish','Frog'],
-  '🗾 Our Trip':['Mount Fuji','Bullet train','Tokyo Skytree','Shibuya Crossing','Torii gate','teamLab','Disneyland','Fushimi Inari','Nara deer','Monkey park','DMZ tunnel','Rainbow fountain','Vending machine','Konbini','Suitcase','Airport security'],
+  '🗾 Our Trip':['Mount Fuji','Bullet train','Tokyo Skytree','Shibuya Crossing','Torii gate','teamLab','Disneyland','Fushimi Inari','Nara deer','Monkey park','Pirate ship','Black eggs','DMZ tunnel','Rainbow fountain','Vending machine','Konbini','Airport security'],
   '🎬 Act It Out':['Bowing','Taking a selfie','Ninja','Sleeping on a train','Plane taking off','Slot machine','Eating ramen','Using chopsticks','Packing a suitcase','Riding a bullet train','Hiking a shrine path','Karaoke','Jet lag','Swimming','K-pop dance','Sumo wrestler'],
   '🍜 Food':['Ramen','Sushi','Gimbap','Mochi','Hotteok','Matcha','Tempura','Kimchi','Bibimbap','Melon pan','Taiyaki','Udon','Onigiri','Bubble tea','Dumplings','Tamagoyaki'],
 };
