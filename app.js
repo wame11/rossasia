@@ -213,6 +213,7 @@ function renderHome(){
   els.leaderboard.classList.toggle('hidden',!isAdmin());
   els.hud.classList.toggle('hidden',isAdmin());
   renderAdminPanel();renderChipGrant();renderResetBox();renderLeaderboard();renderReward();
+  try{renderDaily();renderSteps();}catch(e){console.error('[A26] daily/steps',e);}
   if(!isAdmin()){
     const done=STOPS.filter(s=>statusForStop(s.id)==='approved').length;
     const pct=Math.round(done/STOPS.length*100);
@@ -756,7 +757,7 @@ function syncPlayer(){
       chipsEarned:progress.chipsEarned||0,
       seasonTier:seasonTier,
       stops:STOPS.filter(s=>statusForStop(s.id)==='approved').length,
-      character:JSON.stringify((progress.char&&progress.char.equip)||{})
+      character:JSON.stringify({equip:(progress.char&&progress.char.equip)||{},steps:progress.steps||{}})
     }});
   },1500);
 }
@@ -1556,7 +1557,7 @@ function renderSeason(){
   }).join('');
 }
 /* ---- view switching ---- */
-const VIEWS=['homeView','gamesView','postView'];
+const VIEWS=['homeView','gamesView','translateView','postView'];
 function showView(id){
   showSubmitBar(false);CURRENT_LEVEL=null;stopGame();stopHeadsUp();
   document.getElementById('levelView').classList.add('hidden');
@@ -1564,6 +1565,7 @@ function showView(id){
   document.querySelectorAll('.vtab').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
   if(id==='gamesView')renderHub();
   if(id==='postView')renderPostcards();
+  if(id==='translateView')renderTranslate();
 
   if(id==='homeView')renderHome();
   window.scrollTo(0,0);
@@ -1636,6 +1638,13 @@ const HUB_GAMES=[
   {id:'pool',n:'🎱 Neon Pool',d:'Pull back and shoot. Pot all 9 balls in the fewest shots.'},
   {id:'sweeper',n:'💣 Torii Sweeper',d:'Minesweeper with foxes. Tap to reveal, hold to flag.'},
   {id:'sumo',n:'🥋 Sumo Smash',d:'TWO PLAYERS tap-battle, or you vs Kimbap. Best of 3.'},
+  {id:'slice',n:'🍣 Sushi Slice',d:'Swipe through the fish. Never the shellfish, never the bomb.'},
+  {id:'taiko',n:'🥁 Taiko Beat',d:'Rhythm drums — red taps left, blue taps right. 60 seconds.'},
+  {id:'chop',n:'🥢 Chopstick Catch',d:'Pinch two fingers (or tap) to catch the falling food.'},
+  {id:'crossing',n:'🚦 Crossing Rush',d:'Send 20 people across Shibuya Crossing through the traffic.'},
+  {id:'vend',n:'🥤 Vending Frenzy',d:'Hit the right drink before the timer runs out. It gets fast.'},
+  {id:'gacha',n:'🎰 Gachapon Tower',d:'Drop swinging capsules into a tower — don’t let it lean!'},
+  {id:'ninja',n:'🥷 Ninja Wall Jump',d:'One thumb: tap to leap wall to wall, dodge spikes and shuriken.'},
 ];
 function renderHub(){
   const grid=document.getElementById('hubGrid');if(!grid)return;
@@ -1649,7 +1658,7 @@ function openHubGame(id){
   document.getElementById('hubGrid').classList.add('hidden');
   const st=document.getElementById('hubStage');st.classList.remove('hidden');
   const body=document.getElementById('hubBody');body.innerHTML='';
-  const dispatch={breaker:hubBreaker,roadle:hubRoadle,headsup:hubHeadsUp,doodle:hubDoodle,dash:hubDash,invaders:hubInvaders,hockey:hubHockey,pool:hubPool,sweeper:hubSweeper,sumo:hubSumo};dispatch[id](body);
+  const dispatch={breaker:hubBreaker,roadle:hubRoadle,headsup:hubHeadsUp,doodle:hubDoodle,dash:hubDash,invaders:hubInvaders,hockey:hubHockey,pool:hubPool,sweeper:hubSweeper,sumo:hubSumo,slice:hubSlice,taiko:hubTaiko,chop:hubChop,crossing:hubCross,vend:hubVend,gacha:hubGacha,ninja:hubNinja};dispatch[id](body);
   window.scrollTo(0,0);
 }
 /* --- Brick breaker (9) --- */

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Asia 2026 Family Challenge</title>
-  <link rel="stylesheet" href="styles.css?v=2026-10-05-2" />
+  <link rel="stylesheet" href="styles.css?v=2026-10-05-3" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png" />
@@ -56,6 +56,7 @@
     <nav class="viewtabs">
       <button type="button" class="vtab active" data-view="homeView">🗾 Map</button>
       <button type="button" class="vtab" data-view="gamesView">🎮 Games</button>
+      <button type="button" class="vtab" data-view="translateView">🌐 Translate</button>
       <button type="button" class="vtab" data-view="postView">📮 Cards</button>
     </nav>
 
@@ -77,6 +78,8 @@
         <div class="hud-score"><span class="coin">🪙</span><b id="hudScore">0</b><span>points</span></div>
         <div class="hud-score hud-chips"><span>🐒</span><b id="hudChips">0</b><span>chips</span></div>
       </div>
+
+      <section id="dailyBox" class="daily-box hidden"></section>
 
       <div class="map-head">
         <h2>The Big Asia Map</h2>
@@ -103,6 +106,8 @@
         <div id="resetBox" class="reset-zone"></div>
       </section>
 
+      <section id="stepsBox" class="steps-box hidden"></section>
+
       <section id="leaderboard" class="board-section hidden">
         <div class="section-head"><h2>Leaderboard</h2>
           <button id="exportCsvBtn" class="btn btn-quiet" type="button">Export CSV</button></div>
@@ -121,6 +126,9 @@
       <div id="hubStage" class="hub-stage hidden"><button id="hubBack" class="btn btn-back" type="button">← All games</button><div id="hubBody"></div></div>
     </section>
 
+    <!-- TRANSLATE -->
+    <section id="translateView" class="hidden"></section>
+
     <!-- POSTCARDS -->
     <section id="postView" class="hidden">
       <div class="hub-head"><h2>📮 Postcards</h2><p class="hub-earn">Your arrival photos become postcards — add a caption, then save it straight to your Photos 📸</p></div>
@@ -134,11 +142,13 @@
     </section>
   </main>
 
-  <script>window.__BUILD__='2026-10-05-2';</script>
-  <script src="stops.js?v=2026-10-05-2"></script>
-  <script src="app.js?v=2026-10-05-2"></script>
-  <script src="games.js?v=2026-10-05-2"></script>
-  <script src="hub.js?v=2026-10-05-2"></script>
+  <script>window.__BUILD__='2026-10-05-3';</script>
+  <script src="stops.js?v=2026-10-05-3"></script>
+  <script src="app.js?v=2026-10-05-3"></script>
+  <script src="games.js?v=2026-10-05-3"></script>
+  <script src="hub.js?v=2026-10-05-3"></script>
+  <script src="translate.js?v=2026-10-05-3"></script>
+  <script src="daily.js?v=2026-10-05-3"></script>
   <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js').then(function(reg){
