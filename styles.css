@@ -1062,3 +1062,19 @@ h1,.map-head h2,.hub-head h2,.section-head h2,.reward h2{text-shadow:2px 2px 0 r
 .question{border-left:5px solid transparent;padding-left:10px;border-radius:6px;transition:background .2s}
 .question.q-wrong{border-left-color:#d7263d;background:#fff0f2}
 .question.q-right{border-left-color:#12b38a;background:#effbf6}
+
+/* ---- Game Zone: the bigger games ---- */
+.hub-canvas{max-width:480px}
+.hub-choose{display:grid;gap:10px;max-width:420px;margin:0 auto;padding:6px 0 14px}
+.hub-choose h3{margin:0 0 4px;text-align:center;font-size:1.3rem}
+.hub-choose .btn{display:grid;gap:2px;min-height:auto;padding:14px;text-align:left}
+.hub-choose .btn small{font-weight:700;font-size:.78rem;opacity:.85}
+.sw-tools{display:flex;gap:8px;align-items:center;justify-content:space-between;max-width:480px;margin:0 auto 8px;flex-wrap:wrap}
+.sw-tools .btn{min-height:40px;padding:6px 12px;font-size:.82rem}
+.sw-tools .btn.on{background:linear-gradient(180deg,#ffd166,#f0a830)}
+.sw-info{font-weight:900;font-size:.95rem}
+.sw-grid{display:grid;gap:3px;max-width:480px;margin:0 auto;background:#0d1f45;padding:4px;border-radius:12px;border:3px solid var(--asphalt);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.sw-c{aspect-ratio:1;border:0;border-radius:5px;background:linear-gradient(180deg,#5b86c7,#3a6fd5);box-shadow:inset 0 -3px 0 rgba(0,0,0,.25);padding:0;font-weight:900;font-size:clamp(.8rem,3.4vw,1.1rem);display:grid;place-items:center;color:#fff}
+.sw-c.open{background:#e8f0fb;box-shadow:none;color:#0b1b36}
+.sw-c.n1{color:#1f6fe0}.sw-c.n2{color:#12b38a}.sw-c.n3{color:#d7263d}.sw-c.n4{color:#8a4dd6}.sw-c.n5{color:#b0268f}.sw-c.n6{color:#0fa3c8}.sw-c.n7{color:#111}.sw-c.n8{color:#555}
+.sw-c.boom{background:#d7263d}.sw-c.show{background:#f0a830}.sw-c.wrong{background:#888;text-decoration:line-through}

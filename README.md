@@ -17,6 +17,7 @@ and Korea: white and Japanese-blue, with a neon skyline behind everything.
 | `index.html` | App shell, login, mascot |
 | `stops.js` | All 46 stops, in itinerary order — facts, 7 hunt items (5 per player), 3 games, 7 quiz questions (5 per player) |
 | `games.js` | The 19 activity-game engines (packing, merge, match-3, climb, crossing, conveyor, spot-the-difference, path, pipes, lanterns, maze, pachinko, crane, throw, cooking, balance, archery, word search, sliding puzzle) |
+| `hub.js` | The Games Zone's bigger games: Shinkansen Dash, Neon Invaders, Air Hockey (2-player), Neon Pool, Torii Sweeper, Sumo Smash (2-player) |
 | `app.js` | Level pages, quiz, hunts, Games tab, den, admin, sync |
 | `styles.css` | Neon Tokyo/Seoul theme |
 | `service-worker.js` | Offline cache |

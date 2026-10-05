@@ -1576,9 +1576,9 @@ setInterval(()=>{
   const gv=document.getElementById('gamesView');
   if(!gv||gv.classList.contains('hidden')||document.visibilityState!=='visible')return;
   progress.playSecs=(progress.playSecs||0)+1;
-  if(progress.playSecs%300===0){progress.playBonus=(progress.playBonus||0)+5;sfx('coin');bearCelebrate('+5 points for playing! Keep going! ⏱️');updateHUDPoints();}
+  if(progress.playSecs%60===0){progress.playBonus=(progress.playBonus||0)+5;sfx('coin');bearCelebrate('+5 points for playing! Keep going! ⏱️');updateHUDPoints();}
   const pc=document.getElementById('playClock');
-  if(pc){const s=progress.playSecs%300;pc.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+' → next +5';}
+  if(pc){const s=progress.playSecs%60;pc.textContent='0:'+String(s).padStart(2,'0')+' → next +5';}
   if(progress.playSecs%15===0)saveProgress();
 },1000);
 function updateHUDPoints(){if(els.hudScore&&session&&!isAdmin())els.hudScore.textContent=playerPoints(session.username)+(progress.playBonus||0);}
@@ -1630,6 +1630,12 @@ const HUB_GAMES=[
   {id:'headsup',n:'🙆 Heads Up!',d:'Phone on forehead — family shouts clues! (landscape)'},
   {id:'breaker',n:'🧱 Neon Breaker',d:'Smash the neon bricks — classic breaker!'},
   {id:'roadle',n:'🟩 Asiadle',d:'Wordle, Japan & Korea edition. 6 guesses!'},
+  {id:'dash',n:'🚄 Shinkansen Dash',d:'Three-lane endless runner. Swipe to dodge, jump and slide!'},
+  {id:'invaders',n:'👾 Neon Invaders',d:'Drag to fly, auto-fire, power-ups and a boss every 5 waves.'},
+  {id:'hockey',n:'🏒 Air Hockey',d:'TWO PLAYERS on one iPad, or you vs Kimbap. First to 7.'},
+  {id:'pool',n:'🎱 Neon Pool',d:'Pull back and shoot. Pot all 9 balls in the fewest shots.'},
+  {id:'sweeper',n:'💣 Torii Sweeper',d:'Minesweeper with foxes. Tap to reveal, hold to flag.'},
+  {id:'sumo',n:'🥋 Sumo Smash',d:'TWO PLAYERS tap-battle, or you vs Kimbap. Best of 3.'},
 ];
 function renderHub(){
   const grid=document.getElementById('hubGrid');if(!grid)return;
@@ -1643,7 +1649,7 @@ function openHubGame(id){
   document.getElementById('hubGrid').classList.add('hidden');
   const st=document.getElementById('hubStage');st.classList.remove('hidden');
   const body=document.getElementById('hubBody');body.innerHTML='';
-  const dispatch={breaker:hubBreaker,roadle:hubRoadle,headsup:hubHeadsUp,doodle:hubDoodle};dispatch[id](body);
+  const dispatch={breaker:hubBreaker,roadle:hubRoadle,headsup:hubHeadsUp,doodle:hubDoodle,dash:hubDash,invaders:hubInvaders,hockey:hubHockey,pool:hubPool,sweeper:hubSweeper,sumo:hubSumo};dispatch[id](body);
   window.scrollTo(0,0);
 }
 /* --- Brick breaker (9) --- */
