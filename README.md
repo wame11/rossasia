@@ -49,6 +49,10 @@ Every asset is stamped with a build id so nobody can get a half-updated app.
 2. Put it in **three** places: `version.json`, the `BUILD` constant at the top of
    `service-worker.js`, and the `?v=` / `window.__BUILD__` values in `index.html`.
 3. Commit and push. That is it.
+4. Check `https://ross.asia/version.json` a few minutes later. If it still shows
+   the old build, look at the "pages build and deployment" run under Actions.
+   During a GitHub outage a run can sit in "queued" for hours and refuse to be
+   cancelled or re-run; pushing any further real commit starts a fresh run.
 
 How it heals itself:
 
