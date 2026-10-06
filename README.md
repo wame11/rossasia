@@ -18,7 +18,7 @@ and Korea: white and Japanese-blue, with a neon skyline behind everything.
 | `stops.js` | All 46 stops, in itinerary order — facts, 7 hunt items (5 per player), 3 games, 7 quiz questions (5 per player) |
 | `games.js` | The 19 activity-game engines (packing, merge, match-3, climb, crossing, conveyor, spot-the-difference, path, pipes, lanterns, maze, pachinko, crane, throw, cooking, balance, archery, word search, sliding puzzle) |
 | `hub.js` | The Games Zone's bigger games: Shinkansen Dash, Neon Invaders, Air Hockey (2-player), Neon Pool, Torii Sweeper, Sumo Smash (2-player), Sushi Slice, Taiko Beat, Chopstick Catch, Crossing Rush, Vending Frenzy, Gachapon Tower, Ninja Wall Jump |
-| `translate.js` | Translate tab: photo OCR → English (Tesseract.js from CDN), speech both ways, typed text, the show-the-waiter diet card, phrasebook with voice, live money converter |
+| `translate.js` | Phrases tab: the show-the-waiter diet card, the phrasebook (tap to enlarge), live money converter |
 | `daily.js` | Kimbap's daily challenge (+15 chips) and the walking leaderboard (steps synced via the player's character field) |
 | `app.js` | Level pages, quiz, hunts, Games tab, den, admin, sync |
 | `styles.css` | Neon Tokyo/Seoul theme |
