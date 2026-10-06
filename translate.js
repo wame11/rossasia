@@ -30,23 +30,20 @@ function trSpeakOnline(text,lang){
   while(t.length){let cut=Math.min(180,t.length);if(cut<t.length){const i=Math.max(t.lastIndexOf('。',cut),t.lastIndexOf('.',cut),t.lastIndexOf(' ',cut));if(i>40)cut=i+1;}parts.push(t.slice(0,cut).trim());t=t.slice(cut);}
   if(trAudio){try{trAudio.pause();}catch(_){}}
   let i=0;const a=new Audio();trAudio=a;
-  const next=()=>{if(i>=parts.length)return;a.src='https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl='+code+'&q='+encodeURIComponent(parts[i++]);a.play().catch(()=>{toast('Can’t play audio — check you’re online, or add the '+(code==='ko'?'Korean':'Japanese')+' voice in Settings → Accessibility → Spoken Content → Voices.');});};
-  a.onended=next;a.onerror=()=>toast('Can’t play audio — check you’re online, or add the '+(code==='ko'?'Korean':'Japanese')+' voice in Settings → Accessibility → Spoken Content → Voices.');next();return true;
+  const next=()=>{if(i>=parts.length)return;a.src='https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl='+code+'&q='+encodeURIComponent(parts[i++]);a.play().catch(()=>{if(!trSpeakDevice(text,lang))toast('Can’t play the voice — check you’re online and the volume is up.');});};
+  a.onended=next;a.onerror=()=>{if(!trSpeakDevice(text,lang))toast('Can’t play the voice — check you’re online and the volume is up.');};next();return true;
 }
+function trSpeakDevice(text,lang){
+  try{if(!('speechSynthesis' in window))return false;if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=0.9;const v=trVoiceFor(lang);if(v)u.voice=v;speechSynthesis.speak(u);return true;}catch(_){return false;}
+}
+/* Online voices are the default: they sound better than the phone's, and (unlike the phone's speech) they still play
+   when the iPhone ringer switch is on silent. The phone's own voice is only the offline fallback. */
 function trSpeak(text,lang){
   text=(text||'').trim();if(!text)return false;
-  if(!('speechSynthesis' in window))return navigator.onLine?trSpeakOnline(text,lang):false;
-  const v=trVoiceFor(lang);
-  if(!v&&trVoicesReady){ /* voices are known and none speaks this language → online audio */
-    if(navigator.onLine)return trSpeakOnline(text,lang);
-    toast('This phone has no '+(lang.slice(0,2)==='ko'?'Korean':'Japanese')+' voice. Add it in Settings → Accessibility → Spoken Content → Voices, or go online.');return false;}
-  try{if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=0.9;if(v)u.voice=v;
-    let started=false;u.onstart=()=>{started=true;};
-    u.onerror=e=>{if(e&&e.error==='interrupted')return;if(navigator.onLine)trSpeakOnline(text,lang);};
-    /* iOS sometimes swallows an utterance without any event — if nothing has started after 1.5s, use the online audio instead */
-    setTimeout(()=>{if(!started&&!speechSynthesis.speaking&&navigator.onLine){try{speechSynthesis.cancel();}catch(_){}trSpeakOnline(text,lang);}},1500);
-    speechSynthesis.speak(u);return true;}catch(_){return navigator.onLine?trSpeakOnline(text,lang):false;}
+  if(navigator.onLine)return trSpeakOnline(text,lang);
+  if(trSpeakDevice(text,lang))return true;
+  toast('Offline and this phone has no '+(lang.slice(0,2)==='ko'?'Korean':'Japanese')+' voice — show the screen instead.');return false;
 }
 try{if('speechSynthesis' in window){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{if(speechSynthesis.getVoices().length)trVoicesReady=true;};}}catch(_){}
 
@@ -117,7 +114,7 @@ function renderTranslate(){
      '<div class="tr-progress hidden"><div class="tr-bar"><i></i></div><span></span></div>'+
      '<div class="tr-result hidden"><img class="tr-img" alt="your photo"><textarea class="tr-orig" rows="4" placeholder="Text found in the photo (you can fix it)"></textarea><button type="button" class="btn btn-quiet tr-retrans">↻ Translate again</button><div class="tr-en"></div></div>'+
      '<p class="tr-tip">💡 iPhone tip: long-press on the photo above and choose <b>Translate</b> — Apple’s built-in reader is often even better.</p></section>'+
-   '<section class="tr-card"><h3>🎤 Speech</h3><p>Hold the phone up. One button for them, one for you.</p>'+
+   '<section class="tr-card"><h3>🎤 Speech</h3><p>Hold the phone up. One button for them, one for you.</p><p class="tr-hint">🔊 Voices are online (clearer than the phone’s own) and play even with the ringer on silent — just turn the volume up.</p>'+
      '<div class="tr-row"><button type="button" class="btn btn-primary tr-mic" data-dir="in">🎤 They speak '+L.native+' → English</button><button type="button" class="btn btn-primary tr-mic" data-dir="out">🎤 I speak English → '+L.native+'</button></div>'+
      '<div class="tr-heard"></div><div class="tr-said"></div><p class="tr-note tr-sr-note hidden">⚠️ Speech recognition isn’t available in this view. Open <b>ross.asia</b> in Safari itself for the microphone — typing below still works here.</p></section>'+
    '<section class="tr-card"><h3>⌨️ Type it</h3><p>Paste or type '+L.label+' to get English, or type English to get '+L.label+' (it can say it out loud).</p>'+

@@ -5,7 +5,7 @@
    2. version.json is never cached — it is how the app spots a new build.
    3. An asset that fails NEVER falls back to index.html. Serving HTML in place
       of app.js is what silently breaks the whole app. */
-const BUILD = '2026-10-06-1';
+const BUILD = '2026-10-06-2';
 const CACHE_NAME = 'asia2026-' + BUILD;
 const ASSETS = ['./','./index.html','./styles.css','./app.js','./stops.js','./games.js','./hub.js','./translate.js','./daily.js','./icon-180.png','./icon-192.png'];
 
