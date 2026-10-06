@@ -21,12 +21,34 @@ async function trTranslate(text,from,to){
 const trHasCJK=s=>/[぀-ヿ㐀-鿿가-힯]/.test(s||'');
 
 /* ---------- speech out ---------- */
-function trSpeak(text,lang){
-  try{if(!('speechSynthesis' in window))return false;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=0.9;
-    const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.replace('_','-').toLowerCase().startsWith(lang.toLowerCase().slice(0,2)));if(v)u.voice=v;
-    speechSynthesis.speak(u);return true;}catch(_){return false;}
+let trVoicesReady=false,trAudio=null;
+function trVoiceFor(lang){try{const vs=speechSynthesis.getVoices();if(vs.length)trVoicesReady=true;const two=lang.toLowerCase().slice(0,2);
+  return vs.find(v=>v.lang&&v.lang.replace('_','-').toLowerCase()===lang.toLowerCase())||vs.find(v=>v.lang&&v.lang.toLowerCase().startsWith(two))||null;}catch(_){return null;}}
+/* Online fallback: Google's TTS audio, used when the phone has no voice for the language (iPhones often ship Japanese but not Korean). */
+function trSpeakOnline(text,lang){
+  const code=lang.slice(0,2);const parts=[];let t=text.replace(/\s+/g,' ').trim();
+  while(t.length){let cut=Math.min(180,t.length);if(cut<t.length){const i=Math.max(t.lastIndexOf('。',cut),t.lastIndexOf('.',cut),t.lastIndexOf(' ',cut));if(i>40)cut=i+1;}parts.push(t.slice(0,cut).trim());t=t.slice(cut);}
+  if(trAudio){try{trAudio.pause();}catch(_){}}
+  let i=0;const a=new Audio();trAudio=a;
+  const next=()=>{if(i>=parts.length)return;a.src='https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl='+code+'&q='+encodeURIComponent(parts[i++]);a.play().catch(()=>{toast('Can’t play audio — check you’re online, or add the '+(code==='ko'?'Korean':'Japanese')+' voice in Settings → Accessibility → Spoken Content → Voices.');});};
+  a.onended=next;a.onerror=()=>toast('Can’t play audio — check you’re online, or add the '+(code==='ko'?'Korean':'Japanese')+' voice in Settings → Accessibility → Spoken Content → Voices.');next();return true;
 }
-try{if('speechSynthesis' in window)speechSynthesis.getVoices();}catch(_){}
+function trSpeak(text,lang){
+  text=(text||'').trim();if(!text)return false;
+  if(!('speechSynthesis' in window))return navigator.onLine?trSpeakOnline(text,lang):false;
+  const v=trVoiceFor(lang);
+  if(!v&&trVoicesReady){ /* voices are known and none speaks this language → online audio */
+    if(navigator.onLine)return trSpeakOnline(text,lang);
+    toast('This phone has no '+(lang.slice(0,2)==='ko'?'Korean':'Japanese')+' voice. Add it in Settings → Accessibility → Spoken Content → Voices, or go online.');return false;}
+  try{if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=0.9;if(v)u.voice=v;
+    let started=false;u.onstart=()=>{started=true;};
+    u.onerror=e=>{if(e&&e.error==='interrupted')return;if(navigator.onLine)trSpeakOnline(text,lang);};
+    /* iOS sometimes swallows an utterance without any event — if nothing has started after 1.5s, use the online audio instead */
+    setTimeout(()=>{if(!started&&!speechSynthesis.speaking&&navigator.onLine){try{speechSynthesis.cancel();}catch(_){}trSpeakOnline(text,lang);}},1500);
+    speechSynthesis.speak(u);return true;}catch(_){return navigator.onLine?trSpeakOnline(text,lang):false;}
+}
+try{if('speechSynthesis' in window){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{if(speechSynthesis.getVoices().length)trVoicesReady=true;};}}catch(_){}
 
 /* ---------- speech in ---------- */
 function trRecognise(lang,onResult,onEnd,onError){
@@ -59,14 +81,14 @@ kr:[['Essentials',[['Hello','안녕하세요','an-nyong-ha-se-yo'],['Thank you',
 
 /* ---------- the diet card, show it to the waiter ---------- */
 const DIET_CARD={
-jp:{big:'私たちは宗教上の理由で、肉と貝類（えび・かに・いか・たこ・貝・うなぎ）が食べられません。\n魚と野菜は大丈夫です。',small:'この料理に肉や貝類は入っていますか？',en:'For religious reasons we cannot eat meat or shellfish (prawn, crab, squid, octopus, clams, eel). Fish and vegetables are fine. Does this dish contain meat or shellfish?'},
-kr:{big:'저희는 종교적인 이유로 고기와 조개류(새우, 게, 오징어, 문어, 조개, 장어)를 못 먹어요.\n생선과 채소는 괜찮아요.',small:'이 음식에 고기나 새우젓이 들어갔어요?',en:'For religious reasons we cannot eat meat or shellfish (prawn, crab, squid, octopus, clams, eel). Fish and vegetables are fine. Does this dish contain meat or fermented shrimp?'}};
+jp:{big:'肉と、えび・かに・いか・たこ・貝は\n食べられません。',small:'',en:'We can’t eat meat or shellfish.'},
+kr:{big:'고기와 조개류(새우·게·오징어·문어·조개)는\n못 먹어요.',small:'',en:'We can’t eat meat or shellfish.'}};
 function trShowDietCard(){const L=trL(),d=DIET_CARD[trCountry];document.querySelector('.diet-full')?.remove();
   const o=document.createElement('div');o.className='diet-full';
   o.innerHTML='<div class="diet-inner"><div class="diet-flag">'+L.flag+'</div><p class="diet-big"></p><p class="diet-small"></p><p class="diet-en"></p>'+
     '<div class="diet-actions"><button type="button" class="btn btn-primary diet-say">🔊 Say it</button><button type="button" class="btn btn-quiet diet-close">Done</button></div></div>';
-  o.querySelector('.diet-big').textContent=d.big;o.querySelector('.diet-small').textContent=d.small;o.querySelector('.diet-en').textContent=d.en;
-  o.querySelector('.diet-say').addEventListener('click',()=>{if(!trSpeak(d.big+' '+d.small,L.speech))toast('This phone can’t speak '+L.label+' — show the screen instead.');});
+  o.querySelector('.diet-big').textContent=d.big;o.querySelector('.diet-small').textContent=d.small;if(!d.small)o.querySelector('.diet-small').remove();o.querySelector('.diet-en').textContent=d.en;
+  o.querySelector('.diet-say').addEventListener('click',()=>{if(!trSpeak(d.big.replace(/\n/g,''),L.speech))toast('This phone can’t speak '+L.label+' — show the screen instead.');});
   o.querySelector('.diet-close').addEventListener('click',()=>o.remove());document.body.appendChild(o);}
 
 /* ---------- money ---------- */
@@ -87,7 +109,7 @@ function renderTranslate(){
   host.innerHTML=
    '<div class="hub-head"><h2>🌐 Translate</h2><p class="hub-earn">Photos, speech, typing, the waiter card, the phrasebook and the money converter. Needs internet for photos and speech.</p></div>'+
    '<div class="tr-country"><button type="button" class="tr-cb '+(trCountry==='jp'?'on':'')+'" data-c="jp">🇯🇵 Japan</button><button type="button" class="tr-cb '+(trCountry==='kr'?'on':'')+'" data-c="kr">🇰🇷 Korea</button></div>'+
-   '<section class="tr-card tr-diet"><h3>🍽️ Show the waiter</h3><p>Our diet in '+L.label+', full screen, with a button that says it out loud.</p><button type="button" class="btn btn-primary tr-diet-btn">Open the card</button></section>'+
+   '<section class="tr-card tr-diet"><h3>🍽️ Show the waiter</h3><p>“We can’t eat meat or shellfish” in '+L.label+', full screen, with a button that says it out loud.</p><button type="button" class="btn btn-primary tr-diet-btn">Open the card</button></section>'+
    '<section class="tr-card"><h3>📸 Photo → English</h3><p>Menus, signs, labels. Point the camera at printed text, straight on, good light. The first photo downloads the '+L.label+' reader (a few MB).</p>'+
      '<label class="tr-photo-btn btn btn-primary">📷 Take a photo<input type="file" accept="image/*" capture="environment" hidden></label>'+
      '<label class="tr-photo-btn btn btn-quiet">🖼️ From Photos<input type="file" accept="image/*" hidden></label>'+
