@@ -29,7 +29,7 @@ const DAILY_CHALLENGES=[
   ['📝','Write tonight’s line in the family diary before anyone asks.'],
 ];
 const DAILY_CHIPS=15,WALK_AWARD=25,STEPS_PER_KM=1300;
-function todayKey(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function todayKey(d){d=jstDate(d?d.getTime():Date.now());return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function dailyFor(key){return DAILY_CHALLENGES[seedFrom('a26-daily|'+key)%DAILY_CHALLENGES.length];}
 
 function renderDaily(){

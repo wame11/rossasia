@@ -32,6 +32,17 @@ same spreadsheet, same admin password. Nothing to redeploy.
 Same as before: Jacob, Lily, Hannah, Ethan, admin — or type `test` with no
 password to preview with every stop unlocked.
 
+## Countdown lock
+Until **16 Oct 2026, 00:00 Japan time** (4pm UK on 15 Oct) the site shows only a countdown.
+The **Admin** button under it takes the admin password and opens the full site on that device (it
+remembers). The page itself stores only a salted PBKDF2 fingerprint of the password. The opening time
+is `window.SITE_OPENS` near the top of `index.html`.
+
+## Dates and unlocking
+Every date runs on **Japan time** (UTC+9, the same as Korea) whatever the phone's clock says:
+stop unlocks, Kimbap's daily challenge, steps, streaks. Each day's stops open on that day;
+only stops on the **same** day go in order (the next one waits for the one before to be approved).
+
 ## Publishing
 Live at **https://ross.asia** (GitHub Pages, `main` / root).
 

@@ -1160,3 +1160,20 @@ h1,.map-head h2,.hub-head h2,.section-head h2,.reward h2{text-shadow:2px 2px 0 r
 .vend-start{width:100%;margin-top:12px}
 
 .tr-ph-nosay{cursor:pointer}
+
+/* COUNTDOWN LOCK (until 16 Oct, Japan time) */
+.lock-screen{position:fixed;inset:0;z-index:100;place-items:center;padding:24px 16px;overflow:auto;
+  background:radial-gradient(700px 380px at 85% 0%,rgba(0,229,255,.22),transparent 62%),radial-gradient(700px 420px at 5% 100%,rgba(255,61,139,.2),transparent 60%),linear-gradient(180deg,#0d1f4a,#050b18);color:#fff}
+.lk-inner{width:min(100%,560px);text-align:center}
+.lk-eyebrow{margin:0 0 22px;color:var(--neon);font-size:.8rem;font-weight:900;letter-spacing:.24em;text-transform:uppercase;text-shadow:0 0 12px rgba(0,229,255,.7)}
+.lk-count{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.lk-unit{border:2px solid var(--neon);border-radius:var(--radius-sm);background:rgba(0,0,0,.42);padding:16px 4px 12px;box-shadow:0 0 22px rgba(0,229,255,.25)}
+.lk-unit b{display:block;font-size:clamp(2rem,10vw,3.6rem);line-height:1;font-weight:900;color:var(--neon);text-shadow:0 0 16px rgba(0,229,255,.8);font-variant-numeric:tabular-nums}
+.lk-unit span{display:block;margin-top:8px;font-size:.72rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#9fc3ff}
+.lk-admin{margin-top:34px;background:none;border:1px solid rgba(159,195,255,.35);color:#9fc3ff;border-radius:999px;padding:7px 18px;font-size:.8rem;font-weight:800;letter-spacing:.08em}
+.lk-admin:hover{border-color:var(--neon);color:var(--neon)}
+.lk-form{margin:14px auto 0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:340px}
+.lk-form input{flex:1 1 180px;min-width:0;padding:11px 14px;border-radius:var(--radius-sm);border:2px solid var(--neon);background:rgba(0,0,0,.45);color:#fff;font-size:16px}
+.lk-err{flex-basis:100%;margin:2px 0 0;min-height:1.2em;color:#ff6b8b;font-weight:800}
+.lk-shake{animation:lk-shake .4s}
+@keyframes lk-shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}

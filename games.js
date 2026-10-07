@@ -29,23 +29,23 @@ function reportScore(root,stop,gi,score,won){
 
 /* ---------- engine registry: goal text, how-to, default target ---------- */
 const GAME_META={
-  pack:{target:5,goal:v=>'Clear '+v+' lines',how:'Suitcase blocks drop in. ◀ ▶ to move, ⟳ to turn, ⬇ to drop. Fill a whole row to clear it — don’t let the pile reach the top!'},
-  merge:{target:6,goal:(v,o)=>'Make a '+((o.chain||MERGE_DEFAULT)[v]||'top tile'),how:'Swipe the board (or use the arrows). Two matching tiles slide together and turn into the next thing on the chain. Keep going until you can’t move!'},
-  swap:{target:600,goal:v=>'Score '+v+' in 20 moves',how:'Tap a tile, then tap the one next to it to swap them. Line up 3 or more the same to clear them — chains score extra!'},
-  climb:{target:250,goal:v=>'Climb '+v+'m',how:'You bounce by yourself. Hold the left or right side of the screen to steer onto the next platform. Cracked ones break! Fall off the bottom and it’s over.'},
-  cross:{target:4,goal:v=>'Cross '+v+' times',how:'Get to the far side without being hit. Swipe or use the arrows to step. Every crossing gets busier. 3 lives!'},
-  belt:{target:4,goal:v=>'Finish '+v+' orders',how:'The order card shows what the family wants. Tap the right plates as they go by. Tap a banned one and you lose a life. Don’t let the order timer run out!'},
-  diff:{target:2,goal:v=>'Clear '+v+' rounds',how:'The two pictures have 5 differences. Tap them on either picture before the time runs out. Wrong taps cost 3 seconds!'},
-  path:{target:3,goal:v=>'Solve '+v+' paths',how:'Start on the glowing square. Drag through every open square in one line — no jumping, no crossing your own path. Drag back to undo.'},
-  pipes:{target:2,goal:v=>'Light '+v+' boards',how:'Tap a tile to turn it. Connect every tile back to the power so the whole board glows.'},
+  pack:{target:2,goal:v=>'Clear '+v+' lines',how:'Suitcase blocks drop in. ◀ ▶ to move, ⟳ to turn, ⬇ to drop. Fill a whole row to clear it — don’t let the pile reach the top!'},
+  merge:{target:5,goal:(v,o)=>'Make a '+((o.chain||MERGE_DEFAULT)[v]||'top tile'),how:'Swipe the board (or use the arrows). Two matching tiles slide together and turn into the next thing on the chain. Keep going until you can’t move!'},
+  swap:{target:350,goal:v=>'Score '+v+' in 15 moves',how:'Tap a tile, then tap the one next to it to swap them. Line up 3 or more the same to clear them — chains score extra!'},
+  climb:{target:150,goal:v=>'Climb '+v+'m',how:'You bounce by yourself. Hold the left or right side of the screen to steer onto the next platform. Cracked ones break! Fall off the bottom and it’s over.'},
+  cross:{target:2,goal:v=>'Cross '+v+' times',how:'Get to the far side without being hit. Swipe or use the arrows to step. Every crossing gets busier. 5 lives!'},
+  belt:{target:2,goal:v=>'Finish '+v+' orders',how:'The order card shows what the family wants. Tap the right plates as they go by. Tap a banned one and you lose a life. Don’t let the order timer run out!'},
+  diff:{target:1,goal:v=>'Clear '+v+' round'+(v>1?'s':''),how:'The two pictures have 5 differences. Tap them on either picture before the time runs out. Wrong taps cost 3 seconds!'},
+  path:{target:2,goal:v=>'Solve '+v+' paths',how:'Start on the glowing square. Drag through every open square in one line — no jumping, no crossing your own path. Drag back to undo.'},
+  pipes:{target:1,goal:v=>'Light '+v+' board'+(v>1?'s':''),how:'Tap a tile to turn it. Connect every tile back to the power so the whole board glows.'},
   lights:{target:2,goal:v=>'Solve '+v+' boards',how:'Tapping a lantern flips it AND the ones above, below, left and right. Get every lantern lit!'},
-  maze:{target:3,goal:v=>'Escape '+v+' mazes',how:'Swipe on the maze or use the arrows. Reach the exit before the clock runs out. Each maze is bigger.'},
-  plinko:{target:900,goal:v=>'Score '+v+' with 10 balls',how:'Tap along the top to drop a ball where you like. It bounces off the pins into a pot. Aim for the big numbers!'},
-  claw:{target:3,goal:v=>'Win '+v+' prizes',how:'The claw swings on its own. Tap DROP when it’s right above a prize. Line it up well or the prize slips out. 8 goes.'},
-  toss:{target:5,goal:v=>'Land '+v+' throws',how:'Drag back from the thing you’re throwing, aim, and let go. Watch the wind arrow! Miss 3 times and it’s over.'},
-  cook:{target:8,goal:v=>'Serve '+v,how:'Tap an empty pan to start cooking. Tap again when it turns golden to flip it, then again when the other side is golden to serve. Burn 3 and you’re out!'},
-  balance:{target:120,goal:v=>'Walk '+v+'m',how:'You walk forward by yourself but you keep wobbling. Tap or hold LEFT and RIGHT to lean back the other way. Tip too far and you fall!'},
-  archery:{target:25,goal:v=>'Score '+v+' with 5 arrows',how:'Hold to draw the bow, let go to shoot. The target moves and the wind pushes your arrow — aim off to one side to allow for it.'},
+  maze:{target:2,goal:v=>'Escape '+v+' mazes',how:'Swipe on the maze or use the arrows. Reach the exit before the clock runs out. Each maze is bigger.'},
+  plinko:{target:500,goal:v=>'Score '+v+' with 10 balls',how:'Tap along the top to drop a ball where you like. It bounces off the pins into a pot. Aim for the big numbers!'},
+  claw:{target:2,goal:v=>'Win '+v+' prizes',how:'The claw swings on its own. Tap DROP when it’s right above a prize. Line it up well or the prize slips out. 8 goes.'},
+  toss:{target:3,goal:v=>'Land '+v+' throws',how:'Drag back from the thing you’re throwing, aim, and let go. Watch the wind arrow! Miss 3 times and it’s over.'},
+  cook:{target:5,goal:v=>'Serve '+v,how:'Tap an empty pan to start cooking. Tap again when it turns golden to flip it, then again when the other side is golden to serve. Burn 3 and you’re out!'},
+  balance:{target:80,goal:v=>'Walk '+v+'m',how:'You walk forward by yourself but you keep wobbling. Tap or hold LEFT and RIGHT to lean back the other way. Tip too far and you fall!'},
+  archery:{target:15,goal:v=>'Score '+v+' with 5 arrows',how:'Hold to draw the bow, let go to shoot. The target moves and the wind pushes your arrow — aim off to one side to allow for it.'},
   words:{target:1,goal:v=>'Find all the words'+(v>1?' '+v+' times':''),how:'Drag across the letters to find each word in the list. Words go across, down or diagonally.'},
   slide:{target:1,goal:v=>'Finish '+v+' picture'+(v>1?'s':''),how:'Tap a tile next to the gap to slide it. Put the picture back together.'}
 };
@@ -119,18 +119,18 @@ function gStartBtn(stage,label,cb){const b=document.createElement('button');b.ty
    1 · PACK — falling-block suitcase packing (Tetris-style)
    ============================================================ */
 function egPack(stage,g,report){
-  const COLS=10,ROWS=18,CS=24,W=COLS*CS+110,H=ROWS*CS;
+  const COLS=8,ROWS=18,CS=24,W=COLS*CS+110,H=ROWS*CS;
   const hud=gHud(stage),c=gCanvas(stage,W,H),ctx=c.getContext('2d');
   const COLORS=g.colors||['#1f6fe0','#d7263d','#12b38a','#f0a830','#8a4dd6','#ff3d8b','#00b8d4'];
   const SHAPES=[[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]],[[0,1,1],[1,1,0]],[[1,1,0],[0,1,1]]];
   let board,cur,next,lines,run=false,over=false,won=false,drop=0,speed,score;
   const loop=gLoop(dt=>{drop+=dt;if(drop>=speed){drop=0;step();}draw();});
-  function newPiece(){const k=gInt(0,6);return {m:SHAPES[k].map(r=>r.slice()),k,x:3,y:0};}
+  function newPiece(){const k=gInt(0,6);return {m:SHAPES[k].map(r=>r.slice()),k,x:Math.floor((COLS-SHAPES[k][0].length)/2),y:0};}
   function rot(m){return m[0].map((_,i)=>m.map(r=>r[i]).reverse());}
   function fits(m,x,y){for(let r=0;r<m.length;r++)for(let q=0;q<m[r].length;q++){if(!m[r][q])continue;const X=x+q,Y=y+r;if(X<0||X>=COLS||Y>=ROWS)return false;if(Y>=0&&board[Y][X]!==null)return false;}return true;}
   function lock(){cur.m.forEach((row,r)=>row.forEach((v,q)=>{if(v&&cur.y+r>=0)board[cur.y+r][cur.x+q]=cur.k;}));
     let cleared=0;for(let r=ROWS-1;r>=0;r--){if(board[r].every(v=>v!==null)){board.splice(r,1);board.unshift(Array(COLS).fill(null));cleared++;r++;}}
-    if(cleared){lines+=cleared;score+=[0,100,300,500,800][cleared];sfx('coin');speed=Math.max(0.12,0.7-lines*0.035);}
+    if(cleared){lines+=cleared;score+=[0,100,300,500,800][cleared];sfx('coin');speed=Math.max(0.15,0.85-lines*0.03);}
     if(!won&&lines>=g.target){won=true;report(lines,true);sfx('win');}
     cur=next;next=newPiece();if(!fits(cur.m,cur.x,cur.y))end();}
   function step(){if(!run)return;if(fits(cur.m,cur.x,cur.y+1))cur.y++;else lock();}
@@ -154,7 +154,7 @@ function egPack(stage,g,report){
     gText(ctx,'GOAL',px+43,186,14,'#9fc3ff');gText(ctx,String(g.target),px+43,210,22,'#ffffff');
     gEmoji(ctx,g.icon||'🧳',px+43,290,42);
     if(!run)gOverlay(ctx,COLS*CS,H,over?'Case full!':'Suitcase Pack',over?('Lines: '+lines):'Tap to start',over?'Tap to pack again':'Fill rows to clear them');}
-  function start(){board=Array.from({length:ROWS},()=>Array(COLS).fill(null));lines=0;score=0;speed=0.7;drop=0;won=false;over=false;cur=newPiece();next=newPiece();run=true;loop.start();}
+  function start(){board=Array.from({length:ROWS},()=>Array(COLS).fill(null));lines=0;score=0;speed=0.85;drop=0;won=false;over=false;cur=newPiece();next=newPiece();run=true;loop.start();}
   function end(){run=false;over=true;loop.stop();report(lines,won);sfx('lose');draw();}
   let tx=0,ty=0,moved=false,tt=0;
   c.addEventListener('pointerdown',e=>{if(!run){start();return;}const p=gPos(c,e);tx=p.x;ty=p.y;moved=false;tt=Date.now();});
@@ -222,7 +222,7 @@ function egMerge(stage,g,report){
    3 · SWAP — match-3 market stall, 20 moves
    ============================================================ */
 function egSwap(stage,g,report){
-  const N=7,MOVES=20,icons=(g.icons||['🍙','🍡','🍵','🍘','🍥','🎏']).slice(0,6);
+  const N=7,MOVES=15,icons=(g.icons||['🍙','🍡','🍵','🍘','🍥','🎏']).slice(0,6);
   const hud=gHud(stage);
   const boardEl=document.createElement('div');boardEl.className='sw-board';stage.appendChild(boardEl);
   let grid,sel=null,score,moves,busy=false,won=false,dead=false;
@@ -281,7 +281,7 @@ function egClimb(stage,g,report){
   const P=g.p||'🦊',PLAT=g.plat||'#e0452b',sky=g.sky||['#0b1b36','#3a6fd5'];
   let pl,px,py,vx,vy,cam,top,run=false,over=false,won=false,steer=0,maxH;
   const loop=gLoop(tick);
-  function addPlat(y){const r=Math.random(),w=gRand(62,86),k=top>1500&&r<0.18?'break':top>600&&r<0.36?'move':'solid';
+  function addPlat(y){const r=Math.random(),w=gRand(62,86),k=top>1800&&r<0.18?'break':top>900&&r<0.36?'move':'solid';
     pl.push({x:gRand(10,W-w-10),y,w,k,dx:k==='move'?gRand(40,80)*(Math.random()<.5?-1:1):0,gone:false});}
   function reset(){pl=[];top=0;cam=0;px=W/2;py=H-80;vx=0;vy=-560;maxH=0;won=false;
     pl.push({x:W/2-50,y:H-40,w:100,k:'solid',dx:0});
@@ -326,17 +326,17 @@ function egClimb(stage,g,report){
    5 · CROSS — get across busy lanes (Frogger-style)
    ============================================================ */
 function egCross(stage,g,report){
-  const COLS=8,ROWS=11,CS=46,W=COLS*CS,H=ROWS*CS;
+  const COLS=8,ROWS=9,CS=46,W=COLS*CS,H=ROWS*CS;
   const hud=gHud(stage),c=gCanvas(stage,W,H),ctx=c.getContext('2d');
   const P=g.p||'🚶',OBS=g.obs||['🚗','🚕','🚙','🚌'],GOAL=g.goal||'🏁',road=g.road||'#2a2f3a',safe=g.safe||'#3a6b4a';
   let lanes,fx,fy,lives,crossed,run=false,over=false,won=false,level,flash=0,best=0,grace=0;
   const loop=gLoop(tick);
   function laneFor(r){return r===0||r===ROWS-1||r===Math.floor(ROWS/2);}
   function build(){lanes=[];for(let r=0;r<ROWS;r++){if(laneFor(r)){lanes.push(null);continue;}
-      const dir=r%2?1:-1,sp=(50+level*14+gRand(0,40))*dir,gap=gRand(2.3,3.6)*CS,n=Math.ceil((W+4*CS)/gap);
+      const dir=r%2?1:-1,sp=(34+level*10+gRand(0,24))*dir,gap=gRand(2.8,4)*CS,n=Math.ceil((W+4*CS)/gap);
       const list=[];for(let i=0;i<n;i++)list.push({x:i*gap+gRand(0,CS),e:gPick(OBS),w:CS*(Math.random()<0.25?1.6:1)});
       lanes.push({sp,list});}}
-  function reset(){level=0;lives=3;crossed=0;won=false;build();home();}
+  function reset(){level=0;lives=5;crossed=0;won=false;build();home();}
   function home(){fx=Math.floor(COLS/2);fy=ROWS-1;grace=0.6;}
   function hop(dx,dy){if(!run)return;const nx=fx+dx,ny=fy+dy;if(nx<0||nx>=COLS||ny<0||ny>=ROWS)return;fx=nx;fy=ny;sfx('click');
     if(fy===0){crossed++;level++;sfx('coin');if(!won&&crossed>=g.target){won=true;report(crossed,true);sfx('win');}build();home();}}
@@ -360,7 +360,7 @@ function egCross(stage,g,report){
   gSwipe(c,d=>{if(!run)return;({up:()=>hop(0,-1),down:()=>hop(0,1),left:()=>hop(-1,0),right:()=>hop(1,0)})[d]();},16);
   c.addEventListener('click',e=>{if(!run)return;});
   const pad=gPad(stage,[{label:'◀',fn:()=>hop(-1,0),keys:['ArrowLeft']},{label:'▲',fn:()=>hop(0,-1),keys:['ArrowUp']},{label:'▼',fn:()=>hop(0,1),keys:['ArrowDown']},{label:'▶',fn:()=>hop(1,0),keys:['ArrowRight']}]);
-  reset();lives=3;crossed=0;draw();
+  reset();lives=5;crossed=0;draw();
   return {stop(){run=false;loop.stop();pad.remove();}};
 }
 
@@ -428,9 +428,9 @@ function egDiff(stage,g,report){
       if(kind==='gone')b.e=null;
       else if(kind==='swap'){let e;do{e=gPick(ITEMS);}while(e===o.e);b.e=e;}
       else if(kind==='big')b.s=o.s*(Math.random()<.5?0.55:1.55);
-      else{b.x=Math.min(W-20,Math.max(20,o.x+gPick([-1,1])*gRand(14,20)));}
+      else{b.x=Math.min(W-20,Math.max(20,o.x+gPick([-1,1])*gRand(20,28)));}
       return {i,a:o,b,got:false};});
-    found=0;marks=[];timeLeft=Math.max(35,60-rounds*5);}
+    found=0;marks=[];timeLeft=Math.max(40,75-rounds*5);}
   function panel(oy,alt){ctx.save();ctx.beginPath();ctx.rect(0,oy,W,PH);ctx.clip();
     const gr=ctx.createLinearGradient(0,oy,0,oy+PH);gr.addColorStop(0,sky[0]);gr.addColorStop(1,sky[1]);ctx.fillStyle=gr;ctx.fillRect(0,oy,W,PH);
     ctx.fillStyle=ground;ctx.fillRect(0,oy+PH*0.72,W,PH*0.28);
@@ -467,7 +467,7 @@ function egPath(stage,g,report){
         const deg=j=>nb(j).filter(k=>!seen[k]).length;opts.sort((a,b)=>deg(a)-deg(b)+(Math.random()-0.5)*1.2);cur=opts[0];seen[cur]=true;p.push(cur);}
       if(p.length>=cells*0.72&&p.length<cells){open=seen;return p[0];}}
     open=Array(N*N).fill(true);return 0;}
-  function newPuzzle(){N=Math.min(5+Math.floor(solved/2),8);const s=gen();path=[s];render();}
+  function newPuzzle(){N=Math.min(4+Math.floor(solved/2),8);const s=gen();path=[s];render();}
   function render(){box.innerHTML='';board=document.createElement('div');board.className='pz-board';board.style.gridTemplateColumns='repeat('+N+',1fr)';
     for(let i=0;i<N*N;i++){const d=document.createElement('div');const k=path.indexOf(i);
       d.className='pz-cell'+(open[i]?'':' rock')+(k>=0?' on':'')+(k===path.length-1?' head':'');d.dataset.i=i;
@@ -545,7 +545,7 @@ function egLights(stage,g,report){
   const ON=g.on||'🏮';
   let N,s,solved=0,won=false,moves,par;
   function press(i,arr){const x=i%N,y=Math.floor(i/N);[[0,0],[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const X=x+dx,Y=y+dy;if(X>=0&&Y>=0&&X<N&&Y<N)arr[Y*N+X]^=1;});}
-  function gen(){N=solved>=3?5:solved>=1?4:3;s=Array(N*N).fill(1);par=Math.min(3+solved*2,N*N-2);
+  function gen(){N=solved>=4?5:solved>=2?4:3;s=Array(N*N).fill(1);par=Math.min(3+solved,N*N-2);
     const picks=gShuffle([...Array(N*N).keys()]).slice(0,par);picks.forEach(i=>press(i,s));
     if(s.every(v=>v))press(0,s);moves=0;render();}
   function render(){box.innerHTML='';const bd=document.createElement('div');bd.className='pz-board lt';bd.style.gridTemplateColumns='repeat('+N+',1fr)';
@@ -570,12 +570,12 @@ function egMaze(stage,g,report){
   const P=g.p||'🙂',EXIT=g.exit||'🚪',wall=g.wall||'#2e7d32',floor=g.floor||'#f3ead2',fog=!!g.fog,PICK=g.pick||null;
   let N,cells,px,py,escaped=0,run=false,over=false,won=false,timeLeft,cs,picks,got;
   const loop=gLoop(dt=>{timeLeft-=dt;if(timeLeft<=0)return end();draw();});
-  function gen(){N=Math.min(7+escaped*2,15);cs=W/N;cells=Array.from({length:N*N},()=>({w:[1,1,1,1]}));
+  function gen(){N=Math.min(6+escaped*2,15);cs=W/N;cells=Array.from({length:N*N},()=>({w:[1,1,1,1]}));
     const seen=Array(N*N).fill(false),st=[0];seen[0]=true;
     while(st.length){const i=st[st.length-1],x=i%N,y=Math.floor(i/N);
       const o=[[0,-1,0,2],[1,0,1,3],[0,1,2,0],[-1,0,3,1]].filter(([dx,dy])=>{const X=x+dx,Y=y+dy;return X>=0&&Y>=0&&X<N&&Y<N&&!seen[Y*N+X];});
       if(!o.length){st.pop();continue;}const [dx,dy,a,b]=gPick(o),j=(y+dy)*N+x+dx;cells[i].w[a]=0;cells[j].w[b]=0;seen[j]=true;st.push(j);}
-    px=0;py=0;timeLeft=25+N*3.2;picks=[];got=0;
+    px=0;py=0;timeLeft=30+N*4;picks=[];got=0;
     if(PICK){while(picks.length<3){const k=gInt(1,N*N-2);if(!picks.includes(k))picks.push(k);}}}
   function mv(d){if(!run)return;const i=py*N+px,[dx,dy,wi]={up:[0,-1,0],right:[1,0,1],down:[0,1,2],left:[-1,0,3]}[d];
     if(cells[i].w[wi])return;px+=dx;py+=dy;
@@ -646,18 +646,18 @@ function egClaw(stage,g,report){
   let prizes,cx,cdir,cy,state,held,tries,won_n,run=false,over=false,won=false,msg='',msgT=0,speed;
   const loop=gLoop(tick);
   function fill(){prizes=[];for(let i=0;i<9;i++)prizes.push({x:gRand(CHUTE+40,W-30),y:FLOOR-gRand(0,26),e:gPick(PRIZES),s:gRand(40,50)});}
-  function reset(){fill();cx=W/2;cdir=1;cy=40;state='swing';held=null;tries=8;won_n=0;won=false;speed=120;}
+  function reset(){fill();cx=W/2;cdir=1;cy=40;state='swing';held=null;tries=8;won_n=0;won=false;speed=100;}
   function tick(dt){if(msgT>0)msgT-=dt;
     if(state==='swing'){cx+=cdir*speed*dt;if(cx>W-26){cx=W-26;cdir=-1;}if(cx<CHUTE+20){cx=CHUTE+20;cdir=1;}}
     else if(state==='down'){cy+=260*dt;const target=prizes.reduce((b,p)=>Math.abs(p.x-cx)<Math.abs((b?b.x:9e9)-cx)?p:b,null);
       if(cy>=FLOOR-30){state='grab';setTimeout(()=>{const t=prizes.reduce((b,p)=>Math.abs(p.x-cx)<Math.abs((b?b.x:9e9)-cx)?p:b,null);
-          const off=t?Math.abs(t.x-cx):99;const chance=off<8?0.92:off<16?0.7:off<26?0.35:0;
+          const off=t?Math.abs(t.x-cx):99;const chance=off<10?0.95:off<20?0.82:off<32?0.45:0;
           if(t&&Math.random()<chance){held=t;prizes=prizes.filter(p=>p!==t);}state='up';},260);}}
-    else if(state==='up'){cy-=220*dt;if(held){held.x=cx;held.y=cy+34;if(cy<120&&Math.random()<0.0035){prizes.push({...held,y:FLOOR-gRand(0,20)});held=null;say('😱 It slipped!');}}
+    else if(state==='up'){cy-=220*dt;if(held){held.x=cx;held.y=cy+34;if(cy<120&&Math.random()<0.0015){prizes.push({...held,y:FLOOR-gRand(0,20)});held=null;say('😱 It slipped!');}}
       if(cy<=40){cy=40;state=held?'carry':'back';}}
     else if(state==='carry'){cx-=200*dt;held.x=cx;if(cx<=CHUTE/2+6){state='dropP';}}
     else if(state==='dropP'){held.y+=400*dt;if(held.y>FLOOR){won_n++;say('🎉 WON a '+held.e+'!');sfx('win');held=null;if(!won&&won_n>=g.target){won=true;report(won_n,true);}if(prizes.length<5)fill();state='back';}}
-    else if(state==='back'){cx+=200*dt;if(cx>=W/2){cx=W/2;state='swing';speed=Math.min(240,speed+12);if(tries<=0)return end();}}
+    else if(state==='back'){cx+=200*dt;if(cx>=W/2){cx=W/2;state='swing';speed=Math.min(220,speed+8);if(tries<=0)return end();}}
     draw();}
   function say(t){msg=t;msgT=1.4;}
   function draw(){gSky(ctx,W,H,'#1b0f3a','#3a1f6b');
@@ -693,7 +693,7 @@ function egToss(stage,g,report){
   const HOME={x:W/2,y:H-70},POW=6.2;
   let ball,drag,tgt,wind,hits,misses,run=false,over=false,won=false,msg='',msgT=0,trail=[];
   const loop=gLoop(tick);
-  function newTarget(){tgt={x:gRand(70,W-70),y:gRand(130,240),vx:moving?gRand(30,55+hits*6)*(Math.random()<.5?-1:1):0,r:34};wind=gRand(-1,1)*(18+hits*5);}
+  function newTarget(){tgt={x:gRand(70,W-70),y:gRand(130,240),vx:moving?gRand(30,55+hits*6)*(Math.random()<.5?-1:1):0,r:40};wind=gRand(-1,1)*(18+hits*5);}
   function reset(){hits=0;misses=0;won=false;ball=null;newTarget();}
   function tick(dt){if(msgT>0)msgT-=dt;
     tgt.x+=tgt.vx*dt;if(tgt.x<50||tgt.x>W-50)tgt.vx*=-1;
@@ -734,11 +734,11 @@ function egToss(stage,g,report){
 function egCook(stage,g,report){
   const W=380,H=460,hud=gHud(stage),c=gCanvas(stage,W,H),ctx=c.getContext('2d');
   const FOOD=g.food||'🥞',NAME=g.name||'pancake';
-  const PANS=[{x:95,y:170},{x:285,y:170},{x:95,y:330},{x:285,y:330}];
+  const G0=0.5,G1=0.85,PANS=[{x:95,y:170},{x:285,y:170},{x:95,y:330},{x:285,y:330}];
   let pans,served,burnt,run=false,over=false,won=false,rate,msg='',msgT=0,queue;
   const loop=gLoop(tick);
-  function reset(){pans=PANS.map(p=>({...p,st:'empty',t:0,side:0}));served=0;burnt=0;won=false;rate=0.19;queue=3;}
-  /* t goes 0→1: 0.55–0.8 is GOLDEN, above 1 is burnt */
+  function reset(){pans=PANS.map(p=>({...p,st:'empty',t:0,side:0}));served=0;burnt=0;won=false;rate=0.17;queue=3;}
+  /* t goes 0→1: G0–G1 is GOLDEN, above 1 is burnt */
   function tick(dt){if(msgT>0)msgT-=dt;
     pans.forEach(p=>{if(p.st==='cook'){p.t+=rate*dt*(p.side?1.15:1);if(p.t>=1){p.st='burnt';p.t=0;burnt++;say('🔥 Burnt one!');sfx('lose');if(burnt>=3)end();}}
       else if(p.st==='burnt'){p.t+=dt;if(p.t>1.2){p.st='empty';p.t=0;}}});
@@ -746,8 +746,8 @@ function egCook(stage,g,report){
   function say(t){msg=t;msgT=1;}
   function tapPan(p){if(p.st==='empty'){p.st='cook';p.t=0;p.side=0;sfx('click');return;}
     if(p.st!=='cook')return;
-    const golden=p.t>=0.55&&p.t<=0.8;
-    if(!golden){if(p.t<0.55){say('Not ready yet!');}return;}
+    const golden=p.t>=G0&&p.t<=G1;
+    if(!golden){if(p.t<G0){say('Not ready yet!');}return;}
     if(p.side===0){p.side=1;p.t=0.1;sfx('click');say(gPick(['Flip!','Nice flip!']));}
     else{p.st='empty';p.t=0;served++;rate=Math.min(0.42,rate+0.012);sfx('coin');say('Served! 😋');if(!won&&served>=g.target){won=true;report(served,true);sfx('win');}}}
   function draw(){gSky(ctx,W,H,'#3b2412','#1e1208');
@@ -755,12 +755,12 @@ function egCook(stage,g,report){
     gText(ctx,'Served '+served+'   ·   Burnt '+'🔥'.repeat(burnt),W/2,56,15,'#3b2412');
     pans.forEach(p=>{ctx.fillStyle='#2b2b2b';ctx.beginPath();ctx.arc(p.x,p.y,62,0,Math.PI*2);ctx.fill();ctx.fillStyle='#3d3d3d';ctx.beginPath();ctx.arc(p.x,p.y,54,0,Math.PI*2);ctx.fill();
       ctx.fillStyle='#2b2b2b';ctx.fillRect(p.x+50,p.y-7,40,14);
-      if(p.st==='cook'||p.st==='burnt'){const t=p.st==='burnt'?1.2:p.t;const col=t<0.55?mix('#f6e7b8','#e9b35a',t/0.55):t<=0.8?'#d8902a':mix('#b96a1a','#2a1a10',Math.min(1,(t-0.8)/0.25));
+      if(p.st==='cook'||p.st==='burnt'){const t=p.st==='burnt'?1.2:p.t;const col=t<G0?mix('#f6e7b8','#e9b35a',t/G0):t<=G1?'#d8902a':mix('#b96a1a','#2a1a10',Math.min(1,(t-G1)/(1-G1)));
         ctx.fillStyle=col;ctx.beginPath();ctx.ellipse(p.x,p.y,40,36,0,0,Math.PI*2);ctx.fill();if(p.side)gText(ctx,'side 2',p.x,p.y+20,11,'rgba(0,0,0,.45)');
         gEmoji(ctx,FOOD,p.x,p.y-4,30);
         if(p.st==='cook'){ctx.lineWidth=7;ctx.strokeStyle='rgba(255,255,255,.15)';ctx.beginPath();ctx.arc(p.x,p.y,70,-Math.PI/2,Math.PI*1.5);ctx.stroke();
-          ctx.strokeStyle='#ffd166';ctx.beginPath();ctx.arc(p.x,p.y,70,-Math.PI/2+0.55*Math.PI*2,-Math.PI/2+0.8*Math.PI*2);ctx.stroke();
-          ctx.strokeStyle=p.t>0.8?'#d7263d':'#12b38a';ctx.lineWidth=4;ctx.beginPath();ctx.arc(p.x,p.y,70,-Math.PI/2,-Math.PI/2+Math.min(1,p.t)*Math.PI*2);ctx.stroke();}
+          ctx.strokeStyle='#ffd166';ctx.beginPath();ctx.arc(p.x,p.y,70,-Math.PI/2+G0*Math.PI*2,-Math.PI/2+G1*Math.PI*2);ctx.stroke();
+          ctx.strokeStyle=p.t>G1?'#d7263d':'#12b38a';ctx.lineWidth=4;ctx.beginPath();ctx.arc(p.x,p.y,70,-Math.PI/2,-Math.PI/2+Math.min(1,p.t)*Math.PI*2);ctx.stroke();}
         if(p.st==='burnt'){ctx.globalAlpha=.8;gEmoji(ctx,'💨',p.x+20,p.y-30,26);ctx.globalAlpha=1;}}
       else gText(ctx,'tap to cook',p.x,p.y,14,'rgba(255,255,255,.45)');});
     if(msgT>0)gText(ctx,msg,W/2,H-24,20,'#ffd166');
@@ -858,7 +858,7 @@ function egWords(stage,g,report){
   let N,grid,words,found,cells,sel,solved=0,won=false,dir=null,start=null;
   function gen(){N=Math.max(8,Math.max(...LIST.map(w=>w.length))+1);N=Math.min(N,11);
     for(let t=0;t<60;t++){grid=Array.from({length:N},()=>Array(N).fill(''));words=[];
-      const pool=gShuffle(LIST.filter(w=>w.length<=N)).slice(0,Math.min(7,LIST.length));
+      const pool=gShuffle(LIST.filter(w=>w.length<=N)).slice(0,Math.min(5,LIST.length));
       const dirs=[[1,0],[0,1],[1,1],[1,-1]];let ok=true;
       for(const w of pool){let placed=false;for(let k=0;k<200&&!placed;k++){const [dx,dy]=gPick(dirs),x=gInt(0,N-1),y=gInt(0,N-1);
           const ex=x+dx*(w.length-1),ey=y+dy*(w.length-1);if(ex<0||ex>=N||ey<0||ey>=N)continue;
@@ -906,9 +906,9 @@ function egSlide(stage,g,report){
     if(LBL){x.fillStyle='rgba(10,20,40,.7)';x.fillRect(0,S-40,S,40);gText(x,LBL,S/2,S-20,20,'#fff');}
     for(let i=1;i<6;i++){x.strokeStyle='rgba(255,255,255,.12)';x.beginPath();x.moveTo(i*S/6,0);x.lineTo(i*S/6,S);x.stroke();}
     return cv.toDataURL('image/png');}
-  function gen(){N=solved>=2?4:3;tiles=[...Array(N*N).keys()];let e=N*N-1;
-    for(let k=0;k<(N===3?80:220);k++){const x=e%N,y=Math.floor(e/N);const o=[[1,0],[-1,0],[0,1],[0,-1]].filter(([dx,dy])=>x+dx>=0&&x+dx<N&&y+dy>=0&&y+dy<N);
-      const [dx,dy]=gPick(o),j=(y+dy)*N+x+dx;[tiles[e],tiles[j]]=[tiles[j],tiles[e]];e=j;}
+  function gen(){N=solved>=2?4:3;tiles=[...Array(N*N).keys()];let e=N*N-1,back=-1;
+    for(let k=0;k<(N===3?20:220);k++){const x=e%N,y=Math.floor(e/N);const o=[[1,0],[-1,0],[0,1],[0,-1]].filter(([dx,dy])=>x+dx>=0&&x+dx<N&&y+dy>=0&&y+dy<N&&(y+dy)*N+x+dx!==back);
+      const [dx,dy]=gPick(o),j=(y+dy)*N+x+dx;[tiles[e],tiles[j]]=[tiles[j],tiles[e]];back=e;e=j;}
     if(tiles.every((t,i)=>t===i))return gen();moves=0;render();}
   function render(){box.innerHTML='';const bd=document.createElement('div');bd.className='pz-board sl';bd.style.gridTemplateColumns='repeat('+N+',1fr)';
     tiles.forEach((t,i)=>{const d=document.createElement('button');d.type='button';d.className='sl-cell'+(t===N*N-1?' gap':'');d.dataset.i=i;

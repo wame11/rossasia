@@ -119,7 +119,10 @@ function saveShared(){shared.updatedAt=new Date().toISOString();writeJson(STORAG
 async function sha256(t){const b=new TextEncoder().encode(t);const d=await crypto.subtle.digest('SHA-256',b);return [...new Uint8Array(d)].map(x=>x.toString(16).padStart(2,'0')).join('');}
 function normalName(n){const c=n.trim().toLowerCase();return Object.keys(ACCOUNTS).find(a=>a.toLowerCase()===c);}
 function isAdmin(){return session?.role==='admin';}
-function today(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
+/* every date in the game runs on JAPAN time (UTC+9 — Korea is the same), whatever the phone's own clock says */
+const JST_MS=9*3600000;
+function jstDate(ms){const d=new Date((ms??Date.now())+JST_MS);return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());}
+function today(){return jstDate();}
 function dateObj(v){const [y,m,d]=v.split('-').map(Number);return new Date(y,m-1,d);}
 function stopById(id){return STOPS.find(s=>s.id===id);}
 function timestamp(v){const t=Date.parse(v||'');return Number.isFinite(t)?t:0;}
@@ -152,15 +155,18 @@ function statusForStop(id){
   if(latest?.status==='rejected'||progress.submitted[id]?.status==='rejected')return 'rejected';
   return 'ready';
 }
+/* each day opens on its own date; only stops on the SAME day go in order */
+function sameDayBefore(index){const prev=STOPS[index-1];return prev&&prev.unlock===STOPS[index].unlock?prev:null;}
 function unlocked(index){
   if(session?.test||isAdmin())return true;
   if(today()<dateObj(STOPS[index].unlock))return false;
-  if(index===0)return true;
-  return statusForStop(STOPS[index-1].id)==='approved';
+  const prev=sameDayBefore(index);
+  return !prev||statusForStop(prev.id)==='approved';
 }
 function lockReason(index){
   if(today()<dateObj(STOPS[index].unlock))return 'Opens on '+STOPS[index].day+'.';
-  if(index>0)return 'Clear '+STOPS[index-1].title+' first to unlock this.';
+  const prev=sameDayBefore(index);
+  if(prev)return 'Clear '+prev.title+' first to unlock this.';
   return '';
 }
 function scoreWithBonus(i){return Number(i.score||SCORE_PER_STOP)+Number(i.bonus||0);}
@@ -293,7 +299,7 @@ function toast(msg,ms){
 function renderLevel(index){
   const stop=STOPS[index];
   const status=statusForStop(stop.id),locked=!unlocked(index);
-  const labels={approved:['Mission cleared ⭐','🏆','You smashed it — next stop unlocked!'],
+  const labels={approved:['Mission cleared ⭐','🏆','You smashed it!'],
     pending:['⏳ ON HOLD — waiting for admin approval','🕵️','The boss is checking every photo and your answers. You\u2019ll get your points once it\u2019s approved.'],
     rejected:['Mission failed — retry!','💥','Have another go and resubmit.'],
     ready:['Mission briefing','🎯','Complete all objectives, then submit!'],
@@ -1247,7 +1253,7 @@ const MARKET=[
 /* price = base * (1 + daily wiggle). Crypto pulled live from CoinGecko (free, no key); rest simulated with a seeded daily drift so it feels real and consistent within a day. */
 function marketPrice(m){
   if(m.live)return m.live;
-  const daySeed=seedFrom(m.sym+new Date().toDateString());
+  const daySeed=seedFrom(m.sym+jstDate().toDateString());
   const drift=(mulberry(daySeed)()-0.5)*0.12; // ±6% "today"
   return +(m.base*(1+drift)).toFixed(2);
 }
@@ -1588,9 +1594,9 @@ function updateHUDPoints(){if(els.hudScore&&session&&!isAdmin())els.hudScore.tex
 /* ---- streaks (20) ---- */
 function checkStreak(){
   if(!session||isAdmin()||session.test)return;
-  const today=new Date().toDateString(),last=progress.lastDay;
+  const today=jstDate().toDateString(),last=progress.lastDay;
   if(last===today)return;
-  const yest=new Date(Date.now()-86400000).toDateString();
+  const yest=jstDate(Date.now()-86400000).toDateString();
   progress.streak=(last===yest)?(progress.streak||0)+1:1;
   progress.lastDay=today;
   const bonus=Math.min(25,progress.streak*5);
@@ -1856,7 +1862,7 @@ function postcardViewer(dataUrl,file,title){
 
 /* ---- MOCHI MOODS (32) + name + den reactions (33) ---- */
 function bearMood(){
-  const h=new Date().getHours();
+  const h=new Date(Date.now()+JST_MS).getUTCHours();
   if(h>=21||h<7)return {acc:'💤',lines:['*yaaaawn* five more stations…','Wake me at the next hotel. 😴','Night trains? Brave.','Zzz… huh? Oh. Hi.']};
   if(statusForStop&&stopById('seoul')&&statusForStop('seoul')!=='ready'&&today()>=dateObj('2026-10-27'))return {acc:'🕶️',lines:['SEOUL BABY! 😎','The den never closes in Seoul!','K-pop monkey, reporting in!','I look GOOD in shades.']};
   if(h>=11&&h<=16)return {acc:'🍜',lines:['It\u2019s ramen o\u2019clock. 🍜','Anyone got a melon soda? 🥤','Konbini run? I\u2019m in.','I\u2019m basically a cushion right now.']};

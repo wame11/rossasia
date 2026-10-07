@@ -4,7 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Asia 2026 Family Challenge</title>
-  <link rel="stylesheet" href="styles.css?v=2026-10-06-3" />
+  <script>
+/* LOCKED until 16 Oct 2026, 00:00 JAPAN time (= 4pm UK on 15 Oct). Before then the page is only a
+   countdown; Admin + the password opens the full site on that device and remembers it. */
+window.SITE_OPENS=Date.UTC(2026,9,15,15,0,0);
+(function(){var ok=false;try{ok=localStorage.getItem('rossasia-admin-pass')==='1';}catch(_){}
+  if(Date.now()<window.SITE_OPENS&&!ok)document.documentElement.classList.add('site-locked');})();
+  </script>
+  <style>
+#siteLock{display:none}
+html.site-locked #siteLock{display:grid}
+html.site-locked body>*:not(#siteLock){display:none!important}
+  </style>
+  <link rel="stylesheet" href="styles.css?v=2026-10-07-1" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png" />
@@ -16,6 +28,20 @@
   <meta name="mobile-web-app-capable" content="yes" />
 </head>
 <body>
+  <!-- LOCK: just a countdown until the trip starts -->
+  <section id="siteLock" class="lock-screen" aria-label="Countdown to the trip">
+    <div class="lk-inner">
+      <p class="lk-eyebrow">Japan &amp; South Korea 2026</p>
+      <div id="lockCount" class="lk-count" aria-live="off"></div>
+      <button id="lockAdminBtn" class="lk-admin" type="button">Admin</button>
+      <form id="lockForm" class="lk-form hidden">
+        <input id="lockPass" type="password" autocomplete="current-password" placeholder="Password" aria-label="Admin password" />
+        <button class="btn btn-primary" type="submit">Enter</button>
+        <p id="lockErr" class="lk-err" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+
   <!-- neon skyline backdrop -->
   <div class="city" id="cityBack" aria-hidden="true"></div>
 
@@ -142,13 +168,13 @@
     </section>
   </main>
 
-  <script>window.__BUILD__='2026-10-06-3';</script>
-  <script src="stops.js?v=2026-10-06-3"></script>
-  <script src="app.js?v=2026-10-06-3"></script>
-  <script src="games.js?v=2026-10-06-3"></script>
-  <script src="hub.js?v=2026-10-06-3"></script>
-  <script src="translate.js?v=2026-10-06-3"></script>
-  <script src="daily.js?v=2026-10-06-3"></script>
+  <script>window.__BUILD__='2026-10-07-1';</script>
+  <script src="stops.js?v=2026-10-07-1"></script>
+  <script src="app.js?v=2026-10-07-1"></script>
+  <script src="games.js?v=2026-10-07-1"></script>
+  <script src="hub.js?v=2026-10-07-1"></script>
+  <script src="translate.js?v=2026-10-07-1"></script>
+  <script src="daily.js?v=2026-10-07-1"></script>
   <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js').then(function(reg){
@@ -161,6 +187,32 @@ if ('serviceWorker' in navigator) {
     setInterval(function(){ reg.update().catch(function(){}); }, 60 * 60 * 1000);
   }).catch(function(){});
 }
+  </script>
+  <script>
+/* the countdown lock: only the salted PBKDF2 fingerprint of the password is stored here, never the password */
+(function(){
+  var root=document.documentElement;if(!root.classList.contains('site-locked'))return;
+  var SALT='rossasia-27058663b72bb27f',ITER=150000,HASH='820d8703a47589dcbe55b8b1ebafc165588da10505cfe21bd2a046f7d04be3fb';
+  var count=document.getElementById('lockCount'),form=document.getElementById('lockForm'),pass=document.getElementById('lockPass'),err=document.getElementById('lockErr');
+  function pad(n){return (n<10?'0':'')+n;}
+  function tick(){var ms=window.SITE_OPENS-Date.now();if(ms<=0){unlock();return;}
+    var s=Math.floor(ms/1000),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);s%=60;
+    count.innerHTML=[[d,d===1?'day':'days'],[pad(h),'hours'],[pad(m),'mins'],[pad(s),'secs']].map(function(u){return '<div class="lk-unit"><b>'+u[0]+'</b><span>'+u[1]+'</span></div>';}).join('');}
+  var timer=setInterval(tick,1000);tick();
+  function unlock(){clearInterval(timer);root.classList.remove('site-locked');}
+  function derive(pw){var enc=new TextEncoder();
+    return crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveBits']).then(function(k){
+      return crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(SALT),iterations:ITER,hash:'SHA-256'},k,256);
+    }).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');});}
+  document.getElementById('lockAdminBtn').addEventListener('click',function(){form.classList.toggle('hidden');if(!form.classList.contains('hidden'))pass.focus();});
+  form.addEventListener('submit',function(e){e.preventDefault();err.textContent='';
+    if(!window.crypto||!crypto.subtle){err.textContent='Open https://ross.asia to sign in.';return;}
+    derive(pass.value).then(function(h){
+      if(h!==HASH){err.textContent='Wrong password';pass.value='';form.classList.remove('lk-shake');void form.offsetWidth;form.classList.add('lk-shake');return;}
+      try{localStorage.setItem('rossasia-admin-pass','1');}catch(_){}
+      unlock();
+    }).catch(function(){err.textContent='Something went wrong — try again.';});});
+})();
   </script>
 
   <!-- KIMBAP the Japanese macaque (snow monkey) -->
