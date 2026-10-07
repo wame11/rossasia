@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Asia 2026 Family Challenge</title>
   <script>
-/* LOCKED until 16 Oct 2026, 00:00 JAPAN time (= 4pm UK on 15 Oct). Before then the page is only a
+/* LOCKED until 16 Oct 2026, 12:00 noon UK time (BST = UTC+1). This is the ONE time on UK time — every
+   other date in the game is Japan time. Before then the page is only a
    countdown; Admin + the password opens the full site on that device and remembers it. */
-window.SITE_OPENS=Date.UTC(2026,9,15,15,0,0);
+window.SITE_OPENS=Date.UTC(2026,9,16,11,0,0);
 (function(){var ok=false;try{ok=localStorage.getItem('rossasia-admin-pass')==='1';}catch(_){}
   if(Date.now()<window.SITE_OPENS&&!ok)document.documentElement.classList.add('site-locked');})();
   </script>
@@ -16,7 +17,7 @@ window.SITE_OPENS=Date.UTC(2026,9,15,15,0,0);
 html.site-locked #siteLock{display:grid}
 html.site-locked body>*:not(#siteLock){display:none!important}
   </style>
-  <link rel="stylesheet" href="styles.css?v=2026-10-07-2" />
+  <link rel="stylesheet" href="styles.css?v=2026-10-07-3" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png" />
@@ -168,13 +169,13 @@ html.site-locked body>*:not(#siteLock){display:none!important}
     </section>
   </main>
 
-  <script>window.__BUILD__='2026-10-07-2';</script>
-  <script src="stops.js?v=2026-10-07-2"></script>
-  <script src="app.js?v=2026-10-07-2"></script>
-  <script src="games.js?v=2026-10-07-2"></script>
-  <script src="hub.js?v=2026-10-07-2"></script>
-  <script src="translate.js?v=2026-10-07-2"></script>
-  <script src="daily.js?v=2026-10-07-2"></script>
+  <script>window.__BUILD__='2026-10-07-3';</script>
+  <script src="stops.js?v=2026-10-07-3"></script>
+  <script src="app.js?v=2026-10-07-3"></script>
+  <script src="games.js?v=2026-10-07-3"></script>
+  <script src="hub.js?v=2026-10-07-3"></script>
+  <script src="translate.js?v=2026-10-07-3"></script>
+  <script src="daily.js?v=2026-10-07-3"></script>
   <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js').then(function(reg){

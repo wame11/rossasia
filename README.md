@@ -33,7 +33,8 @@ Same as before: Jacob, Lily, Hannah, Ethan, admin — or type `test` with no
 password to preview with every stop unlocked.
 
 ## Countdown lock
-Until **16 Oct 2026, 00:00 Japan time** (4pm UK on 15 Oct) the site shows only a countdown.
+Until **16 Oct 2026, 12:00 noon UK time** the site shows only a countdown. This is the only time
+in the game that is UK time — everything else is Japan time.
 The **Admin** button under it takes the admin password and opens the full site on that device (it
 remembers). The page itself stores only a salted PBKDF2 fingerprint of the password. The opening time
 is `window.SITE_OPENS` near the top of `index.html`.
