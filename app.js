@@ -804,12 +804,17 @@ function exportCsv(){
 function imageToThumb(file,max,q){return new Promise((res,rej)=>{const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const sc=Math.min(1,(max||480)/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',q||0.6));};im.onerror=rej;im.src=rd.result;};rd.onerror=rej;rd.readAsDataURL(file);});}
 
 /* ---------- auth / boot ---------- */
+/* the login lives in localStorage so the phone remembers you until you tap Log out
+   (sessionStorage forgot it every time the tab or home-screen app was closed) */
+function saveSession(){try{localStorage.setItem(STORAGE.session,JSON.stringify(session));}catch(_){/**/}}
+function readSession(){try{return JSON.parse(localStorage.getItem(STORAGE.session)||sessionStorage.getItem(STORAGE.session)||'null');}catch(_){return null;}}
+function clearSession(){try{localStorage.removeItem(STORAGE.session);sessionStorage.removeItem(STORAGE.session);}catch(_){/**/}}
 async function doLogin(name,password){
-  if(name.trim().toLowerCase()==='test'){session={username:'test',role:'player',test:true};sessionStorage.setItem(STORAGE.session,JSON.stringify(session));await openSite();return true;}
+  if(name.trim().toLowerCase()==='test'){session={username:'test',role:'player',test:true};saveSession();await openSite();return true;}
   const acc=normalName(name);if(!acc)return false;
   const account=ACCOUNTS[acc];if(await sha256(password)!==account.hash)return false;
   session={username:acc,role:account.role,test:false};if(account.role==='admin')session.adminKey=password;
-  sessionStorage.setItem(STORAGE.session,JSON.stringify(session));await openSite();return true;
+  saveSession();await openSite();return true;
 }
 async function openSite(){
   loadProgress();loadShared();
@@ -821,7 +826,7 @@ async function openSite(){
   await syncShared();
 }
 els.loginForm.addEventListener('submit',async e=>{e.preventDefault();els.loginError.textContent='';if(!await doLogin(els.username.value,els.password.value))els.loginError.textContent='Wrong name or password.';});
-els.logoutBtn.addEventListener('click',()=>{sessionStorage.removeItem(STORAGE.session);session=null;stopGame();els.site.classList.add('hidden');els.login.classList.remove('hidden');document.getElementById('cornerMascot')?.classList.add('hidden');clearInterval(bearTimer);});
+els.logoutBtn.addEventListener('click',()=>{clearSession();session=null;stopGame();els.site.classList.add('hidden');els.login.classList.remove('hidden');document.getElementById('cornerMascot')?.classList.add('hidden');clearInterval(bearTimer);});
 els.backBtn.addEventListener('click',showHome);
 els.syncBtn.addEventListener('click',()=>{checkForUpdate(true);syncShared();});
 els.adminRefreshBtn.addEventListener('click',syncShared);
@@ -1174,8 +1179,8 @@ buildCity();
 document.addEventListener('DOMContentLoaded',buildCity);
 
 const pp=new URLSearchParams(location.search);
-if(pp.get('preview')==='test'){session={username:'test',role:'player',test:true};sessionStorage.setItem(STORAGE.session,JSON.stringify(session));openSite();}
-else{try{const s=JSON.parse(sessionStorage.getItem(STORAGE.session)||'null');if(s?.username){session=s;openSite();}}catch{}}
+if(pp.get('preview')==='test'){session={username:'test',role:'player',test:true};saveSession();openSite();}
+else{const s=readSession();if(s?.username){session=s;saveSession();openSite();}}
 
 /* ================================================================
    HUB MODULE — Game Zone, Music, Postcards, Journey GPS, Streaks,
