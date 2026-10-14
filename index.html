@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Asia 2026 Family Challenge</title>
+  <script>
+/* LOCKED until 16 Oct 2026, 12:00 noon UK time (BST = UTC+1). This is the ONE time on UK time — every
+   other date in the game is Japan time. Before then the page is only a
+   countdown; Admin + Ethan's password opens the full site on that device and remembers it. */
+window.SITE_OPENS=Date.UTC(2026,9,16,11,0,0);
+(function(){var ok=false;try{ok=localStorage.getItem('rossasia-admin-pass')==='1';}catch(_){}
+  if(Date.now()<window.SITE_OPENS&&!ok)document.documentElement.classList.add('site-locked');})();
+  </script>
+  <style>
+#siteLock{display:none}
+html.site-locked #siteLock{display:grid}
+html.site-locked body>*:not(#siteLock){display:none!important}
+  </style>
+  <link rel="stylesheet" href="styles.css?v=2026-10-14-1" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <meta name="theme-color" content="#0a1428" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Asia 2026" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="robots" content="noindex, nofollow" />
+</head>
+<body>
+  <!-- LOCK: just a countdown until the trip starts -->
+  <section id="siteLock" class="lock-screen" aria-label="Countdown to the trip">
+    <div class="lk-inner">
+      <p class="lk-eyebrow">Japan &amp; South Korea 2026</p>
+      <div id="lockCount" class="lk-count" aria-live="off"></div>
+      <button id="lockAdminBtn" class="lk-admin" type="button">Admin</button>
+      <form id="lockForm" class="lk-form hidden">
+        <input id="lockPass" type="password" autocomplete="current-password" placeholder="Password" aria-label="Admin password" />
+        <button class="btn btn-primary" type="submit">Enter</button>
+        <p id="lockErr" class="lk-err" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- neon skyline backdrop -->
+  <div class="city" id="cityBack" aria-hidden="true"></div>
+
+  <!-- SIGN IN: the game itself is encrypted (vault.bin) and only opens with a family password or Face ID -->
+  <section id="login" class="login-screen">
+    <div class="city" aria-hidden="true"></div>
+    <div class="login-panel">
+      <p class="eyebrow">Japan &amp; South Korea 2026</p>
+      <h1>Asia 26 Challenge</h1>
+      <p class="lead">Family only — sign in to play.</p>
+
+      <div id="faceBox" class="gate-face hidden">
+        <button id="faceBtn" class="btn btn-primary gate-face-btn" type="button">🙂 Unlock with Face ID</button>
+        <p class="small"><span id="faceName"></span> · <button id="usePassBtn" class="gate-link" type="button">use password instead</button></p>
+      </div>
+
+      <form id="loginForm" class="login-form">
+        <label><span>Name</span>
+          <input id="username" autocomplete="username" autocapitalize="words" placeholder="Jacob, Lily, Hannah, Mark or Ethan" required />
+        </label>
+        <label><span>Password</span>
+          <input id="password" type="password" autocomplete="current-password" required />
+        </label>
+        <button id="loginBtn" class="btn btn-primary" type="submit">Start the adventure</button>
+      </form>
+
+      <div id="faceOffer" class="gate-offer hidden">
+        <p class="gate-offer-title">✅ You're in! Turn on Face ID?</p>
+        <p class="small">Next time just look at your phone — no password. Your password still works too.</p>
+        <div class="gate-offer-row">
+          <button id="faceYes" class="btn btn-primary" type="button">🙂 Turn on Face ID</button>
+          <button id="faceNo" class="btn btn-quiet" type="button">Not now</button>
+        </div>
+      </div>
+
+      <p id="loginError" class="error" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <script src="gate.js?v=2026-10-14-1"></script>
+  <script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./service-worker.js').then(function(reg){
+    reg.addEventListener('updatefound', function(){
+      var w = reg.installing;
+      if (w) w.addEventListener('statechange', function(){
+        if (w.state === 'installed' && navigator.serviceWorker.controller) w.postMessage('skipWaiting');
+      });
+    });
+    setInterval(function(){ reg.update().catch(function(){}); }, 60 * 60 * 1000);
+  }).catch(function(){});
+}
+  </script>
+</body>
+</html>
