@@ -8,7 +8,7 @@
    (The pre-trip countdown lock was removed on 16 Oct 2026: the site goes straight to sign-in.) */
 (function(){
 'use strict';
-var BUILD='2026-10-16-1925';
+var BUILD='2026-10-16-1905b';
 var SLOTS={"v":1,"users":{"jacob":{"iter":600000,"salt":"j3C/uNg6ulYdxEQw2SvvwQ==","iv":"yAOb/ajVgh/IkO8U","ct":"MR0ExlgPZ16bZWABiYBUSr/TfwnW1KfQsavurOYEW7+OBIcHiUZjOxhmSkvjfDeok5mjk3O0l0qywumxh+UufXm4+S9M2r0w6fgjyjfjPpduleo7IsslgSUycL80QLGnXZO/"},"lily":{"iter":600000,"salt":"bkcV8X4ASH/u7DJ1GBUWDQ==","iv":"Ha7xGHyWnn+D+My+","ct":"QDpjCBlmx0hcm+e+YjgLVpJ4pHalrmiUowYEfxUkAYR+xpRBtwOH8DAhTi2gVytO+zH5wiN48o+kcW6W83A9M+mYQgdRCDJ8xhJa6ARvqORQKVBWcwVVzQ0F7Yr1NeXV1eI="},"hannah":{"iter":600000,"salt":"LWZ9TX34Au00InTcugvxXA==","iv":"eCbEVGsD9wab3sxz","ct":"CuyfJlfsRgTtFU+g9Zp3Biar/CUq4on25o5WcITcXjsZPl2KUpQd7FS3CTTOwq6J8k3N4x/Dk+ZVcO3LOB1R0AGvwP6rgCRazLv2FJmX2lLUhL+lGB/QH3k66VolQ3IuFxSwIg=="},"mark":{"iter":600000,"salt":"LEsdcN8fifrXzqZeGAsAKg==","iv":"78fGp/01Qw6Pfu/6","ct":"QPwWYH47AVPYuzcnmE/bSCyO1aWhZZ+5XWwwaeRs6Isb5rP6GDHL2MIZPZnLNSHhgEp8JV7cRfH6OemQ0EanzsF/WlL0G57JIFDtgd61tmxxn5c5El8LeNc/C1Zg6IxAjY0="},"ethan":{"iter":600000,"salt":"7LZyAnhCSBc2SPvqaJ+NdA==","iv":"LCmd5aZCPtzOM2np","ct":"E64PUj98SlLij9HdfOrCSl+re/O+3IkyYph12LPuDGxTO0JbUL2NLkFyf4Ow4LoWBYLpm8CVwWfr5gc9aA4ANvy9j/Ib2sHAjMaQsXO4cWBVNz+KHs/oql65+vYTnWlc2oILi6KWltaebelLPpcDSEWipnBV3nRmd7mhx9Vu"}}};
 window.__BUILD__=BUILD;
 var FACE='rossasia-face-v1',SESSION='asia26-session-v1',KEYFIX='rossasia-adminkey-v1',STAY='rossasia-stay-v1'; /* STAY: stay signed in on this phone until Log out */
