@@ -4,14 +4,14 @@
    right password opens the game even with no signal. After one password sign-in a phone can use Face ID:
    - PRF passkeys (iOS 18+, recent Android): the key is sealed with a secret only Face ID can release.
    - older phones: the key is sealed with a locked-in-the-browser key that only opens after a Face ID check.
-   Log out forgets both. Built by tools/build.mjs, which fills in BUILD and SLOTS. */
+   Log out forgets both. Built by tools/build.mjs, which fills in BUILD and SLOTS.
+   (The pre-trip countdown lock was removed on 16 Oct 2026: the site goes straight to sign-in.) */
 (function(){
 'use strict';
-var BUILD='2026-10-14-2248';
+var BUILD='2026-10-16-0725';
 var SLOTS={"v":1,"users":{"jacob":{"iter":600000,"salt":"j3C/uNg6ulYdxEQw2SvvwQ==","iv":"yAOb/ajVgh/IkO8U","ct":"MR0ExlgPZ16bZWABiYBUSr/TfwnW1KfQsavurOYEW7+OBIcHiUZjOxhmSkvjfDeok5mjk3O0l0qywumxh+UufXm4+S9M2r0w6fgjyjfjPpduleo7IsslgSUycL80QLGnXZO/"},"lily":{"iter":600000,"salt":"bkcV8X4ASH/u7DJ1GBUWDQ==","iv":"Ha7xGHyWnn+D+My+","ct":"QDpjCBlmx0hcm+e+YjgLVpJ4pHalrmiUowYEfxUkAYR+xpRBtwOH8DAhTi2gVytO+zH5wiN48o+kcW6W83A9M+mYQgdRCDJ8xhJa6ARvqORQKVBWcwVVzQ0F7Yr1NeXV1eI="},"hannah":{"iter":600000,"salt":"LWZ9TX34Au00InTcugvxXA==","iv":"eCbEVGsD9wab3sxz","ct":"CuyfJlfsRgTtFU+g9Zp3Biar/CUq4on25o5WcITcXjsZPl2KUpQd7FS3CTTOwq6J8k3N4x/Dk+ZVcO3LOB1R0AGvwP6rgCRazLv2FJmX2lLUhL+lGB/QH3k66VolQ3IuFxSwIg=="},"mark":{"iter":600000,"salt":"LEsdcN8fifrXzqZeGAsAKg==","iv":"78fGp/01Qw6Pfu/6","ct":"QPwWYH47AVPYuzcnmE/bSCyO1aWhZZ+5XWwwaeRs6Isb5rP6GDHL2MIZPZnLNSHhgEp8JV7cRfH6OemQ0EanzsF/WlL0G57JIFDtgd61tmxxn5c5El8LeNc/C1Zg6IxAjY0="},"ethan":{"iter":600000,"salt":"7LZyAnhCSBc2SPvqaJ+NdA==","iv":"LCmd5aZCPtzOM2np","ct":"E64PUj98SlLij9HdfOrCSl+re/O+3IkyYph12LPuDGxTO0JbUL2NLkFyf4Ow4LoWBYLpm8CVwWfr5gc9aA4ANvy9j/Ib2sHAjMaQsXO4cWBVNz+KHs/oql65+vYTnWlc2oILi6KWltaebelLPpcDSEWipnBV3nRmd7mhx9Vu"}}};
 window.__BUILD__=BUILD;
-var FACE='rossasia-face-v1',SESSION='asia26-session-v1',ADMIN_FLAG='rossasia-admin-pass',KEYFIX='rossasia-adminkey-v1';
-var root=document.documentElement;
+var FACE='rossasia-face-v1',SESSION='asia26-session-v1',KEYFIX='rossasia-adminkey-v1';
 var te=new TextEncoder(),td=new TextDecoder();
 var subtle=window.crypto&&crypto.subtle;
 function $(id){return document.getElementById(id);}
@@ -242,24 +242,4 @@ function showSignIn(){
 }
 showSignIn();
 
-/* ---- countdown lock until 16 Oct 12:00 UK: Admin + Ethan's password opens it on this phone ---- */
-(function(){
-  if(!root.classList.contains('site-locked'))return;
-  var count=$('lockCount'),lform=$('lockForm'),pass=$('lockPass'),lerr=$('lockErr');
-  function pad(n){return (n<10?'0':'')+n;}
-  function tick(){var ms=window.SITE_OPENS-Date.now();if(ms<=0){unlock();return;}
-    var s=Math.floor(ms/1000),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);s%=60;
-    count.innerHTML=[[d,d===1?'day':'days'],[pad(h),'hours'],[pad(m),'mins'],[pad(s),'secs']].map(function(u){return '<div class="lk-unit"><b>'+u[0]+'</b><span>'+u[1]+'</span></div>';}).join('');}
-  var timer=setInterval(tick,1000);tick();
-  function unlock(){clearInterval(timer);root.classList.remove('site-locked');}
-  $('lockAdminBtn').addEventListener('click',function(){lform.classList.toggle('hidden');if(!lform.classList.contains('hidden'))pass.focus();});
-  lform.addEventListener('submit',function(e){e.preventDefault();lerr.textContent='';
-    if(!subtle){lerr.textContent='Open https://ross.asia to sign in.';return;}
-    unlockWithPassword('ethan',pass.value).then(function(p){
-      if(p.role!=='admin')throw new Error('bad');
-      store(ADMIN_FLAG,'1');pass.value='';unlock();afterPassword(p);
-    }).catch(function(){
-      lerr.textContent='Wrong password';pass.value='';lform.classList.remove('lk-shake');void lform.offsetWidth;lform.classList.add('lk-shake');
-    });});
-})();
 })();

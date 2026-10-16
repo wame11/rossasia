@@ -4,20 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Asia 2026 Family Challenge</title>
-  <script>
-/* LOCKED until 16 Oct 2026, 12:00 noon UK time (BST = UTC+1). This is the ONE time on UK time — every
-   other date in the game is Japan time. Before then the page is only a
-   countdown; Admin + Ethan's password opens the full site on that device and remembers it. */
-window.SITE_OPENS=Date.UTC(2026,9,16,11,0,0);
-(function(){var ok=false;try{ok=localStorage.getItem('rossasia-admin-pass')==='1';}catch(_){}
-  if(Date.now()<window.SITE_OPENS&&!ok)document.documentElement.classList.add('site-locked');})();
-  </script>
-  <style>
-#siteLock{display:none}
-html.site-locked #siteLock{display:grid}
-html.site-locked body>*:not(#siteLock){display:none!important}
-  </style>
-  <link rel="stylesheet" href="styles.css?v=2026-10-14-2248" />
+  <link rel="stylesheet" href="styles.css?v=2026-10-16-0725" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png" />
@@ -30,20 +17,6 @@ html.site-locked body>*:not(#siteLock){display:none!important}
   <meta name="robots" content="noindex, nofollow" />
 </head>
 <body>
-  <!-- LOCK: just a countdown until the trip starts -->
-  <section id="siteLock" class="lock-screen" aria-label="Countdown to the trip">
-    <div class="lk-inner">
-      <p class="lk-eyebrow">Japan &amp; South Korea 2026</p>
-      <div id="lockCount" class="lk-count" aria-live="off"></div>
-      <button id="lockAdminBtn" class="lk-admin" type="button">Admin</button>
-      <form id="lockForm" class="lk-form hidden">
-        <input id="lockPass" type="password" autocomplete="current-password" placeholder="Password" aria-label="Admin password" />
-        <button class="btn btn-primary" type="submit">Enter</button>
-        <p id="lockErr" class="lk-err" aria-live="polite"></p>
-      </form>
-    </div>
-  </section>
-
   <!-- neon skyline backdrop -->
   <div class="city" id="cityBack" aria-hidden="true"></div>
 
@@ -83,7 +56,7 @@ html.site-locked body>*:not(#siteLock){display:none!important}
     </div>
   </section>
 
-  <script src="gate.js?v=2026-10-14-2248"></script>
+  <script src="gate.js?v=2026-10-16-0725"></script>
   <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js').then(function(reg){
