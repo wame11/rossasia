@@ -5,7 +5,7 @@
    2. version.json is never cached — it is how the app spots a new build.
    3. An asset that fails NEVER falls back to index.html. Serving HTML in place
       of app.js is what silently breaks the whole app. */
-const BUILD = '2026-10-16-1850';
+const BUILD = '2026-10-16-1905';
 const CACHE_NAME = 'asia2026-' + BUILD;
 /* the whole game is inside vault.bin (encrypted), so these few files are all a phone needs offline */
 const ASSETS = ['./','./index.html','./styles.css','./gate.js','./vault.bin','./icon-180.png','./icon-192.png'];
