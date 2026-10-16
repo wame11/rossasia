@@ -8,10 +8,10 @@
    (The pre-trip countdown lock was removed on 16 Oct 2026: the site goes straight to sign-in.) */
 (function(){
 'use strict';
-var BUILD='2026-10-16-1905';
+var BUILD='2026-10-16-1912';
 var SLOTS={"v":1,"users":{"jacob":{"iter":600000,"salt":"j3C/uNg6ulYdxEQw2SvvwQ==","iv":"yAOb/ajVgh/IkO8U","ct":"MR0ExlgPZ16bZWABiYBUSr/TfwnW1KfQsavurOYEW7+OBIcHiUZjOxhmSkvjfDeok5mjk3O0l0qywumxh+UufXm4+S9M2r0w6fgjyjfjPpduleo7IsslgSUycL80QLGnXZO/"},"lily":{"iter":600000,"salt":"bkcV8X4ASH/u7DJ1GBUWDQ==","iv":"Ha7xGHyWnn+D+My+","ct":"QDpjCBlmx0hcm+e+YjgLVpJ4pHalrmiUowYEfxUkAYR+xpRBtwOH8DAhTi2gVytO+zH5wiN48o+kcW6W83A9M+mYQgdRCDJ8xhJa6ARvqORQKVBWcwVVzQ0F7Yr1NeXV1eI="},"hannah":{"iter":600000,"salt":"LWZ9TX34Au00InTcugvxXA==","iv":"eCbEVGsD9wab3sxz","ct":"CuyfJlfsRgTtFU+g9Zp3Biar/CUq4on25o5WcITcXjsZPl2KUpQd7FS3CTTOwq6J8k3N4x/Dk+ZVcO3LOB1R0AGvwP6rgCRazLv2FJmX2lLUhL+lGB/QH3k66VolQ3IuFxSwIg=="},"mark":{"iter":600000,"salt":"LEsdcN8fifrXzqZeGAsAKg==","iv":"78fGp/01Qw6Pfu/6","ct":"QPwWYH47AVPYuzcnmE/bSCyO1aWhZZ+5XWwwaeRs6Isb5rP6GDHL2MIZPZnLNSHhgEp8JV7cRfH6OemQ0EanzsF/WlL0G57JIFDtgd61tmxxn5c5El8LeNc/C1Zg6IxAjY0="},"ethan":{"iter":600000,"salt":"7LZyAnhCSBc2SPvqaJ+NdA==","iv":"LCmd5aZCPtzOM2np","ct":"E64PUj98SlLij9HdfOrCSl+re/O+3IkyYph12LPuDGxTO0JbUL2NLkFyf4Ow4LoWBYLpm8CVwWfr5gc9aA4ANvy9j/Ib2sHAjMaQsXO4cWBVNz+KHs/oql65+vYTnWlc2oILi6KWltaebelLPpcDSEWipnBV3nRmd7mhx9Vu"}}};
 window.__BUILD__=BUILD;
-var FACE='rossasia-face-v1',SESSION='asia26-session-v1',KEYFIX='rossasia-adminkey-v1';
+var FACE='rossasia-face-v1',SESSION='asia26-session-v1',KEYFIX='rossasia-adminkey-v1',STAY='rossasia-stay-v1'; /* STAY: stay signed in on this phone until Log out */
 var te=new TextEncoder(),td=new TextDecoder();
 var subtle=window.crypto&&crypto.subtle;
 function $(id){return document.getElementById(id);}
@@ -177,7 +177,7 @@ function mount(vault,p,key,adminKey){
       var iv=rand(12);
       return subtle.encrypt({name:'AES-GCM',iv:iv},key,te.encode(k)).then(function(ct){store(KEYFIX,JSON.stringify({iv:b64(iv),ct:b64(ct)}));});
     },
-    logout:function(){store(SESSION,null);store(KEYFIX,null);forgetFace().then(function(){location.replace(location.pathname);});}
+    logout:function(){store(SESSION,null);store(KEYFIX,null);store(STAY,null);forgetFace().then(function(){location.replace(location.pathname);});}
   };
   document.body.insertAdjacentHTML('beforeend',vault.html);
   vault.scripts.forEach(function(sc){
@@ -200,7 +200,7 @@ function failOpen(e){
   show(offer,false);show(form,true);loginBtn.disabled=false;loginBtn.textContent='Start the adventure';
   err(navigator.onLine===false?'Connect to the internet once so this phone can download the game, then try again.':'Could not open the game — try again, or open ross.asia/?fresh=1');
 }
-function go(p){err('');return openApp(p).catch(failOpen);}
+function go(p){err('');store(STAY,JSON.stringify(p));return openApp(p).catch(failOpen);}
 function afterPassword(p){
   passIn.value='';
   var rec=faceRecord();
@@ -241,5 +241,8 @@ function showSignIn(){
   else{show(faceBox,false);show(form,true);}
 }
 showSignIn();
+/* signed in before on this phone and never logged out: straight back into the game */
+(function(){var p=null;try{p=JSON.parse(read(STAY)||'null');}catch(_){p=null;}
+  if(p&&p.k&&p.name){show(form,false);show(faceBox,false);err('Opening…');go(p).then(function(){err('');});}})();
 
 })();
