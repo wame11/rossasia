@@ -1,0 +1,108 @@
+{
+  "domain": "staldhelms.example",
+  "business": {
+    "name": "St Aldhelm's Church",
+    "tagline": "A welcoming church in Westbrook",
+    "schemaType": "Church",
+    "description": "A friendly parish church in Westbrook. Sunday services, toddler group, food bank collection and community events.",
+    "phone": "01632 960789",
+    "email": "office@staldhelms.example",
+    "address": { "line1": "Church Lane", "town": "Westbrook", "postcode": "WB5 2RD" }
+  },
+  "theme": {
+    "primary": "#27346b",
+    "accent": "#f0704f",
+    "background": "#ffffff",
+    "surface": "#f1f3fa",
+    "text": "#1a1f36",
+    "headingFont": "serif",
+    "bodyFont": "inter",
+    "radius": 10
+  },
+  "seo": {
+    "title": "St Aldhelm's Church, Westbrook | Everyone welcome",
+    "description": "Join us on Sundays at 10:30am at St Aldhelm's Church, Westbrook. Service times, groups, events and how to get in touch."
+  },
+  "social": { "facebook": "https://www.facebook.com/", "youtube": "https://www.youtube.com/" },
+  "headerCta": { "label": "Plan your visit", "href": "visit/" },
+  "footer": { "note": "Registered charity (sample)." },
+  "pages": [
+    {
+      "slug": "",
+      "title": "Home",
+      "sections": [
+        {
+          "type": "hero",
+          "eyebrow": "Sundays at 10:30am",
+          "heading": "Whoever you are, you are welcome here.",
+          "text": "St Aldhelm's is a friendly parish church at the centre of Westbrook. Come as you are, stay for coffee.",
+          "cta": { "label": "Plan your visit", "href": "visit/" },
+          "secondaryCta": { "label": "What's on", "href": "whats-on/" }
+        },
+        {
+          "type": "features",
+          "heading": "This week at St Aldhelm's",
+          "items": [
+            { "title": "Sunday service · 10:30am", "text": "Family-friendly worship with a children's group during the talk. Refreshments afterwards." },
+            { "title": "Little Lambs · Tuesday 9:30am", "text": "Stay and play for under fives and their grown-ups. Term time only, no need to book." },
+            { "title": "Community lunch · Thursday 12pm", "text": "A hot meal and good company in the church hall. Pay what you can." }
+          ]
+        },
+        {
+          "type": "text",
+          "tinted": true,
+          "heading": "New here?",
+          "body": [
+            "Walking into a church for the first time can feel daunting. You will be met at the door, shown where to sit and never asked to do anything you are not comfortable with.",
+            "Services last about an hour. There is level access throughout, a hearing loop and plenty of parking on Church Lane."
+          ],
+          "cta": { "label": "Plan your visit", "href": "visit/" }
+        },
+        {
+          "type": "cta",
+          "heading": "Weddings, christenings and funerals",
+          "text": "We would be honoured to walk with you through life's big moments. Get in touch with the church office to talk it through.",
+          "cta": { "label": "Contact the office", "href": "visit/" }
+        }
+      ]
+    },
+    {
+      "slug": "whats-on",
+      "title": "What's on",
+      "description": "Service times, groups and regular events at St Aldhelm's Church, Westbrook.",
+      "sections": [
+        {
+          "type": "services",
+          "heading": "What's on",
+          "text": "Everything is free unless it says otherwise, and everyone is welcome.",
+          "groups": [
+            {
+              "name": "Sundays",
+              "items": [
+                { "name": "Holy Communion", "description": "A quiet, traditional service", "price": "8:30am" },
+                { "name": "Morning worship", "description": "With children's groups", "price": "10:30am" },
+                { "name": "Evening prayer", "description": "First Sunday of the month", "price": "6:00pm" }
+              ]
+            },
+            {
+              "name": "Through the week",
+              "items": [
+                { "name": "Little Lambs toddler group", "description": "Tuesdays, term time", "price": "9:30am" },
+                { "name": "Community lunch", "description": "Thursdays in the hall", "price": "12:00pm" },
+                { "name": "Bell ringing practice", "description": "Fridays, beginners welcome", "price": "7:30pm" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "visit",
+      "title": "Visit",
+      "navLabel": "Visit and contact",
+      "sections": [
+        { "type": "contact", "heading": "Visit and contact", "text": "The church office is open Tuesday to Thursday, 9:30am to 12:30pm." }
+      ]
+    }
+  ]
+}

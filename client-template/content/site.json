@@ -1,0 +1,156 @@
+{
+  "domain": "marlowesbarbers.example",
+  "business": {
+    "name": "Marlowe's Barbers",
+    "tagline": "Sharp cuts in the heart of Northbridge",
+    "schemaType": "HairSalon",
+    "description": "Traditional barbering with a modern finish. Walk-ins welcome, appointments available six days a week.",
+    "phone": "01632 960123",
+    "email": "hello@marlowesbarbers.example",
+    "address": { "line1": "14 Market Street", "town": "Northbridge", "postcode": "NB1 4QT" },
+    "mapEmbedUrl": ""
+  },
+  "theme": {
+    "primary": "#15120f",
+    "accent": "#e3a92b",
+    "background": "#fbf8f3",
+    "surface": "#f1ebe1",
+    "text": "#15120f",
+    "headingFont": "inter",
+    "bodyFont": "inter",
+    "radius": 6
+  },
+  "logo": "",
+  "seo": {
+    "title": "Marlowe's Barbers | Barber shop in Northbridge",
+    "description": "Skin fades, classic cuts, beard trims and hot towel shaves in Northbridge. Walk in or call 01632 960123 to book.",
+    "ogImage": ""
+  },
+  "social": {
+    "instagram": "https://www.instagram.com/",
+    "facebook": "https://www.facebook.com/"
+  },
+  "hours": {
+    "mon": "closed",
+    "tue": "09:00-18:00",
+    "wed": "09:00-18:00",
+    "thu": "09:00-20:00",
+    "fri": "09:00-18:00",
+    "sat": "08:30-16:30",
+    "sun": "closed"
+  },
+  "hoursNote": "Late night on Thursdays. Last walk-in 30 minutes before closing.",
+  "headerCta": { "label": "Call to book", "href": "tel:01632960123" },
+  "contactForm": { "action": "", "accessKey": "" },
+  "footer": { "note": "Walk-ins always welcome." },
+  "pages": [
+    {
+      "slug": "",
+      "title": "Home",
+      "sections": [
+        {
+          "type": "hero",
+          "eyebrow": "Barber shop · Northbridge",
+          "heading": "Look sharp. Feel sharper.",
+          "text": "Proper barbering from people who care about the details. Skin fades, classic cuts and hot towel shaves, six days a week on Market Street.",
+          "cta": { "label": "Call 01632 960123", "href": "tel:01632960123" },
+          "secondaryCta": { "label": "See prices", "href": "prices/" }
+        },
+        {
+          "type": "features",
+          "heading": "Why people come back",
+          "items": [
+            { "title": "No rushing", "text": "Every cut gets a full slot. We would rather run five minutes late than send you out half finished." },
+            { "title": "Walk in or book", "text": "Pop in when you are passing, or call ahead and we will keep a chair for you." },
+            { "title": "All ages welcome", "text": "First haircuts, school cuts, wedding mornings and everything in between." }
+          ]
+        },
+        {
+          "type": "services",
+          "tinted": true,
+          "heading": "Popular services",
+          "groups": [
+            {
+              "items": [
+                { "name": "Skin fade", "price": "£18" },
+                { "name": "Cut and beard trim", "price": "£22" },
+                { "name": "Hot towel shave", "price": "£16" }
+              ]
+            }
+          ],
+          "note": "Card and cash both accepted."
+        },
+        {
+          "type": "cta",
+          "heading": "Need a trim this week?",
+          "text": "Call the shop and we will fit you in, or just walk through the door.",
+          "cta": { "label": "Call 01632 960123", "href": "tel:01632960123" },
+          "secondaryCta": { "label": "Find us", "href": "contact/" }
+        }
+      ]
+    },
+    {
+      "slug": "prices",
+      "title": "Prices",
+      "description": "Price list for Marlowe's Barbers in Northbridge: haircuts, fades, beard trims and shaves.",
+      "sections": [
+        {
+          "type": "services",
+          "heading": "Prices",
+          "text": "Simple, honest pricing. No hidden extras.",
+          "groups": [
+            {
+              "name": "Hair",
+              "items": [
+                { "name": "Classic cut", "description": "Scissor or clipper cut, styled to finish", "price": "£15" },
+                { "name": "Skin fade", "description": "Zero or foil fade with a blended top", "price": "£18" },
+                { "name": "Kids' cut", "description": "Under 12s", "price": "£11" },
+                { "name": "Over 65s", "description": "Tuesday to Thursday", "price": "£11" }
+              ]
+            },
+            {
+              "name": "Beard and shave",
+              "items": [
+                { "name": "Beard trim and shape", "price": "£9" },
+                { "name": "Hot towel shave", "description": "Traditional cut-throat shave", "price": "£16" },
+                { "name": "Cut and beard trim", "price": "£22" }
+              ]
+            }
+          ]
+        },
+        { "type": "hours", "tinted": true }
+      ]
+    },
+    {
+      "slug": "about",
+      "title": "About",
+      "sections": [
+        {
+          "type": "text",
+          "heading": "A proper local barber shop",
+          "body": [
+            "Marlowe's opened on Market Street with two chairs and one rule: nobody leaves until they are happy with their haircut.",
+            "We have grown since then, but the rule has not changed. Whether you want a tidy-up before work or a full restyle, you will get our full attention and an honest opinion."
+          ]
+        },
+        {
+          "type": "faq",
+          "heading": "Good to know",
+          "items": [
+            { "q": "Do I need to book?", "a": "No. Walk-ins are welcome all day. If you are short on time, call ahead and we will hold a chair." },
+            { "q": "Do you take card?", "a": "Yes, card, contactless and cash are all fine." },
+            { "q": "Is there parking?", "a": "There is free parking for one hour on Market Street and a pay and display car park behind the shop." }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "contact",
+      "title": "Contact",
+      "navLabel": "Find us",
+      "sections": [
+        { "type": "contact", "heading": "Find us", "text": "We are on Market Street, two doors down from the post office." }
+      ]
+    }
+  ]
+}
