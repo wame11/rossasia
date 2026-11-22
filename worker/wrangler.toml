@@ -3,6 +3,7 @@
 # Private: /admin and /admin/api/*      (Cloudflare Access + JWT check in the Worker)
 # Bot:     /bot/api/*                   (optional, API key, see BOT_ACCESS.md)
 name = "webstitch"
+account_id = "f26de234e39c9e1fda038a72ac4e8b70"
 main = "src/index.js"
 compatibility_date = "2025-09-01"
 
@@ -22,20 +23,22 @@ run_worker_first = true
 [[d1_databases]]
 binding = "DB"
 database_name = "webstitch"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "8a496fe4-06e3-49ee-917b-b60fe67f4d09"
 migrations_dir = "migrations"
 
-# Logo and photo uploads. Optional: delete this block if you do not want to enable R2.
-# Without it the enquiry form still works, but uploads are skipped.
-[[r2_buckets]]
-binding = "FILES"
-bucket_name = "webstitch-uploads"
+# Logo and photo uploads. Optional. Switched off for now (22 Nov 2026): R2 is not enabled on the Cloudflare
+# account (it asks for a payment card first), and a deploy with this block fails without it. To switch uploads
+# on: enable R2 in the dashboard, run `npx wrangler r2 bucket create webstitch-uploads`, remove the "# " from
+# the three lines below and deploy. Without it the enquiry form still works, but uploads are skipped.
+# [[r2_buckets]]
+# binding = "FILES"
+# bucket_name = "webstitch-uploads"
 
 [vars]
 SITE_URL = "https://webstitch.co.uk"
 ALLOWED_ORIGINS = "https://webstitch.co.uk,https://www.webstitch.co.uk"
 # "read" lets the bot API read only. "write" also lets it add leads and log outreach.
-BOT_ACCESS = "read"
+BOT_ACCESS = "write"
 
 # Secrets are NOT stored in this file. Set each one with `npx wrangler secret put NAME`:
 #   ADMIN_EMAILS          comma-separated emails allowed into /admin
