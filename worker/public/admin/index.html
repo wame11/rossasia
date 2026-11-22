@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Webstitch admin</title>
+<link rel="icon" href="/admin/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <a class="logo" href="#/dashboard">
+      <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#2a3cff"/><path d="M6.5 10.5 11 22l5-11 5 11 4.5-11.5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3.4 3.4"/></svg>
+      <span>webstitch</span>
+    </a>
+    <nav id="nav" aria-label="Admin">
+      <a href="#/dashboard">Dashboard</a>
+      <a href="#/leads">Leads</a>
+      <a href="#/outreach">Outreach</a>
+      <a href="#/templates">Email templates</a>
+      <a href="#/invoices">Invoices</a>
+      <a href="#/subscriptions">Subscriptions</a>
+      <a href="#/settings">Settings and export</a>
+    </nav>
+    <p class="whoami" id="whoami"></p>
+  </aside>
+  <main id="view" tabindex="-1"><p class="loading">Loading…</p></main>
+</div>
+<dialog id="modal"><div id="modal-body"></div></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="/admin/prompt.js" defer></script>
+<script src="/admin/admin.js" defer></script>
+</body>
+</html>

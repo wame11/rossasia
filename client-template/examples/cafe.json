@@ -1,0 +1,126 @@
+{
+  "domain": "thedailycrumb.example",
+  "business": {
+    "name": "The Daily Crumb",
+    "tagline": "Coffee, cake and proper breakfasts",
+    "schemaType": "CafeOrCoffeeShop",
+    "description": "An independent café in Ashcombe serving fresh coffee, homemade cakes and all-day breakfasts.",
+    "phone": "01632 960456",
+    "email": "hello@thedailycrumb.example",
+    "address": { "line1": "3 Station Road", "town": "Ashcombe", "postcode": "AC2 7LP" }
+  },
+  "theme": {
+    "primary": "#21382e",
+    "accent": "#f2b84b",
+    "background": "#fffaf2",
+    "surface": "#f6eede",
+    "text": "#1d2a24",
+    "headingFont": "serif",
+    "bodyFont": "inter",
+    "radius": 14
+  },
+  "seo": {
+    "title": "The Daily Crumb | Café in Ashcombe",
+    "description": "Fresh coffee, homemade cakes and all-day breakfasts on Station Road, Ashcombe. Dog friendly. Open seven days."
+  },
+  "social": { "instagram": "https://www.instagram.com/", "facebook": "https://www.facebook.com/" },
+  "hours": {
+    "mon": "08:00-16:00",
+    "tue": "08:00-16:00",
+    "wed": "08:00-16:00",
+    "thu": "08:00-16:00",
+    "fri": "08:00-16:00",
+    "sat": "09:00-16:00",
+    "sun": "10:00-14:00"
+  },
+  "hoursNote": "Kitchen closes 45 minutes before the café.",
+  "headerCta": { "label": "See the menu", "href": "menu/" },
+  "footer": { "note": "Dogs, prams and laptops all welcome." },
+  "pages": [
+    {
+      "slug": "",
+      "title": "Home",
+      "sections": [
+        {
+          "type": "hero",
+          "eyebrow": "Independent café · Ashcombe",
+          "heading": "Good coffee. Great cake. No fuss.",
+          "text": "Everything is baked here each morning and the coffee comes from a roaster ten miles up the road. Pull up a chair.",
+          "cta": { "label": "See the menu", "href": "menu/" },
+          "secondaryCta": { "label": "Find us", "href": "visit/" }
+        },
+        {
+          "type": "features",
+          "heading": "What we do best",
+          "items": [
+            { "title": "All-day breakfast", "text": "Full English, veggie and vegan plates cooked to order until 3pm." },
+            { "title": "Baked this morning", "text": "Scones, traybakes and a different cake of the week, every week." },
+            { "title": "Takeaway and pre-order", "text": "Ring ahead and your order will be waiting on the counter." }
+          ]
+        },
+        {
+          "type": "testimonials",
+          "heading": "Kind words",
+          "items": [
+            { "quote": "Sample review text. Replace with a real customer review once you have permission to use it.", "name": "Customer name", "detail": "sample" }
+          ]
+        },
+        {
+          "type": "cta",
+          "heading": "Bringing a crowd?",
+          "text": "We take bookings for tables of six or more. Give us a ring and we will sort it.",
+          "cta": { "label": "Call 01632 960456", "href": "tel:01632960456" }
+        }
+      ]
+    },
+    {
+      "slug": "menu",
+      "title": "Menu",
+      "description": "Breakfast, lunch, cakes and drinks at The Daily Crumb café in Ashcombe.",
+      "sections": [
+        {
+          "type": "services",
+          "heading": "Menu",
+          "text": "Please tell us about any allergies before you order.",
+          "groups": [
+            {
+              "name": "Breakfast",
+              "items": [
+                { "name": "Full English", "description": "Two bacon, two sausage, egg, beans, mushrooms, toast", "price": "£9.50" },
+                { "name": "Veggie breakfast", "description": "Halloumi, veggie sausage, egg, beans, mushrooms, toast", "price": "£9.00" },
+                { "name": "Bacon or sausage bap", "price": "£4.50" },
+                { "name": "Eggs on toast", "description": "Poached, fried or scrambled", "price": "£5.50" }
+              ]
+            },
+            {
+              "name": "Drinks",
+              "items": [
+                { "name": "Flat white", "price": "£3.20" },
+                { "name": "Latte or cappuccino", "price": "£3.40" },
+                { "name": "Pot of tea", "price": "£2.60" },
+                { "name": "Hot chocolate", "description": "With cream and marshmallows", "price": "£3.60" }
+              ]
+            },
+            {
+              "name": "Cakes and bakes",
+              "items": [
+                { "name": "Cake of the week", "price": "£3.80" },
+                { "name": "Fruit scone", "description": "With jam and clotted cream", "price": "£3.50" },
+                { "name": "Traybake", "price": "£2.90" }
+              ]
+            }
+          ],
+          "note": "Gluten-free and vegan options available every day."
+        }
+      ]
+    },
+    {
+      "slug": "visit",
+      "title": "Visit",
+      "navLabel": "Find us",
+      "sections": [
+        { "type": "contact", "heading": "Come and say hello", "text": "We are opposite the station, next to the florist." }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+# Webstitch API + private admin.
+# Public:  POST /api/enquiry            (enquiry form on webstitch.co.uk)
+# Private: /admin and /admin/api/*      (Cloudflare Access + JWT check in the Worker)
+# Bot:     /bot/api/*                   (optional, API key, see BOT_ACCESS.md)
+name = "webstitch"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+# Serve only from the custom domain so the Cloudflare Access rules cannot be bypassed.
+workers_dev = false
+preview_urls = false
+routes = [
+  { pattern = "app.webstitch.co.uk", custom_domain = true }
+]
+
+# The admin front end. run_worker_first means every request passes the auth check in src/index.js first.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "webstitch"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+# Logo and photo uploads. Optional: delete this block if you do not want to enable R2.
+# Without it the enquiry form still works, but uploads are skipped.
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "webstitch-uploads"
+
+[vars]
+SITE_URL = "https://webstitch.co.uk"
+ALLOWED_ORIGINS = "https://webstitch.co.uk,https://www.webstitch.co.uk"
+# "read" lets the bot API read only. "write" also lets it add leads and log outreach.
+BOT_ACCESS = "read"
+
+# Secrets are NOT stored in this file. Set each one with `npx wrangler secret put NAME`:
+#   ADMIN_EMAILS          comma-separated emails allowed into /admin
+#   ACCESS_TEAM_DOMAIN    e.g. yourteam.cloudflareaccess.com
+#   ACCESS_AUD            Application Audience (AUD) tag of the Access application
+#   BANK_ACCOUNT_NAME     e.g. Ethan Ross
+#   BANK_SORT_CODE        e.g. 12-34-56
+#   BANK_ACCOUNT_NUMBER   e.g. 12345678
+#   TURNSTILE_SECRET      optional, spam check for the enquiry form
+#   NOTIFY_WEBHOOK_URL    optional, Discord or Slack webhook pinged on each new enquiry
+#   BOT_API_KEY           optional, enables /bot/api for an AI assistant
+
+# Local development (`npm run dev`): keep the request host as localhost so the DEV_BYPASS_ACCESS
+# switch in .dev.vars works. It is ignored on the deployed Worker.
+[dev]
+host = "localhost:8787"
+local_protocol = "http"
+upstream_protocol = "http"
+port = 8787

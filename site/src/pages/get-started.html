@@ -1,0 +1,102 @@
+<!--
+{
+  "title": "Get started | Tell us about your business | Webstitch",
+  "description": "Start your new website today. Tell Webstitch about your business in two minutes and we will reply within one working day. £150 build, £5 a month, no obligation."
+}
+-->
+<section class="page-hero">
+  <div class="wrap">
+    <p class="eyebrow">Get started</p>
+    <h1>Tell us about your business.</h1>
+    <p class="lead">Two minutes now, a new website in about a week. There is no obligation and nothing to pay until you are ready to go ahead.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="wrap form-layout">
+    <div>
+      <form id="enquiry-form" class="form" action="{{apiBase}}/api/enquiry" method="post" enctype="multipart/form-data">
+        <div class="field">
+          <label for="business_name">Business name</label>
+          <input id="business_name" name="business_name" type="text" autocomplete="organization" required maxlength="120">
+        </div>
+        <div class="field">
+          <label for="contact_name">Your name</label>
+          <input id="contact_name" name="contact_name" type="text" autocomplete="name" required maxlength="120">
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required maxlength="200">
+        </div>
+        <div class="field">
+          <label for="phone">Phone <span class="muted">(optional)</span></label>
+          <input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="40">
+        </div>
+        <div class="field">
+          <label for="website_url">Current website <span class="muted">(if you have one)</span></label>
+          <input id="website_url" name="website_url" type="text" inputmode="url" autocomplete="url" placeholder="www.example.co.uk" maxlength="300">
+        </div>
+        <div class="field">
+          <label for="business_type">Type of business</label>
+          <select id="business_type" name="business_type" required>
+            <option value="">Please choose</option>
+            <option>Barber or hairdresser</option>
+            <option>Beauty or salon</option>
+            <option>Café or restaurant</option>
+            <option>Takeaway</option>
+            <option>Trades (plumber, electrician, builder…)</option>
+            <option>Gym or fitness</option>
+            <option>Church or place of worship</option>
+            <option>Charity or community group</option>
+            <option>Shop or retail</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field field-wide">
+          <label for="wants">What would you like your website to do?</label>
+          <p class="hint" id="wants-hint">For example: show our prices and opening hours, get more bookings, look more professional than our Facebook page.</p>
+          <textarea id="wants" name="wants" rows="5" required maxlength="4000" aria-describedby="wants-hint"></textarea>
+        </div>
+        <div class="field field-wide">
+          <label for="colours">Preferred colours <span class="muted">(optional)</span></label>
+          <input id="colours" name="colours" type="text" maxlength="300" placeholder="e.g. navy and gold, or match our logo">
+        </div>
+        <div class="field field-wide">
+          <label for="files">Logo and photos <span class="muted">(optional)</span></label>
+          <p class="hint" id="files-hint">Up to 6 files, 8 MB each. JPG, PNG, WebP, SVG or PDF. You can always send more later.</p>
+          <input id="files" name="files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/svg+xml,application/pdf" aria-describedby="files-hint">
+        </div>
+        <div class="hp-field" aria-hidden="true">
+          <label for="company_website">Leave this field empty</label>
+          <input id="company_website" name="company_website" type="text" tabindex="-1" autocomplete="off">
+        </div>
+        <div class="field field-wide check">
+          <input id="consent" name="consent" type="checkbox" value="yes" required>
+          <label for="consent">I am happy for Webstitch to use these details to reply to my enquiry, as described in the <a href="/privacy/">privacy policy</a>.</label>
+        </div>
+        {{turnstile}}
+        <div class="field field-wide">
+          <button class="btn btn-primary" type="submit">Send my details</button>
+        </div>
+        <p class="form-status" role="status" aria-live="polite"></p>
+      </form>
+
+      <div id="enquiry-done" class="form-done" tabindex="-1" hidden>
+        <h2>Thank you. We have got it.</h2>
+        <p>We will read through your details and reply within one working day. Keep an eye on your inbox, and your junk folder just in case.</p>
+        <p><a class="text-link" href="/portfolio/">Have a look at our work while you wait</a></p>
+      </div>
+    </div>
+
+    <aside class="card aside-card">
+      <h2 style="font-size:1.5rem">What happens next</h2>
+      <ol>
+        <li><span>We reply within one working day to say hello and ask anything we need to know.</span></li>
+        <li><span>If you want to go ahead, we send an invoice for £150 and a short list of what to send us.</span></li>
+        <li><span>About 7 days after your content arrives, you get a private preview of your new site.</span></li>
+        <li><span>You approve it, we put it live, and your £5 a month plan begins.</span></li>
+      </ol>
+      <p class="muted" style="margin-top:1.4rem">Prefer email? Write to <a class="text-link" href="mailto:{{email}}">{{email}}</a></p>
+    </aside>
+  </div>
+</section>

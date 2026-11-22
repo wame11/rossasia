@@ -1,0 +1,8 @@
+# Copy to .dev.vars for local development. .dev.vars is git-ignored: never commit real values.
+DEV_BYPASS_ACCESS="true"
+ADMIN_EMAILS="dev@localhost"
+BANK_ACCOUNT_NAME="Example Name"
+BANK_SORT_CODE="00-00-00"
+BANK_ACCOUNT_NUMBER="00000000"
+BOT_API_KEY="local-dev-bot-key-change-me-0123456789"
+BOT_ACCESS="write"

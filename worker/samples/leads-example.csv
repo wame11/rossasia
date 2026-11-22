@@ -1,0 +1,4 @@
+business_name,business_type,town,phone,email,website_url,score,notes,status
+Example Barbers,Barber,Northbridge,01632 960001,info@example-barbers.example,http://example-barbers.example,3,"Site not mobile friendly, last updated 2014",New
+Example Cafe,Café,Ashcombe,01632 960002,,,1,"No website, Facebook page only",New
+Example Plumbing,Trades,Westbrook,07700 900003,hello@example-plumbing.example,http://example-plumbing.example,5,Slow to load and no prices,Contacted

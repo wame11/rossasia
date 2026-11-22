@@ -1,0 +1,35 @@
+[
+  {
+    "name": "Marlowe's Barbers",
+    "type": "Barber shop",
+    "town": "Concept project",
+    "concept": true,
+    "summary": "A cluttered one-page site with tiny text became a sharp four-page site with prices, opening hours and a call button that is always in reach.",
+    "highlights": ["Tap-to-call on every page", "Clear price list", "Today's opening hours up front"],
+    "before": "/assets/img/portfolio/barber-before.jpg",
+    "after": "/assets/img/portfolio/barber-after.jpg",
+    "url": ""
+  },
+  {
+    "name": "The Daily Crumb",
+    "type": "Café",
+    "town": "Concept project",
+    "concept": true,
+    "summary": "The old site hid the menu in a PDF that was painful to open on a phone. The new one puts the menu, opening times and directions a tap away.",
+    "highlights": ["Menu you can read on a phone", "Map and directions", "Warm, on-brand colours"],
+    "before": "/assets/img/portfolio/cafe-before.jpg",
+    "after": "/assets/img/portfolio/cafe-after.jpg",
+    "url": ""
+  },
+  {
+    "name": "St Aldhelm's Church",
+    "type": "Church",
+    "town": "Concept project",
+    "concept": true,
+    "summary": "Years of notices had buried the one thing newcomers want to know: when is the service? The redesign leads with a welcome and this week's times.",
+    "highlights": ["Service times first", "A friendly 'New here?' guide", "Easy for volunteers to keep current"],
+    "before": "/assets/img/portfolio/church-before.jpg",
+    "after": "/assets/img/portfolio/church-after.jpg",
+    "url": ""
+  }
+]
