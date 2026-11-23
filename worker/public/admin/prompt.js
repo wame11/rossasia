@@ -13,7 +13,7 @@
 
 I'm {{my_name}} from Webstitch, a small UK web design studio. I was looking at {{business_type_or_local}} businesses in {{town_or_area}} and {{site_observation}}
 
-We build clean, modern websites for local businesses at a fixed price: {{build_price}} for the build, then {{monthly_price}} a month for hosting, maintenance and small edits. It takes about a week, it works properly on phones, and there is no contract tying you in.
+We build clean, modern websites for local businesses at a fixed price: {{build_price}} for the build, then {{monthly_price}} a month for your own domain name and hosting. It takes about a week, it works properly on phones, and there is no contract tying you in.
 
 You can see examples at {{site_url}}/portfolio/
 
@@ -34,7 +34,7 @@ ${OPT_OUT}`,
 
 I got in touch last week about a new website for {{business_name}} and wanted to follow up once in case it got buried.
 
-The short version: a modern, mobile-friendly website for {{build_price}}, live in about a week, then {{monthly_price}} a month to keep it hosted and up to date. You send the details, I do the rest.
+The short version: a modern, mobile-friendly website for {{build_price}}, live in about a week, then {{monthly_price}} a month for your own domain and hosting. You send the details, I do the rest.
 
 If it is not for you, no problem at all. If you are curious, just reply to this email and I will send over a couple of ideas for your site.
 
@@ -56,12 +56,12 @@ Thanks for your time on the phone today. Here is a quick summary of what we disc
 What you get
 - A custom, mobile-friendly website of up to 5 pages
 - Contact form, Google Maps and a click-to-call button
-- Basic SEO set-up, SSL certificate and your domain connected
+- Basic SEO set-up, SSL certificate and your own domain
 - Ready to preview around 7 days after I receive your content
 
 What it costs
 - {{build_price}} one-off for the build
-- {{monthly_price}} a month for hosting, maintenance and small edits (no minimum term, cancel with 30 days' notice)
+- {{monthly_price}} a month for your domain name and hosting (no minimum term, cancel any time and take your domain with you)
 
 What I need from you
 - Your logo and a few photos
@@ -247,7 +247,6 @@ If you would rather not receive emails from Webstitch, reply with "no thanks" an
       x.booking ? `Online booking widget${x.booking_url ? ` (embed ${x.booking_url})` : ' (ask which booking service they use)'}` : '',
       x.menu ? 'Online menu page (HTML, easy to read on a phone, not a PDF)' : '',
       x.gallery ? 'Photo gallery page' : '',
-      x.domain_purchase ? 'Domain to be purchased by Webstitch on the client\'s behalf' : '',
     ].filter(Boolean);
     const domain = String(b.domain || '').replace(/^https?:\/\//, '').replace(/\/.*$/, '');
     const siteJson = JSON.stringify(buildSiteJson(lead, b), null, 2);
@@ -268,7 +267,7 @@ ${list([
     line('Phone (click-to-call)', phone),
     line('Public email', email),
     line('Current website', lead.website_url ? `${lead.website_url} (being replaced. Use it for reference only)` : 'None'),
-    line('Domain for the new site', domain || (b.domain_status ? `Not confirmed (${b.domain_status})` : 'Not confirmed')),
+    line('Domain for the new site', (domain || (b.domain_status ? `Not confirmed (${b.domain_status})` : 'Not confirmed')) + (x.domain_purchase ? '. Register a new domain in the client\'s name (included in the monthly fee)' : '')),
   ])}
 
 ${b.description ? `**About the business, in the client's words:**\n\n${block(b.description)}` : ''}

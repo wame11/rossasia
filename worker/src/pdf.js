@@ -165,9 +165,9 @@ export function invoicePdf(invoice, client, business, bank) {
   y += 34;
 
   if (invoice.monthly_pence > 0) {
-    p.text('MONTHLY PLAN (NOT INCLUDED IN THE TOTAL ABOVE)', left, y, { size: 8, bold: true, colour: BLUE });
-    y = p.paragraph(`Hosting, maintenance and small edits: ${money(invoice.monthly_pence)} per month by standing order, `
-      + 'starting on the day your website goes live. No minimum term. Cancel at any time with 30 days\' notice.',
+    p.text('MONTHLY FEE (NOT INCLUDED IN THE TOTAL ABOVE)', left, y, { size: 8, bold: true, colour: BLUE });
+    y = p.paragraph(`Your domain name and hosting: ${money(invoice.monthly_pence)} per month by standing order, `
+      + 'starting on the day your website goes live. No minimum term. Cancel any time and take your domain with you.',
     left, y + 16, right - left, { size: 10, colour: GREY });
     y += 18;
   }

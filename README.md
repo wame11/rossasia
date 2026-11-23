@@ -1,7 +1,7 @@
 # Webstitch
 
 Website, private admin and client-site template for **Webstitch** (webstitch.co.uk): modern websites for UK local
-businesses. £150 one-off build, £5 a month for hosting, maintenance and small edits.
+businesses. £150 to build, then £5 a month for the client's own domain and hosting.
 
 ```
 .
@@ -178,13 +178,13 @@ listed in `ALLOWED_ORIGINS` in `wrangler.toml`.
 | **Dashboard** | Total leads, clients won, conversion rate, revenue received, MRR, pipeline counts, new website enquiries, follow-ups due, overdue plans, unpaid invoices. |
 | **Leads** | The pipeline: New → Contacted → Interested → Paid → Building → Live → Lost. Search and filter by status, type, town and website score. **Import CSV** takes a file like `worker/samples/leads-example.csv` and skips duplicates. |
 | **Lead page** | Edit details, log calls and emails with a follow-up date, see invoices and the monthly plan. |
-| **Client brief** | Everything the client wants: details, pages and copy, colours, fonts, hours, services and prices, social links, domain, extras, plus logo and photo uploads. Website enquiries arrive here already part-filled. |
+| **Client brief** | Everything the client wants: details, pages and copy, colours, fonts, hours, services and prices, social links, domain, monthly fee (£5 by default), extras, plus logo and photo uploads. Website enquiries arrive here already part-filled. |
 | **Generate build prompt** | Turns the brief into a detailed prompt for an AI coding assistant, including a starter `site.json` for the client template and the GitHub Pages deploy steps. Copy it, download it as `.md`, or download the `site.json` on its own. |
-| **Invoices** | Numbered invoices (`WS-2026-0001`), £150 build line, extras, a £5 a month standing order line, payment reference (business name, trimmed to the 18 characters banks allow). **PDF** downloads the invoice with your bank details. **Mark paid** records the payment and moves the lead to Paid. |
-| **Subscriptions** | Who pays £5 a month, last payment date, next due date, an overdue flag (a week after the due date) and the monthly revenue total. |
+| **Invoices** | Numbered invoices (`WS-2026-0001`), £150 build line, extras, a monthly fee line (the client's fee, £5 by default), payment reference (business name, trimmed to the 18 characters banks allow). **PDF** downloads the invoice with your bank details. **Mark paid** records the payment and moves the lead to Paid. |
+| **Subscriptions** | Who pays the monthly fee, last payment date, next due date, an overdue flag (a week after the due date) and the monthly revenue total. |
 | **Outreach** | Every call and email across all leads, with follow-ups due. |
 | **Email templates** | Initial pitch, follow-up, after-call summary and payment details, filled in for the chosen lead. Each ends with an opt-out line. Copy, open in your email app, and log it as sent. Wording is editable. |
-| **Settings and export** | Business details for invoices, prices for the build, monthly plan and extras, and CSV export of everything (leads, briefs, outreach, invoices, subscriptions, payments). |
+| **Settings and export** | Business details for invoices, prices for the build, the default monthly fee and extras, and CSV export of everything (leads, briefs, outreach, invoices, subscriptions, payments). |
 
 ### Outreach and the law, briefly
 
@@ -218,7 +218,7 @@ This is a summary, not legal advice.
 6. **Preview and changes.** Send the client the `github.io` preview link. Two rounds of changes are included.
 7. **Go live.** Set `"domain"` in `site.json`, add the DNS records, enforce HTTPS, and set up their contact form key.
 8. **Monthly plan.** In **Subscriptions** press **Add monthly plan** with the go-live date. The lead moves to Live.
-   Ask the client to set up a £5 standing order with the reference on their invoice. Press **Record payment** each
+   Ask the client to set up a standing order for their monthly fee with the reference on their invoice. Press **Record payment** each
    month when it arrives. Overdue plans are flagged on the dashboard.
 9. **Show it off.** Take before and after screenshots (1200 × 750), save them in
    `site/src/assets/img/portfolio/`, add an entry to `site/src/data/portfolio.json`, and push.

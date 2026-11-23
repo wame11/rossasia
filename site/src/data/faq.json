@@ -2,56 +2,84 @@
   {
     "q": "Why is it so affordable?",
     "a": "We keep things simple. We build small, focused websites for local businesses, we use a proven process, and we don't have an office or a sales team to pay for. You get exactly what a local business needs and nothing you don't.",
-    "pages": ["home", "pricing"]
+    "pages": [
+      "home",
+      "pricing"
+    ]
   },
   {
     "q": "What do I need to send you?",
     "a": "Your logo if you have one, a few photos, your opening hours, services or prices, and a few lines about your business. Not a writer? Send rough notes and we will turn them into clear, friendly copy.",
-    "pages": ["home"]
+    "pages": [
+      "home"
+    ]
   },
   {
     "q": "How long does it take?",
     "a": "Around seven days from the day we receive your content. We send you a private preview link first, and nothing goes live until you are happy with it.",
-    "pages": ["home"]
+    "pages": [
+      "home"
+    ]
   },
   {
-    "q": "What does the £5 a month cover?",
-    "a": "Hosting, your security certificate (the padlock in the address bar), keeping the site running smoothly, and small edits whenever you need them: new opening hours, a price change, a swapped photo or an updated paragraph. Just email us.",
-    "pages": ["home", "pricing"]
+    "q": "What's the £5 a month for?",
+    "a": "It covers your domain name and keeps your site online. Cancel any time and you can take your domain with you.",
+    "pages": [
+      "home",
+      "pricing"
+    ]
   },
   {
-    "q": "Can I cancel the monthly plan?",
-    "a": "Yes. There is no minimum term. Give us 30 days' notice by email and that's it. We will send you a copy of your website files so you can host them elsewhere if you wish.",
-    "pages": ["home", "pricing"]
+    "q": "Can I cancel the £5 a month?",
+    "a": "Yes, any time. There is no minimum term and no notice period. Email us and stop your standing order, and we will transfer your domain to you and send you a copy of your website files.",
+    "pages": [
+      "home",
+      "pricing"
+    ]
   },
   {
     "q": "I already have a domain name. Can I keep it?",
-    "a": "Yes. We connect your existing domain to your new site at no extra cost, and your email addresses carry on working as before. If you don't have a domain, we can buy one in your name and set it up.",
-    "pages": ["home", "pricing"]
+    "a": "Yes. We can look after your existing domain as part of the £5 a month, it stays registered in your name, and your email addresses carry on working as before. No domain yet? We will register one in your name.",
+    "pages": [
+      "home",
+      "pricing"
+    ]
   },
   {
     "q": "How do I pay?",
     "a": "By UK bank transfer. We send you an invoice with our bank details for the £150 build fee, and you set up a £5 standing order for the monthly plan once your site is live. No card details, no direct debit forms.",
-    "pages": ["home", "pricing"]
+    "pages": [
+      "home",
+      "pricing"
+    ]
   },
   {
     "q": "Will my site show up on Google?",
     "a": "We set up the foundations properly: page titles, descriptions, fast loading and a mobile-friendly design, and we show you how to get the most from your free Google Business Profile. Nobody can honestly promise a number one ranking, and we won't pretend to.",
-    "pages": ["home"]
+    "pages": [
+      "home"
+    ]
   },
   {
     "q": "Do you build online shops?",
     "a": "Not at this price. We specialise in clear, good-looking information websites for local businesses. If you need to sell online, tell us what you have in mind and we will point you in the right direction.",
-    "pages": ["home", "pricing"]
+    "pages": [
+      "home",
+      "pricing"
+    ]
   },
   {
     "q": "Are there any hidden costs?",
-    "a": "No. It is £150 for the build and £5 a month after that. Optional extras have a fixed price that we agree with you before any work starts. If you need a domain name, that is charged at cost.",
-    "pages": ["pricing"]
+    "a": "No. It is £150 for the build and £5 a month after that, which includes your domain. Optional extras have a fixed price that we agree with you before any work starts.",
+    "pages": [
+      "pricing"
+    ]
   },
   {
     "q": "Do I own my website?",
     "a": "Yes. Your content is yours, your domain is registered in your name, and if you ever leave we will hand over your website files.",
-    "pages": ["pricing"]
+    "pages": [
+      "pricing"
+    ]
   }
 ]

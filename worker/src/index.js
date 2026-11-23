@@ -24,7 +24,6 @@ const DEFAULT_BUSINESS = {
     { name: 'Online booking widget', pricePence: 3000 },
     { name: 'Online menu', pricePence: 3000 },
     { name: 'Photo gallery', pricePence: 2000 },
-    { name: 'Domain purchase (first year, at cost)', pricePence: 1000 },
   ],
 };
 

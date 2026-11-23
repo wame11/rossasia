@@ -89,7 +89,7 @@ Replace `YOUR_KEY` with your key. Remove the "write" section if your key is read
 
 ```text
 You are helping me run Webstitch, my UK web design micro-agency. We build modern websites for small local
-businesses (barbers, cafés, salons, trades, churches, gyms, takeaways, charities) for £150 one-off plus £5 a month.
+businesses (barbers, cafés, salons, trades, churches, gyms, takeaways, charities) for £150 to build plus £5 a month, which includes the client's own domain and hosting.
 Use UK English.
 
 You have access to my private admin data through this API. Add the key to every request:
