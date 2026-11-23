@@ -2,6 +2,5 @@
   { "name": "Extra pages", "description": "Need more than five pages? Add as many as you like.", "price": "£25 per page" },
   { "name": "Online booking", "description": "A booking widget from a service such as Fresha, Booksy or Calendly, built into your site.", "price": "£30" },
   { "name": "Online menu", "description": "A proper menu page that is easy to read on a phone and easy for us to update. No more PDFs.", "price": "£30" },
-  { "name": "Photo gallery", "description": "A tidy, fast-loading gallery to show off your work, your venue or your food.", "price": "£20" },
-  { "name": "Domain name", "description": "No domain yet? We will buy it in your name and set it up for you.", "price": "At cost, usually £8 to £12 a year" }
+  { "name": "Photo gallery", "description": "A tidy, fast-loading gallery to show off your work, your venue or your food.", "price": "£20" }
 ]

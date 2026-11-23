@@ -120,7 +120,7 @@
         <div class="stat"><b>${total ? ((won / total) * 100).toFixed(1) : '0.0'}%</b><span>Conversion rate</span></div>
         <div class="stat"><b>${gbp(revenue)}</b><span>Revenue received</span></div>
         <div class="stat"><b>${gbp(monthRevenue)}</b><span>Received this month</span></div>
-        <div class="stat"><b>${gbp(mrr)}</b><span>MRR (${active.length} active plan${active.length === 1 ? '' : 's'})</span></div>
+        <div class="stat"><b>${gbp(mrr)}</b><span>Monthly recurring revenue (${active.length} active plan${active.length === 1 ? '' : 's'})</span></div>
       </div>
       <div class="card"><h2>Pipeline</h2><div class="pipeline">
         ${state.me.statuses.map((s) => `<a href="#/leads" data-action="pipeline" data-status="${esc(s)}"><b>${counts[s]}</b>${esc(s)}</a>`).join('')}
@@ -302,13 +302,17 @@
           ${SOCIALS.map((s) => `<label>${s[0].toUpperCase() + s.slice(1)}<input name="social.${s}" value="${esc((b.social || {})[s] || '')}" placeholder="https://"></label>`).join('')}
         </div></fieldset>
 
+        <fieldset><legend>Price</legend><div class="form-grid">
+          <label>Monthly fee (£) <span class="hint">covers their domain and hosting. Used as the default on their invoices and monthly plan</span><input name="monthly_fee" inputmode="decimal" value="${esc(b.monthly_fee ?? pounds(state.business.monthlyPence))}"></label>
+        </div></fieldset>
+
         <fieldset><legend>Optional extras</legend><div class="form-grid">
           <label>Extra pages (beyond 5)<input type="number" min="0" max="20" name="extras.extra_pages" value="${esc(x.extra_pages || 0)}"></label>
           <label>Booking link <span class="hint">Fresha, Booksy, Calendly…</span><input name="extras.booking_url" value="${esc(x.booking_url || '')}"></label>
           <label class="check"><input type="checkbox" name="extras.booking"${x.booking ? ' checked' : ''}> Online booking widget</label>
           <label class="check"><input type="checkbox" name="extras.menu"${x.menu ? ' checked' : ''}> Online menu</label>
           <label class="check"><input type="checkbox" name="extras.gallery"${x.gallery ? ' checked' : ''}> Photo gallery</label>
-          <label class="check"><input type="checkbox" name="extras.domain_purchase"${x.domain_purchase ? ' checked' : ''}> We buy the domain</label>
+          <label class="check"><input type="checkbox" name="extras.domain_purchase"${x.domain_purchase ? ' checked' : ''}> We register a new domain (included)</label>
         </div></fieldset>
 
         <fieldset><legend>Internal notes</legend><label>Anything else the builder should know<textarea name="notes" rows="3">${v('notes')}</textarea></label></fieldset>
@@ -355,8 +359,16 @@
   };
 
   const invoiceLine = (description, pence) => `<div class="row" data-line><input data-line-desc value="${esc(description)}" placeholder="Description" aria-label="Line description" required><input data-line-amount value="${esc(pence === '' ? '' : pounds(pence))}" placeholder="£" inputmode="decimal" aria-label="Amount in pounds" required><button type="button" data-action="row-remove" aria-label="Remove line">✕</button></div>`;
-  function invoiceModal(leadId) {
+  // A client's monthly fee: from their brief if set, otherwise the default in Settings.
+  async function leadMonthlyPence(leadId) {
+    if (!leadId) return state.business.monthlyPence;
+    const { data } = await api(`briefs/${leadId}`);
+    return data.monthly_fee !== undefined && data.monthly_fee !== '' ? toPence(data.monthly_fee) : state.business.monthlyPence;
+  }
+
+  async function invoiceModal(leadId) {
     const b = state.business;
+    const monthly = await leadMonthlyPence(leadId);
     openModal(`<h2>New invoice</h2><form data-form="invoice-create">
       <div class="form-grid">
         <label class="wide">Client<select name="lead_id" required>${leadOptions(leadId)}</select></label>
@@ -368,7 +380,7 @@
       <div class="form-actions"><button type="button" data-action="line-add" data-desc="" data-pence="">Add a line</button>
         ${(b.extras || []).map((e) => `<button type="button" data-action="line-add" data-desc="${esc(e.name)}" data-pence="${esc(e.pricePence)}">+ ${esc(e.name)}</button>`).join('')}</div>
       <div class="form-grid" style="margin-top:1rem">
-        <label>Monthly plan line (£ per month, 0 to hide)<input name="monthly" value="${pounds(b.monthlyPence)}" inputmode="decimal"></label>
+        <label>Monthly fee line (£ per month, 0 to hide)<input name="monthly" value="${pounds(monthly)}" inputmode="decimal"></label>
         <label>Payment reference <span class="hint">blank = business name, max 18 characters</span><input name="reference" maxlength="18"></label>
         <label class="wide">Note on the invoice (optional)<textarea name="notes" rows="2" maxlength="1000"></textarea></label>
       </div>
@@ -496,7 +508,7 @@
       </div></fieldset>
       <fieldset><legend>Prices</legend><div class="form-grid">
         <label>Build fee (£)<input name="buildPrice" value="${pounds(b.buildPricePence)}" inputmode="decimal"></label>
-        <label>Monthly plan (£)<input name="monthly" value="${pounds(b.monthlyPence)}" inputmode="decimal"></label>
+        <label>Default monthly fee (£) <span class="hint">domain and hosting</span><input name="monthly" value="${pounds(b.monthlyPence)}" inputmode="decimal"></label>
         <label class="wide">Optional extras, one per line: <span class="hint">Name | price in pounds</span>
           <textarea name="extras" rows="6" class="mono">${esc((b.extras || []).map((e) => `${e.name} | ${pounds(e.pricePence)}`).join('\n'))}</textarea></label>
       </div><div class="form-actions"><button class="primary">Save settings</button></div></fieldset></form>
@@ -611,10 +623,10 @@
       await reload('invoices'); toast('Invoice deleted'); route();
     },
 
-    'sub-new': (el) => openModal(`<h2>Add monthly plan</h2><form data-form="sub-create"><div class="form-grid">
+    'sub-new': async (el) => openModal(`<h2>Add monthly plan</h2><form data-form="sub-create"><div class="form-grid">
       <label class="wide">Client<select name="lead_id" required>${leadOptions(el.dataset.id)}</select></label>
       <label>Start date (go-live day)<input type="date" name="start_date" value="${today()}" required></label>
-      <label>Monthly amount (£)<input name="monthly" value="${pounds(state.business.monthlyPence)}" inputmode="decimal" required></label>
+      <label>Monthly fee (£)<input name="monthly" value="${pounds(await leadMonthlyPence(el.dataset.id))}" inputmode="decimal" required></label>
       <label class="wide">Notes<input name="notes" maxlength="2000"></label>
       </div><p class="hint">If the client is at Paid or Building, they will be moved to Live.</p>
       <div class="form-actions"><button class="primary">Add plan</button><button type="button" data-action="modal-close">Cancel</button></div></form>`),
