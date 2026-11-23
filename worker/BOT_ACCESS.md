@@ -8,7 +8,7 @@ key. It is off until you set a key.
 
 | | Read access (`BOT_ACCESS = "read"`, the default) | Write access (`BOT_ACCESS = "write"`) |
 | --- | --- | --- |
-| Dashboard totals, leads, briefs, outreach log, follow-ups | Yes | Yes |
+| Dashboard totals, leads, briefs, outreach log, follow-ups, subscription status | Yes | Yes |
 | Add new leads (always enter the pipeline as "New") | No | Yes |
 | Update a lead's status, score, notes and contact details | No | Yes |
 | Log outreach | No | Yes |
@@ -59,10 +59,11 @@ The key is accepted in three ways, in order of preference:
 | Method and path | What it returns |
 | --- | --- |
 | `GET /bot/api` | This list, as JSON |
-| `GET /bot/api/summary` | Leads by status, conversion rate, revenue received, follow-ups due |
+| `GET /bot/api/summary` | Leads by status, conversion rate, revenue, MRR, overdue plans, follow-ups due |
 | `GET /bot/api/leads` | Leads. Filters: `status`, `town`, `type`, `q`, `max_score`, `limit` |
 | `GET /bot/api/leads/{id}` | One lead with its brief and outreach history |
 | `GET /bot/api/followups` | Follow-ups due today or earlier |
+| `GET /bot/api/subscriptions` | Monthly plans with overdue flags |
 | `POST /bot/api/leads` | Write only. One lead, or `{ "leads": [...] }` (up to 100). Duplicates (same name and town) are skipped |
 | `PUT /bot/api/leads/{id}` | Write only. Update status, score, notes or contact fields |
 | `POST /bot/api/outreach` | Write only. `{ lead_id, date, channel, outcome, notes, follow_up_date }` |
@@ -88,7 +89,7 @@ Replace `YOUR_KEY` with your key. Remove the "write" section if your key is read
 
 ```text
 You are helping me run Webstitch, my UK web design micro-agency. We build modern websites for small local
-businesses (barbers, cafés, salons, trades, churches, gyms, takeaways, charities) for £150 one-off, with hosting included and no monthly fee.
+businesses (barbers, cafés, salons, trades, churches, gyms, takeaways, charities) for £150 one-off plus £5 a month.
 Use UK English.
 
 You have access to my private admin data through this API. Add the key to every request:
@@ -98,10 +99,11 @@ You have access to my private admin data through this API. Add the key to every 
              (or send the header "Authorization: Bearer YOUR_KEY" if you can set headers)
 
 Read endpoints (open these as normal web addresses):
-  /summary                 totals: leads by status, conversion rate, revenue received, follow-ups due
+  /summary                 totals: leads by status, conversion rate, revenue, MRR, overdue plans, follow-ups due
   /leads                   all leads. Filters: status, town, type, q (search), max_score, limit
   /leads/{id}              one lead with its client brief and outreach history
   /followups               follow-ups due today or earlier
+  /subscriptions           monthly plans, last payment date, overdue flag
 
 Example: https://app.webstitch.co.uk/bot/api/leads?status=New&max_score=4&key=YOUR_KEY
 
@@ -128,6 +130,6 @@ Rules you must follow:
 5. Keep my data private: do not repeat the key, and do not share lead details outside this conversation.
 
 When I ask "what should I do today?", check /summary, /followups and /leads?status=New, then give me a short,
-prioritised list: follow-ups due, new website enquiries to answer, and the best
+prioritised list: follow-ups due, new website enquiries to answer, overdue monthly payments to chase, and the best
 five prospects to contact next (lowest website scores first), with one line on why for each.
 ```

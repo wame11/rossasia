@@ -8,7 +8,7 @@
   const modal = document.getElementById('modal');
   const modalBody = document.getElementById('modal-body');
   const state = {
-    me: null, leads: [], outreach: [], invoices: [], payments: [], business: {}, templates: {}, bank: null,
+    me: null, leads: [], outreach: [], invoices: [], subs: [], payments: [], business: {}, templates: {}, bank: null,
     filters: { q: '', status: '', type: '', town: '', maxScore: '' }, outreachDueOnly: false,
   };
 
@@ -82,7 +82,7 @@
   }
 
   async function reload(...names) {
-    const paths = { leads: 'leads', outreach: 'outreach', invoices: 'invoices', payments: 'payments' };
+    const paths = { leads: 'leads', outreach: 'outreach', invoices: 'invoices', subs: 'subscriptions', payments: 'payments' };
     await Promise.all(names.map(async (n) => { state[n] = await api(paths[n]); }));
   }
 
@@ -105,7 +105,9 @@
     const revenue = state.payments.reduce((sum, p) => sum + p.amount_pence, 0);
     const month = today().slice(0, 7);
     const monthRevenue = state.payments.filter((p) => p.date.startsWith(month)).reduce((sum, p) => sum + p.amount_pence, 0);
-    const building = state.leads.filter((l) => l.status === 'Paid' || l.status === 'Building');
+    const active = state.subs.filter((s) => s.status === 'Active');
+    const mrr = active.reduce((sum, s) => sum + s.monthly_pence, 0);
+    const overdue = active.filter((s) => s.overdue);
     const followups = dueFollowups();
     const enquiries = state.leads.filter((l) => l.source === 'enquiry' && l.status === 'New');
     const unpaid = state.invoices.filter((i) => i.status === 'Sent');
@@ -118,6 +120,7 @@
         <div class="stat"><b>${total ? ((won / total) * 100).toFixed(1) : '0.0'}%</b><span>Conversion rate</span></div>
         <div class="stat"><b>${gbp(revenue)}</b><span>Revenue received</span></div>
         <div class="stat"><b>${gbp(monthRevenue)}</b><span>Received this month</span></div>
+        <div class="stat"><b>${gbp(mrr)}</b><span>MRR (${active.length} active plan${active.length === 1 ? '' : 's'})</span></div>
       </div>
       <div class="card"><h2>Pipeline</h2><div class="pipeline">
         ${state.me.statuses.map((s) => `<a href="#/leads" data-action="pipeline" data-status="${esc(s)}"><b>${counts[s]}</b>${esc(s)}</a>`).join('')}
@@ -129,8 +132,8 @@
         <div class="card"><h2>Follow-ups due (${followups.length})</h2>
           ${followups.length ? followups.map((o) => `<div class="log-item"><a href="#/lead/${o.lead_id}"><b>${esc(leadName(o.lead_id))}</b></a> <span class="muted">due ${esc(fmtDate(o.follow_up_date))} · last: ${esc(o.channel)}${o.outcome ? ', ' + esc(o.outcome) : ''}</span></div>`).join('') : '<p class="muted">You are up to date.</p>'}
         </div>
-        <div class="card"><h2>Sites to build (${building.length})</h2>
-          ${building.length ? building.map((l) => `<div class="log-item"><a href="#/lead/${l.id}"><b>${esc(l.business_name)}</b></a> ${statusTag(l.status)} <a href="#/brief/${l.id}">Brief</a></div>`).join('') : '<p class="muted">Nothing waiting to be built.</p>'}
+        <div class="card"><h2>Overdue monthly payments (${overdue.length})</h2>
+          ${overdue.length ? overdue.map((s) => `<div class="log-item"><a href="#/lead/${s.lead_id}"><b>${esc(leadName(s.lead_id))}</b></a> <span class="tag red">Overdue</span> <span class="muted">was due ${esc(fmtDate(s.next_due))}</span></div>`).join('') : '<p class="muted">No overdue plans.</p>'}
         </div>
         <div class="card"><h2>Invoices awaiting payment (${unpaid.length})</h2>
           ${unpaid.length ? unpaid.map((i) => `<div class="log-item"><a href="#/invoices"><b>${esc(i.number)}</b></a> ${esc(leadName(i.lead_id))} <span class="muted">${gbp(i.total_pence)} · due ${esc(fmtDate(i.due_date))}</span>${i.due_date < today() ? ' <span class="tag red">Late</span>' : ''}</div>`).join('') : '<p class="muted">Nothing outstanding.</p>'}
@@ -200,11 +203,12 @@
     if (!l) { view.innerHTML = '<p>That lead no longer exists. <a href="#/leads">Back to leads</a></p>'; return; }
     const log = state.outreach.filter((o) => o.lead_id === l.id);
     const invoices = state.invoices.filter((i) => i.lead_id === l.id);
+    const sub = state.subs.find((s) => s.lead_id === l.id);
     view.innerHTML = `
       <p><a href="#/leads">← All leads</a></p>
       <div class="page-head"><div><h1>${esc(l.business_name)}</h1><p class="muted">${statusTag(l.status)} ${esc([l.business_type, l.town].filter(Boolean).join(' · '))} · added ${esc(fmtDate(l.created_at))} via ${esc(l.source)}</p></div>
         <div class="toolbar"><a class="btn primary" href="#/brief/${l.id}">Client brief</a><a class="btn" href="#/templates/${l.id}">Email templates</a>
-          <button data-action="invoice-new" data-id="${l.id}">New invoice</button></div></div>
+          <button data-action="invoice-new" data-id="${l.id}">New invoice</button>${sub ? '' : `<button data-action="sub-new" data-id="${l.id}">Start monthly plan</button>`}</div></div>
       ${l.do_not_contact ? '<div class="notice red"><b>Do not contact.</b> This business has opted out of marketing. Only get in touch about work they have already asked for.</div>' : ''}
       <div class="grid cols-2">
         <form class="card" data-form="lead-save" data-id="${l.id}"><h2>Details</h2>${leadFields(l)}
@@ -224,6 +228,7 @@
           </div>
           <div class="card"><h2>Money</h2>
             ${invoices.length ? invoices.map((i) => `<div class="log-item"><b>${esc(i.number)}</b> ${gbp(i.total_pence)} <span class="tag ${i.status === 'Paid' ? 'green' : i.status === 'Void' ? 'grey' : 'amber'}">${esc(i.status)}</span> <a href="/admin/api/invoices/${i.id}/pdf">PDF</a></div>`).join('') : '<p class="muted">No invoices yet.</p>'}
+            ${sub ? `<p style="margin-top:.8rem">Monthly plan: <b>${gbp(sub.monthly_pence)}</b> ${sub.overdue ? '<span class="tag red">Overdue</span>' : `<span class="tag ${sub.status === 'Active' ? 'green' : 'grey'}">${esc(sub.status)}</span>`} · last paid ${sub.last_payment_date ? esc(fmtDate(sub.last_payment_date)) : 'never'}</p>` : ''}
           </div>
         </div>
       </div>`;
@@ -363,20 +368,37 @@
       <div class="form-actions"><button type="button" data-action="line-add" data-desc="" data-pence="">Add a line</button>
         ${(b.extras || []).map((e) => `<button type="button" data-action="line-add" data-desc="${esc(e.name)}" data-pence="${esc(e.pricePence)}">+ ${esc(e.name)}</button>`).join('')}</div>
       <div class="form-grid" style="margin-top:1rem">
+        <label>Monthly plan line (£ per month, 0 to hide)<input name="monthly" value="${pounds(b.monthlyPence)}" inputmode="decimal"></label>
         <label>Payment reference <span class="hint">blank = business name, max 18 characters</span><input name="reference" maxlength="18"></label>
         <label class="wide">Note on the invoice (optional)<textarea name="notes" rows="2" maxlength="1000"></textarea></label>
       </div>
       <div class="form-actions"><button class="primary">Create invoice</button><button type="button" data-action="modal-close">Cancel</button></div></form>`);
   }
 
-  /* ----- payments ----- */
-  views.payments = () => {
-    const total = state.payments.reduce((sum, p) => sum + p.amount_pence, 0);
+  /* ----- subscriptions ----- */
+  views.subscriptions = () => {
+    const active = state.subs.filter((s) => s.status === 'Active');
+    const overdue = active.filter((s) => s.overdue);
     view.innerHTML = `
-      <div class="page-head"><div><h1>Payments</h1><p class="muted">${gbp(total)} received in total. Marking an invoice as paid adds its payment here automatically.</p></div>
-        <div class="toolbar"><button class="primary" data-action="payment-new">Record a payment</button><a class="btn" href="/admin/api/export/payments">Export CSV</a></div></div>
+      <div class="page-head"><div><h1>Subscriptions</h1><p class="muted">Who pays the monthly plan. A plan is flagged overdue a week after its payment was due.</p></div>
+        <div class="toolbar"><button class="primary" data-action="sub-new">Add monthly plan</button><button data-action="payment-new">Record other payment</button><a class="btn" href="/admin/api/export/subscriptions">Export CSV</a></div></div>
+      <div class="stats">
+        <div class="stat"><b>${gbp(active.reduce((sum, s) => sum + s.monthly_pence, 0))}</b><span>Monthly revenue (MRR)</span></div>
+        <div class="stat"><b>${active.length}</b><span>Active plans</span></div>
+        <div class="stat"><b>${overdue.length}</b><span>Overdue</span></div>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Client</th><th class="num">Monthly</th><th>Started</th><th>Last payment</th><th>Next due</th><th>Status</th><th></th></tr></thead><tbody>
+      ${state.subs.length ? state.subs.map((s) => `<tr><td><a href="#/lead/${s.lead_id}"><b>${esc(leadName(s.lead_id))}</b></a>${s.notes ? `<br><span class="muted small">${esc(s.notes)}</span>` : ''}</td><td class="num">${gbp(s.monthly_pence)}</td><td>${esc(fmtDate(s.start_date))}</td>
+        <td>${s.last_payment_date ? esc(fmtDate(s.last_payment_date)) : '<span class="muted">None yet</span>'}</td><td>${s.status === 'Active' ? esc(fmtDate(s.next_due)) : ''}</td>
+        <td>${s.overdue ? '<span class="tag red">Overdue</span>' : `<span class="tag ${s.status === 'Active' ? 'green' : 'grey'}">${esc(s.status)}</span>`}</td>
+        <td class="actions"><button class="primary" data-action="sub-pay" data-id="${s.id}">Record payment</button>
+          <select data-change="sub-status" data-id="${s.id}" aria-label="Plan status">${['Active', 'Paused', 'Cancelled'].map((x) => option(x, x, s.status)).join('')}</select>
+          <button class="danger" data-action="sub-delete" data-id="${s.id}">Delete</button></td></tr>`).join('')
+      : '<tr><td colspan="7" class="empty">No monthly plans yet. Add one when a client\'s site goes live.</td></tr>'}
+      </tbody></table></div>
+      <h2 style="margin-top:1.6rem">Payments received <a class="small" href="/admin/api/export/payments">Export CSV</a></h2>
       <div class="table-wrap"><table><thead><tr><th>Date</th><th>Client</th><th>Type</th><th>Note</th><th class="num">Amount</th><th></th></tr></thead><tbody>
-      ${state.payments.length ? state.payments.map((p) => `<tr><td>${esc(fmtDate(p.date))}</td><td><a href="#/lead/${p.lead_id}">${esc(leadName(p.lead_id))}</a></td><td>${esc(p.kind)}</td><td>${esc(p.note)}</td><td class="num">${gbp(p.amount_pence)}</td><td class="actions"><button class="danger" data-action="payment-delete" data-id="${p.id}">Delete</button></td></tr>`).join('')
+      ${state.payments.length ? state.payments.map((p) => `<tr><td>${esc(fmtDate(p.date))}</td><td>${esc(leadName(p.lead_id))}</td><td>${esc(p.kind)}</td><td>${esc(p.note)}</td><td class="num">${gbp(p.amount_pence)}</td><td class="actions"><button class="danger" data-action="payment-delete" data-id="${p.id}">Delete</button></td></tr>`).join('')
       : '<tr><td colspan="6" class="empty">No payments recorded yet.</td></tr>'}
       </tbody></table></div>`;
   };
@@ -474,6 +496,7 @@
       </div></fieldset>
       <fieldset><legend>Prices</legend><div class="form-grid">
         <label>Build fee (£)<input name="buildPrice" value="${pounds(b.buildPricePence)}" inputmode="decimal"></label>
+        <label>Monthly plan (£)<input name="monthly" value="${pounds(b.monthlyPence)}" inputmode="decimal"></label>
         <label class="wide">Optional extras, one per line: <span class="hint">Name | price in pounds</span>
           <textarea name="extras" rows="6" class="mono">${esc((b.extras || []).map((e) => `${e.name} | ${pounds(e.pricePence)}`).join('\n'))}</textarea></label>
       </div><div class="form-actions"><button class="primary">Save settings</button></div></fieldset></form>
@@ -483,8 +506,8 @@
         <p class="muted small">Bank details and keys live in Worker secrets, never in this database or the code. Change them with <span class="mono">npx wrangler secret put NAME</span>.</p>
       </div>
       <div class="card"><h2>Export everything to CSV</h2>
-        <div class="toolbar">${['leads', 'briefs', 'outreach', 'invoices', 'payments'].map((n) => `<a class="btn" href="/admin/api/export/${n}">${n[0].toUpperCase() + n.slice(1)}</a>`).join('')}
-        <button class="primary" data-action="export-all">Download all five</button></div>
+        <div class="toolbar">${['leads', 'briefs', 'outreach', 'invoices', 'subscriptions', 'payments'].map((n) => `<a class="btn" href="/admin/api/export/${n}">${n[0].toUpperCase() + n.slice(1)}</a>`).join('')}
+        <button class="primary" data-action="export-all">Download all six</button></div>
       </div>`;
   };
 
@@ -534,7 +557,7 @@
       const l = leadById(el.dataset.id);
       if (!confirm(`Delete ${l.business_name} and everything attached to it (brief, files, outreach, invoices, payments)? This cannot be undone.`)) return;
       await api(`leads/${l.id}`, { method: 'DELETE' });
-      await reload('leads', 'outreach', 'invoices', 'payments');
+      await reload('leads', 'outreach', 'invoices', 'subs', 'payments');
       toast('Lead deleted'); location.hash = '#/leads';
     },
     'import-open': () => openModal(`<h2>Import leads from CSV</h2>
@@ -588,11 +611,29 @@
       await reload('invoices'); toast('Invoice deleted'); route();
     },
 
+    'sub-new': (el) => openModal(`<h2>Add monthly plan</h2><form data-form="sub-create"><div class="form-grid">
+      <label class="wide">Client<select name="lead_id" required>${leadOptions(el.dataset.id)}</select></label>
+      <label>Start date (go-live day)<input type="date" name="start_date" value="${today()}" required></label>
+      <label>Monthly amount (£)<input name="monthly" value="${pounds(state.business.monthlyPence)}" inputmode="decimal" required></label>
+      <label class="wide">Notes<input name="notes" maxlength="2000"></label>
+      </div><p class="hint">If the client is at Paid or Building, they will be moved to Live.</p>
+      <div class="form-actions"><button class="primary">Add plan</button><button type="button" data-action="modal-close">Cancel</button></div></form>`),
+    'sub-pay': async (el) => {
+      const date = prompt('Date the payment arrived (YYYY-MM-DD):', today());
+      if (!date) return;
+      await api(`subscriptions/${el.dataset.id}/payment`, { method: 'POST', body: { date } });
+      await reload('subs', 'payments'); toast('Payment recorded'); route();
+    },
+    'sub-delete': async (el) => {
+      if (!confirm('Delete this monthly plan? Payments already recorded are kept. To stop a plan, set it to Cancelled instead.')) return;
+      await api(`subscriptions/${el.dataset.id}`, { method: 'DELETE' });
+      await reload('subs'); route();
+    },
     'payment-new': () => openModal(`<h2>Record a payment</h2><form data-form="payment-create"><div class="form-grid">
       <label class="wide">Client<select name="lead_id" required>${leadOptions()}</select></label>
       <label>Date<input type="date" name="date" value="${today()}" required></label>
       <label>Amount (£)<input name="amount" inputmode="decimal" required></label>
-      <label>Type<select name="kind">${['Build', 'Extra', 'Other'].map((k) => option(k, k)).join('')}</select></label>
+      <label>Type<select name="kind">${['Extra', 'Build', 'Monthly', 'Other'].map((k) => option(k, k)).join('')}</select></label>
       <label>Note<input name="note" maxlength="500"></label>
       </div><div class="form-actions"><button class="primary">Record payment</button><button type="button" data-action="modal-close">Cancel</button></div></form>`),
     'payment-delete': async (el) => {
@@ -618,7 +659,7 @@
       const key = state.tpl.key;
       const tpl = getTemplate(key);
       openModal(`<h2>Edit template: ${esc(TEMPLATES[key].name)}</h2>
-        <p class="hint">Placeholders: {{greeting_name}} {{business_name}} {{business_type}} {{town}} {{website_url}} {{site_observation}} {{my_name}} {{my_email}} {{my_phone}} {{site_url}} {{build_price}} {{invoice_number}} {{invoice_total}} {{payment_reference}} {{bank_account_name}} {{bank_sort_code}} {{bank_account_number}}. Keep the opt-out line at the end.</p>
+        <p class="hint">Placeholders: {{greeting_name}} {{business_name}} {{business_type}} {{town}} {{website_url}} {{site_observation}} {{my_name}} {{my_email}} {{my_phone}} {{site_url}} {{build_price}} {{monthly_price}} {{invoice_number}} {{invoice_total}} {{payment_reference}} {{bank_account_name}} {{bank_sort_code}} {{bank_account_number}}. Keep the opt-out line at the end.</p>
         <form data-form="tpl-save"><label>Subject<input name="subject" value="${esc(tpl.subject)}" required></label>
         <label style="margin-top:.8rem">Message<textarea name="body" rows="16" required>${esc(tpl.body)}</textarea></label>
         <div class="form-actions"><button class="primary">Save template</button><button type="button" data-action="tpl-reset">Reset to original</button><button type="button" data-action="modal-close">Cancel</button></div></form>`);
@@ -630,7 +671,7 @@
     },
 
     'export-all': async () => {
-      for (const name of ['leads', 'briefs', 'outreach', 'invoices', 'payments']) {
+      for (const name of ['leads', 'briefs', 'outreach', 'invoices', 'subscriptions', 'payments']) {
         const a = document.createElement('a');
         a.href = `/admin/api/export/${name}`; a.download = '';
         document.body.appendChild(a); a.click(); a.remove();
@@ -666,9 +707,16 @@
     'invoice-create': async (form) => {
       const d = readForm(form);
       const items = [...form.querySelectorAll('[data-line]')].map((row) => ({ description: row.querySelector('[data-line-desc]').value.trim(), amount_pence: toPence(row.querySelector('[data-line-amount]').value) }));
-      const invoice = await api('invoices', { method: 'POST', body: { lead_id: Number(d.lead_id), issue_date: d.issue_date, due_date: d.due_date, items, monthly_pence: 0, reference: d.reference, notes: d.notes } });
+      const invoice = await api('invoices', { method: 'POST', body: { lead_id: Number(d.lead_id), issue_date: d.issue_date, due_date: d.due_date, items, monthly_pence: toPence(d.monthly || '0'), reference: d.reference, notes: d.notes } });
       await reload('invoices'); closeModal(); toast(`Invoice ${invoice.number} created`);
       if (location.hash === '#/invoices') route(); else location.hash = '#/invoices';
+    },
+    'sub-create': async (form) => {
+      const d = readForm(form);
+      await api('subscriptions', { method: 'POST', body: { lead_id: Number(d.lead_id), start_date: d.start_date, monthly_pence: toPence(d.monthly), status: 'Active', notes: d.notes } });
+      const lead = leadById(d.lead_id);
+      if (lead && ['Paid', 'Building'].includes(lead.status)) await api(`leads/${lead.id}`, { method: 'PUT', body: { status: 'Live' } });
+      await reload('subs', 'leads'); closeModal(); toast('Monthly plan added'); route();
     },
     'payment-create': async (form) => {
       const d = readForm(form);
@@ -693,8 +741,8 @@
     'settings-save': async (form) => {
       const d = readForm(form);
       const extras = d.extras.split('\n').map((line) => line.split('|').map((s) => s.trim())).filter(([name]) => name).map(([name, price]) => ({ name, pricePence: toPence(price || '0') }));
-      const business = { ...state.business, ...d, extras, buildPricePence: toPence(d.buildPrice), monthlyPence: 0, invoiceDueDays: Number(d.invoiceDueDays) || 7 };
-      delete business.buildPrice;
+      const business = { ...state.business, ...d, extras, buildPricePence: toPence(d.buildPrice), monthlyPence: toPence(d.monthly), invoiceDueDays: Number(d.invoiceDueDays) || 7 };
+      delete business.buildPrice; delete business.monthly;
       await api('settings', { method: 'PUT', body: { business } });
       state.business = business; toast('Settings saved'); route();
     },
@@ -705,6 +753,10 @@
     'lead-status': async (el) => {
       await api(`leads/${el.dataset.id}`, { method: 'PUT', body: { status: el.value } });
       leadById(el.dataset.id).status = el.value; toast('Status updated');
+    },
+    'sub-status': async (el) => {
+      await api(`subscriptions/${el.dataset.id}`, { method: 'PUT', body: { status: el.value } });
+      await reload('subs'); route();
     },
     'outreach-due': (el) => { state.outreachDueOnly = el.checked; views.outreach(); },
     'tpl-lead': (el) => { state.tpl.leadId = Number(el.value) || null; views.templates(); },
@@ -758,7 +810,7 @@
       state.me = me;
       state.business = settings.business;
       state.templates = settings.templates || {};
-      await reload('leads', 'outreach', 'invoices', 'payments');
+      await reload('leads', 'outreach', 'invoices', 'subs', 'payments');
       document.getElementById('whoami').textContent = me.email;
       route();
     } catch (err) {

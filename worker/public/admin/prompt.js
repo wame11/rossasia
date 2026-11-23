@@ -13,7 +13,7 @@
 
 I'm {{my_name}} from Webstitch, a small UK web design studio. I was looking at {{business_type_or_local}} businesses in {{town_or_area}} and {{site_observation}}
 
-We build clean, modern websites for local businesses at a fixed price: {{build_price}}, once, with hosting included and no monthly fees. It takes about a week, it works properly on phones, and there is no contract tying you in.
+We build clean, modern websites for local businesses at a fixed price: {{build_price}} for the build, then {{monthly_price}} a month for hosting, maintenance and small edits. It takes about a week, it works properly on phones, and there is no contract tying you in.
 
 You can see examples at {{site_url}}/portfolio/
 
@@ -34,7 +34,7 @@ ${OPT_OUT}`,
 
 I got in touch last week about a new website for {{business_name}} and wanted to follow up once in case it got buried.
 
-The short version: a modern, mobile-friendly website for {{build_price}}, live in about a week, with hosting included and no monthly fees. You send the details, I do the rest.
+The short version: a modern, mobile-friendly website for {{build_price}}, live in about a week, then {{monthly_price}} a month to keep it hosted and up to date. You send the details, I do the rest.
 
 If it is not for you, no problem at all. If you are curious, just reply to this email and I will send over a couple of ideas for your site.
 
@@ -56,12 +56,12 @@ Thanks for your time on the phone today. Here is a quick summary of what we disc
 What you get
 - A custom, mobile-friendly website of up to 5 pages
 - Contact form, Google Maps and a click-to-call button
-- Basic SEO set-up, SSL certificate, hosting and your domain connected
+- Basic SEO set-up, SSL certificate and your domain connected
 - Ready to preview around 7 days after I receive your content
 
 What it costs
-- {{build_price}} one-off. Hosting is included and there are no monthly fees
-- If you need changes after launch, I will quote a fixed price first
+- {{build_price}} one-off for the build
+- {{monthly_price}} a month for hosting, maintenance and small edits (no minimum term, cancel with 30 days' notice)
 
 What I need from you
 - Your logo and a few photos
@@ -96,7 +96,7 @@ Payment reference: {{payment_reference}}
 
 As soon as the payment arrives I will start building your site and send you a private preview link within about 7 days of receiving your content.
 
-That is the only payment: there are no monthly fees.
+When your site goes live, the {{monthly_price}} a month plan starts. Please set up a standing order to the same account with the same reference. I will remind you when it is time.
 
 For your security: I will never change these bank details by email. If you ever receive a message asking you to pay a different account, please call me before paying.
 
@@ -136,6 +136,7 @@ If you would rather not receive emails from Webstitch, reply with "no thanks" an
       my_phone: business.phone || '',
       site_url: (siteUrl || 'https://webstitch.co.uk').replace(/\/$/, ''),
       build_price: gbp(business.buildPricePence),
+      monthly_price: gbp(business.monthlyPence),
       bank_account_name: (bank && bank.accountName) || '[bank details not set]',
       bank_sort_code: (bank && bank.sortCode) || '[not set]',
       bank_account_number: (bank && bank.accountNumber) || '[not set]',
